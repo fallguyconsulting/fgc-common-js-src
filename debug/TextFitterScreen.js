@@ -45,10 +45,10 @@ const SVG_DIVIDER_ICON = {
 
 const FONTS = {
     roboto: {
-        [ FONT_FACE.REGULAR ]:      'http://localhost:3000/fonts/roboto/roboto-regular.ttf',
-        [ FONT_FACE.BOLD ]:         'http://localhost:3000/fonts/roboto/roboto-bold.ttf',
-        [ FONT_FACE.ITALIC ]:       'http://localhost:3000/fonts/roboto/roboto-regularitalic.ttf',
-        [ FONT_FACE.BOLD_ITALIC ]:  'http://localhost:3000/fonts/roboto/roboto-bolditalic.ttf',
+        [ FONT_FACE.REGULAR ]:      'https://raw.githubusercontent.com/cryptogogue/vol-cardmotron-js-assets/master/fonts/roboto/Roboto-Regular.ttf',
+        [ FONT_FACE.BOLD ]:         'https://raw.githubusercontent.com/cryptogogue/vol-cardmotron-js-assets/master/fonts/roboto/Roboto-Bold.ttf',
+        [ FONT_FACE.ITALIC ]:       'https://raw.githubusercontent.com/cryptogogue/vol-cardmotron-js-assets/master/fonts/roboto/Roboto-RegularItalic.ttf',
+        [ FONT_FACE.BOLD_ITALIC ]:  'https://raw.githubusercontent.com/cryptogogue/vol-cardmotron-js-assets/master/fonts/roboto/Roboto-BoldItalic.ttf',
     },
 };
 

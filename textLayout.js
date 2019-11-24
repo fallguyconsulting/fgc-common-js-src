@@ -175,12 +175,6 @@ class TextLine {
     }
 
     //----------------------------------------------------------------//
-    carriageReturn () {
-
-        this.cursor = 0;
-    }
-
-    //----------------------------------------------------------------//
     constructor ( context ) {
 
         this.hJustify       = context.hJustify || JUSTIFY.HORIZONTAL.LEFT;
@@ -357,14 +351,6 @@ class TextLine {
 export class TextBox {
 
     //----------------------------------------------------------------//
-    carriageReturn () {
-
-        if ( this.lines.length > 0 ) {
-            _.last ( this.lines ).carriageReturn ();
-        }
-    }
-
-    //----------------------------------------------------------------//
     constructor ( text, resources, fontName, fontSize, x, y, width, height, hJustify, vJustify ) {
 
         this.text           = text;
@@ -423,13 +409,12 @@ export class TextBox {
                 }
 
                 if ( isCarriageReturn ) {
-                    this.carriageReturn ();
                     tokenStart++;
                 }
 
                 if ( isNewline ) {
                     this.newline ( styledChar.style );
-                    tokenStart++;
+                    tokenStart = i + 1;
                 }
             }
             else {
