@@ -43,7 +43,6 @@ export const InfiniteScrollView = ( props ) => {
                     };
                 }
             }
-            console.log ( 'SET SIZES', sizes );
             setCardSizes ( sizes );
         }
     });
