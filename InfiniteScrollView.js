@@ -14,13 +14,13 @@ const ROW_MARGIN = 20; // TODO: would be nicer to get the scroll size dynamicall
 //================================================================//
 export const InfiniteScrollView = ( props ) => {
 
-    const { onGetCard, onGetSizer, totalCards } = props;
+    const { onGetCard, onGetSizerName, totalCards } = props;
 
     const sizers = props.sizers || [ onGetCard ( 0 )];
 
-    const cardRefs = [];
-    for ( let i in sizers ) {
-        cardRefs.push ( useRef ());
+    const sizerRefs = {};
+    for ( let sizerName in sizers ) {
+        sizerRefs [ sizerName ] = useRef ();
     }
 
     const [ rowWidth, setRowWidth ]         = useState ( 0 );
@@ -30,21 +30,20 @@ export const InfiniteScrollView = ( props ) => {
 
     useLayoutEffect (() => {
 
-        const cardRef = cardRefs [ 0 ];
-
         if ( !cardSizes ) {
 
-            const sizes = [];
+            const sizes = {};
 
-            for ( let i in cardRefs ) {
-                const cardRef = cardRefs [ i ];
-                if ( cardRef.current ) {
-                    sizes [ i ] = {
-                        width: cardRef.current.offsetWidth + CARD_PADDING,
-                        height: cardRef.current.offsetHeight + CARD_PADDING,
+            for ( let sizerName in sizerRefs ) {
+                const sizerRef = sizerRefs [ sizerName ];
+                if ( sizerRef.current ) {
+                    sizes [ sizerName ] = {
+                        width: sizerRef.current.offsetWidth + CARD_PADDING,
+                        height: sizerRef.current.offsetHeight + CARD_PADDING,
                     };
                 }
             }
+            console.log ( 'SET SIZES', sizes );
             setCardSizes ( sizes );
         }
     });
@@ -76,8 +75,8 @@ export const InfiniteScrollView = ( props ) => {
         }
 
         for ( let i = 0; i < totalCards; ++i ) {
-            const sizerID = onGetSizer ? onGetSizer ( i ) : 0;
-            const cardSize = cardSizes [ sizerID ];
+            const sizerName = onGetSizerName ? onGetSizerName ( i ) : 0;
+            const cardSize = cardSizes [ sizerName ];
             if ( !cardSize ) continue;
 
             if ( !pushCard ( cardSize, i )) {
@@ -149,14 +148,14 @@ export const InfiniteScrollView = ( props ) => {
 
     const sizerList = [];
     if ( !cardSizes ) {
-        for ( let i in sizers ) {
+        for ( let sizerName in sizers ) {
             sizerList.push (
                 <div
-                    key = { `sizer${ i }` } 
-                    ref = { cardRefs [ i ]}
+                    key = { `sizer:${ sizerName }` } 
+                    ref = { sizerRefs [ sizerName ]}
                     style = {{ visibility: 'hidden', float: 'left' }}
                 >
-                    { sizers [ i ]}
+                    { sizers [ sizerName ]}
                 </div>
             );
         }
