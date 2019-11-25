@@ -8,9 +8,9 @@ const CARD_MARGIN = 6;
 const TOTAL_CARDS = 1000;
 
 const cardArray = [];
-for ( let i = 0; i < TOTAL_CARDS; ++i) {
+for ( let i = 0; i < TOTAL_CARDS; ++i ) {
     cardArray.push (
-        <svg width = { CARD_WIDTH } height = { CARD_HEIGHT } key = { i }>
+        <svg width = { CARD_WIDTH } height = { CARD_HEIGHT }>
             <rect width = { CARD_WIDTH - CARD_MARGIN } height = { CARD_HEIGHT - CARD_MARGIN } fill = "blue" stroke = "rgb( 0,0,0 )" strokeWidth = "3" />
         </svg>
     )
@@ -20,11 +20,11 @@ const getCard = ( i ) => {
     return cardArray [ i ];
 }
 
-export const InfiniteScrollScreen = () => {
+export const FixedRowScrollScreen = () => {
     return (
         <div style = {{ height: '100vh' }}>
             <InfiniteScrollView 
-                onGetAsset  = { getCard }
+                onGetCard   = { getCard }
                 totalCards  = { cardArray.length }
             />
         </div>

@@ -1,95 +1,204 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import React, { useState, useRef, useEffect, useLayoutEffect }  from 'react';
+import React, { Fragment, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Link }                                                 from 'react-router-dom';
+import AutoSizer                                                from 'react-virtualized-auto-sizer';
+import { FixedSizeList, VariableSizeList }                      from 'react-window';
 import { Dropdown, Grid, Icon, List, Menu, Card, Group }        from 'semantic-ui-react';
 
-import { FixedSizeList }                                        from 'react-window';
-import AutoSizer                                                from 'react-virtualized-auto-sizer';
-import InfiniteLoader                                           from 'react-window-infinite-loader';
-
-const CARD_PADDING = 4; // for whatever reason, cards get wrapped in the row even if they "fit" (according to the measurements).
+const CARD_PADDING = 0;
+const ROW_MARGIN = 20; // TODO: would be nicer to get the scroll size dynamically
 
 //================================================================//
 // InfiniteScrollView
 //================================================================//
 export const InfiniteScrollView = ( props ) => {
 
-    const [ rowWidth, setRowWidth ]         = useState ( 0 );
-    const [ cardWidth, setCardWidth ]       = useState ( 0 );
-    const [ cardHeight, setCardHeight ]     = useState ( 0 );
+    const { onGetCard, onGetSizer, totalCards } = props;
 
-    const hasDimensions = (( rowWidth > 0 ) && ( cardWidth > 0 ) && ( cardHeight > 0 )); 
+    const sizers = props.sizers || [ onGetCard ( 0 )];
 
-    const getAsset      = props.onGetAsset;
-    const totalCards    = hasDimensions ? props.totalCards : 1;
-    const cardsPerRow   = hasDimensions ? Math.floor ( rowWidth / cardWidth ) : 1;
-    const totalRows     = hasDimensions ? Math.ceil ( totalCards / cardsPerRow ) : 1;    
-
-    const onResize = ({ width, height }) => {
-        setRowWidth ( width );
+    const cardRefs = [];
+    for ( let i in sizers ) {
+        cardRefs.push ( useRef ());
     }
 
-    const rowFactory = ({ index, style }) => {
+    const [ rowWidth, setRowWidth ]         = useState ( 0 );
+    const [ cardSizes, setCardSizes ]       = useState ( false );
+    const [ rowMetrics, setRowMetrics ]     = useState ( false );
+    const listRef                           = useRef ();
 
-        let cardRef = null;
+    useLayoutEffect (() => {
 
-        if ( !hasDimensions ) {
-            cardRef = useRef ();
-            useLayoutEffect (() => {
+        const cardRef = cardRefs [ 0 ];
+
+        if ( !cardSizes ) {
+
+            const sizes = [];
+
+            for ( let i in cardRefs ) {
+                const cardRef = cardRefs [ i ];
                 if ( cardRef.current ) {
-                    // use the offset/outer width
-                    setCardWidth ( cardRef.current.offsetWidth + CARD_PADDING );
-                    setCardHeight ( cardRef.current.offsetHeight + CARD_PADDING );
+                    sizes [ i ] = {
+                        width: cardRef.current.offsetWidth + CARD_PADDING,
+                        height: cardRef.current.offsetHeight + CARD_PADDING,
+                    };
                 }
+            }
+            setCardSizes ( sizes );
+        }
+    });
+
+    const recalculate = ( rowMetrics === false ) || ( rowMetrics.width != rowWidth );
+
+    if ( recalculate && cardSizes && ( rowWidth > 0 )) {
+
+        const rows = [];
+        let fixedheight = true;
+        let height = false;
+
+        const nextRow = ( cardSize, i ) => {
+            rows.push ({
+                cards:      [ i ],
+                width:      cardSize.width,
+                height:     cardSize.height,
             });
         }
 
-        let cards = [];
-        for ( let i = 0; i < cardsPerRow; ++i ) {
-            const assetID = i + ( index * cardsPerRow );
-            if ( assetID < totalCards ) {
-                cards.push (
-                    <div
-                        style = {{ float: 'left' }}
-                        ref = {( i === 0 ) ? cardRef : null }
-                        key = { assetID }
-                    >
-                        { getAsset ( assetID )}
-                    </div>
-                );
+        const pushCard = ( cardSize, i ) => {
+            const row = rows [ rows.length - 1 ];
+            if ( !row ) return false;
+            if ( row.height !== cardSize.height ) return false;
+            if (( row.width + cardSize.width ) > rowWidth ) return false;
+            row.cards.push ( i );
+            row.width += cardSize.width;
+            return true;
+        }
+
+        for ( let i = 0; i < totalCards; ++i ) {
+            const sizerID = onGetSizer ? onGetSizer ( i ) : 0;
+            const cardSize = cardSizes [ sizerID ];
+            if ( !cardSize ) continue;
+
+            if ( !pushCard ( cardSize, i )) {
+                nextRow ( cardSize, i );
+            }
+
+            if ( height === false ) {
+                height = cardSize.height;
+            }
+
+            if ( height !== cardSize.height ) {
+                fixedheight = false;
             }
         }
 
-        let centerFromLeft = hasDimensions ? ( rowWidth - ( cardsPerRow * cardWidth )) / 2 : 0;
+        setRowMetrics ({
+            rows:           rows,
+            width:          rowWidth,
+            fixedHeight:    fixedheight ? height : false,
+        });
+    }
+
+    const getRowHeight = ( index ) => {
+        return rowMetrics ? rowMetrics.rows [ index ].height : 0;
+    }
+
+    const onResize = ({ width, height }) => {
+        if ( listRef.current ) {
+            listRef.current.resetAfterIndex ( 0, false );
+        }
+        setRowWidth ( width - ROW_MARGIN );
+    }
+
+    const rowFactory = ( props ) => {
+
+        const { index, style } = props;
+        const row = rowMetrics.rows [ index ];
+
+        let cards = [];
+        for ( let cardID of row.cards ) {
+            cards.push (
+                <div
+                    key = { cardID }
+                    style = {{ display: 'inline-block' }}
+                >
+                    { onGetCard ( cardID )}
+                </div>
+            );
+        }
+
+        const rowHeight = getRowHeight ( index );
 
         return (
-            <div style = { style }>
+            <div
+                style = { style }
+            >
                 <div style = {{
-                    float: 'left',
-                    position: 'relative',
-                    left: centerFromLeft,
+                    height: rowHeight,
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
                 }}>
-                    { cards }
+                    <div>
+                        { cards }
+                    </div>
                 </div>
             </div>
         );
     }
 
-    return (
-        <AutoSizer
-            onResize = { onResize }
-        >
-            {({ width, height }) => (
-                <FixedSizeList
-                    height = { height }
-                    itemCount = { totalRows }
-                    itemSize = { hasDimensions ? cardHeight : height }
-                    width = { width }
+    const sizerList = [];
+    if ( !cardSizes ) {
+        for ( let i in sizers ) {
+            sizerList.push (
+                <div
+                    key = { `sizer${ i }` } 
+                    ref = { cardRefs [ i ]}
+                    style = {{ visibility: 'hidden', float: 'left' }}
                 >
-                    { rowFactory }
-                </FixedSizeList>
-            )}
-        </AutoSizer>
+                    { sizers [ i ]}
+                </div>
+            );
+        }
+    }
+
+    return (
+        <Fragment>
+            { sizerList }
+            <AutoSizer
+                onResize = { onResize }
+            >
+                {({ width, height }) => (
+                    <If condition = { rowMetrics }>
+                        <Choose>
+
+                            <When condition = { rowMetrics.fixedHeight !== false }>
+                                <FixedSizeList
+                                    height = { height }
+                                    itemCount = { rowMetrics.rows.length }
+                                    itemSize = { rowMetrics.fixedHeight }
+                                    width = { width }
+                                >
+                                    { rowFactory }
+                                </FixedSizeList>
+                            </When>
+
+                            <Otherwise>
+                                <VariableSizeList
+                                    ref = { listRef }
+                                    height = { height }
+                                    itemCount = { rowMetrics.rows.length }
+                                    itemSize = { getRowHeight }
+                                    width = { width }
+                                >
+                                    { rowFactory }
+                                </VariableSizeList>
+                            </Otherwise>
+
+                        </Choose>
+                    </If>
+                )}
+            </AutoSizer>
+        </Fragment>
     );
 }
