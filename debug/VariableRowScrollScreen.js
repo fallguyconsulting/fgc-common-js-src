@@ -42,7 +42,7 @@ const getCard = ( i ) => {
     return cards [ cardArray [ i ]];
 }
 
-const getSizer = ( i ) => {
+const getSizerName = ( i ) => {
     return cardArray [ i ];
 }
 
@@ -50,10 +50,10 @@ export const VariableRowScrollScreen = () => {
     return (
         <div style = {{ height: '100vh' }}>
             <InfiniteScrollView 
-                onGetCard   = { getCard }
-                sizers      = { cards }
-                onGetSizer  = { getSizer }
-                totalCards  = { cardArray.length }
+                onGetCard           = { getCard }
+                sizers              = { cards }
+                onGetSizerName      = { getSizerName }
+                totalCards          = { cardArray.length }
             />
         </div>
     );
