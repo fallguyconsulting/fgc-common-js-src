@@ -174,35 +174,37 @@ export const InfiniteScrollView = ( props ) => {
                 onResize = { onResize }
             >
                 {({ width, height }) => (
-                    <If condition = { rowMetrics }>
-                        <Choose>
+                    <div onClick = { props.onClick }>
+                        <If condition = { rowMetrics }>
+                            <Choose>
 
-                            <When condition = { rowMetrics.fixedHeight !== false }>
-                                <FixedSizeList
-                                    ref = { listRef }
-                                    height = { height }
-                                    itemCount = { rowMetrics.rows.length }
-                                    itemSize = { rowMetrics.fixedHeight }
-                                    width = { width }
-                                >
-                                    { rowFactory }
-                                </FixedSizeList>
-                            </When>
+                                <When condition = { rowMetrics.fixedHeight !== false }>
+                                    <FixedSizeList
+                                        ref = { listRef }
+                                        height = { height }
+                                        itemCount = { rowMetrics.rows.length }
+                                        itemSize = { rowMetrics.fixedHeight }
+                                        width = { width }
+                                    >
+                                        { rowFactory }
+                                    </FixedSizeList>
+                                </When>
 
-                            <Otherwise>
-                                <VariableSizeList
-                                    ref = { listRef }
-                                    height = { height }
-                                    itemCount = { rowMetrics.rows.length }
-                                    itemSize = { getRowHeight }
-                                    width = { width }
-                                >
-                                    { rowFactory }
-                                </VariableSizeList>
-                            </Otherwise>
+                                <Otherwise>
+                                    <VariableSizeList
+                                        ref = { listRef }
+                                        height = { height }
+                                        itemCount = { rowMetrics.rows.length }
+                                        itemSize = { getRowHeight }
+                                        width = { width }
+                                    >
+                                        { rowFactory }
+                                    </VariableSizeList>
+                                </Otherwise>
 
-                        </Choose>
-                    </If>
+                            </Choose>
+                        </If>
+                    </div>
                 )}
             </AutoSizer>
         </Fragment>
