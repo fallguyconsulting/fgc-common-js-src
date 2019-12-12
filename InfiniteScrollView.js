@@ -16,6 +16,12 @@ export const InfiniteScrollView = ( props ) => {
 
     const { onGetCard, onGetSizerName, totalCards } = props;
 
+    if ( totalCards === 0 ) {
+        return (
+            <div/>
+        );
+    }
+
     const sizers = props.sizers || [ onGetCard ( 0 )];
 
     const sizerRefs = {};
@@ -47,7 +53,7 @@ export const InfiniteScrollView = ( props ) => {
         }
     });
 
-    const recalculate = ( rowMetrics === false ) || ( rowMetrics.width != rowWidth );
+    const recalculate = ( rowMetrics === false ) || ( rowMetrics.width != rowWidth ) || ( rowMetrics.totalCards != totalCards );
 
     if ( recalculate && cardSizes && ( rowWidth > 0 )) {
 
@@ -94,6 +100,7 @@ export const InfiniteScrollView = ( props ) => {
         setRowMetrics ({
             rows:           rows,
             width:          rowWidth,
+            totalCards:     totalCards,
             fixedHeight:    fixedheight ? height : false,
         });
     }
@@ -172,6 +179,7 @@ export const InfiniteScrollView = ( props ) => {
 
                             <When condition = { rowMetrics.fixedHeight !== false }>
                                 <FixedSizeList
+                                    ref = { listRef }
                                     height = { height }
                                     itemCount = { rowMetrics.rows.length }
                                     itemSize = { rowMetrics.fixedHeight }
