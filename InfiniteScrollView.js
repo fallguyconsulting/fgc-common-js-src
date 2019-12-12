@@ -180,7 +180,6 @@ export const InfiniteScrollView = ( props ) => {
 
                                 <When condition = { rowMetrics.fixedHeight !== false }>
                                     <FixedSizeList
-                                        ref = { listRef }
                                         height = { height }
                                         itemCount = { rowMetrics.rows.length }
                                         itemSize = { rowMetrics.fixedHeight }
