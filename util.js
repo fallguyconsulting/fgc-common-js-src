@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import * as storage             from './storage';
 import { extendObservable, isObservable, observe } from 'mobx';
 import { deepObserve }          from 'mobx-utils';
 import React                    from 'react';
@@ -50,7 +51,7 @@ export function lesser ( x, y ) {
 }
 
 //----------------------------------------------------------------//
-export function observeField ( container, field, callback ) {
+export function observeField ( owner, field, callback ) {
 
     let valueDisposer;
 
@@ -58,14 +59,14 @@ export function observeField ( container, field, callback ) {
 
         valueDisposer && valueDisposer (); // not strictly necessary, but why not?
 
-        if ( isObservable ( container [ field ])) {
-            valueDisposer = deepObserve ( container [ field ], callback );
+        if ( isObservable ( owner [ field ])) {
+            valueDisposer = deepObserve ( owner [ field ], callback );
         }
     }
 
     setValueObserver ();
 
-    let fieldDisposer = observe ( container, field, ( change ) => {
+    let fieldDisposer = observe ( owner, field, ( change ) => {
         setValueObserver ();
         callback ( change );
     });

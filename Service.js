@@ -6,29 +6,15 @@ import React            from 'react';
 import { Redirect }     from 'react-router-dom';
 
 //================================================================//
-// Store
+// Service
 //================================================================//
 export class Service {
 
     //----------------------------------------------------------------//
     constructor () {
 
-        this.disposeObservers ();
-
         this.revocables = new Map (); // need to use a propet set to contain objects
         this.revoked = false;
-    }
-
-    //----------------------------------------------------------------//
-    disposeObservers () {
-
-        if ( this.observerDisposers ) {
-
-            for ( let key in this.observerDisposers ) {
-                this.observerDisposers [ key ]();
-            }
-        }
-        this.observerDisposers = {};
     }
 
     //----------------------------------------------------------------//

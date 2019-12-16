@@ -36,4 +36,5 @@ module.exports = {
     useService:                     require ( './Service.js' ).useService,
     Service:                        require ( './Service.js' ).Service,
     SingleColumnContainerView:      require ( './SingleColumnContainerView.js' ).SingleColumnContainerView,
+    StorageContext:                 require ( './StorageContext.js' ).StorageContext,
 };
