@@ -6,40 +6,42 @@ import React            from 'react';
 import { Redirect }     from 'react-router-dom';
 
 //================================================================//
-// Service
+// RevocableContext
 //================================================================//
-export class Service {
+export class RevocableContext {
 
     //----------------------------------------------------------------//
     constructor () {
 
         this.revocables = new Map (); // need to use a propet set to contain objects
-        this.revoked = false;
+        this.finalized = false;
     }
 
     //----------------------------------------------------------------//
-    isRevoked () {
-        return this.revoked;
+    finalize () {
+
+        this.finalized = true;
+        this.revokeAll ();
     }
 
     //----------------------------------------------------------------//
-    revocableAll ( promises ) {
-        return this.revocablePromise ( Promise.all ( promises ));
+    all ( promises ) {
+        return this.promise ( Promise.all ( promises ));
     }
 
     //----------------------------------------------------------------//
-    revocableFetch ( input, init, timeout ) {
-        return this.revocablePromise ( fetch ( input, init ), timeout );
+    fetch ( input, init, timeout ) {
+        return this.promise ( fetch ( input, init ), timeout );
     }
 
     //----------------------------------------------------------------//
-    revocableFetchJSON ( input, init, timeout ) {
-        return this.revocableFetch ( input, init, timeout )
-            .then ( response => this.revocablePromise ( response.json ()));
+    fetchJSON ( input, init, timeout ) {
+        return this.fetch ( input, init, timeout )
+            .then ( response => this.promise ( response.json ()));
     }
 
     //----------------------------------------------------------------//
-    revocablePromise ( promise, timeout ) {
+    promise ( promise, timeout ) {
 
         let isCancelled = false;
         let timer;
@@ -88,17 +90,17 @@ export class Service {
     };
 
     //----------------------------------------------------------------//
-    revocablePromiseWithBackoff ( makePromise, wait, asService, step, max, retries ) {
+    promiseWithBackoff ( makePromise, wait, asService, step, max, retries ) {
 
         step = step || 2;
         retries = retries || 0;
         max = typeof ( max ) == 'number' ? ( max > 0 ? max : false ) : wait * 10;
 
-        this.revocablePromise ( makePromise ())
+        this.promise ( makePromise ())
 
         .then (() => {
             if ( asService ) {
-                this.revocableTimeout (() => { this.revocablePromiseWithBackoff ( makePromise, wait, asService, step, max )}, wait );
+                this.timeout (() => { this.promiseWithBackoff ( makePromise, wait, asService, step, max )}, wait );
             }
         })
         
@@ -112,16 +114,16 @@ export class Service {
 
             console.log ( 'RETRY:', retries, retryDelay );
 
-            this.revocableTimeout (() => { this.revocablePromiseWithBackoff ( makePromise, wait, asService, step, max, retries )}, retryDelay );
+            this.timeout (() => { this.promiseWithBackoff ( makePromise, wait, asService, step, max, retries )}, retryDelay );
         },
 
         wait );
     }
 
     //----------------------------------------------------------------//
-    revocableTimeout ( callback, delay ) {
+    timeout ( callback, delay ) {
         
-        if ( this.revoked ) return;
+        if ( this.finalized ) return;
 
         let timeout = setTimeout (() => {
             this.revocables.delete ( timeout );
@@ -151,12 +153,5 @@ export class Service {
             revoke ();
         });
         this.revocables.clear ();
-    }
-
-    //----------------------------------------------------------------//
-    finalize () {
-
-        this.revoked = true;
-        this.revokeAll ();
     }
 }

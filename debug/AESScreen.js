@@ -1,7 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { Service, useService }          from '../Service';
 import { SingleColumnContainerView }    from '../SingleColumnContainerView'
 import * as crypto                      from '../crypto';
 import * as hooks                       from '../hooks';
@@ -14,7 +13,7 @@ import { Button, Divider, Dropdown, Form, Grid, Header, Icon, Modal, Segment } f
 //================================================================//
 // AESScreenController
 //================================================================//
-class AESScreenController extends Service {
+class AESScreenController {
 
     @observable message         = '';
     @observable password        = '';
@@ -23,7 +22,10 @@ class AESScreenController extends Service {
 
     //----------------------------------------------------------------//
     constructor ( appState ) {
-        super ();
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
     }
 
     //----------------------------------------------------------------//

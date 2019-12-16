@@ -34,8 +34,7 @@ module.exports = {
     util:               require ( './util.js' ),
 
     InfiniteScrollView:             require ( './InfiniteScrollView.js' ).InfiniteScrollView,
-    useService:                     require ( './Service.js' ).useService,
-    Service:                        require ( './Service.js' ).Service,
+    RevocableContext:               require ( './RevocableContext.js' ).RevocableContext,
     SingleColumnContainerView:      require ( './SingleColumnContainerView.js' ).SingleColumnContainerView,
     StorageContext:                 require ( './StorageContext.js' ).StorageContext,
 };

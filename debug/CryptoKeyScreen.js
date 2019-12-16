@@ -1,7 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { Service, useService }          from '../Service';
 import { SingleColumnContainerView }    from '../SingleColumnContainerView'
 import * as crypto                      from '../crypto';
 import * as hooks                       from '../hooks';
@@ -22,7 +21,7 @@ const DEFAULT_URL = 'http://localhost:9090/test/signature';
 //================================================================//
 // CryptoKeyScreenController
 //================================================================//
-class CryptoKeyScreenController extends Service {
+class CryptoKeyScreenController {
 
     @observable phraseOrKey     = '';
     @observable message         = '';
@@ -35,8 +34,13 @@ class CryptoKeyScreenController extends Service {
 
     //----------------------------------------------------------------//
     constructor ( appState ) {
-        super ();
+        this.revocable = new RevocableContext ();
         this.setPhraseOrKey ( DEFAULT_KEY );
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
+        this.revocable.finalize ();
     }
 
     //----------------------------------------------------------------//
@@ -78,7 +82,7 @@ class CryptoKeyScreenController extends Service {
         };
 
         try {
-            const result = await this.revocableFetchJSON ( this.url, {
+            const result = await this.revocable.fetchJSON ( this.url, {
                 method : 'POST',
                 headers : { 'content-type': 'application/json' },
                 body : JSON.stringify ( envelope )

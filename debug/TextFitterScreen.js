@@ -1,7 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
 import * as hooks                           from '../hooks';
-import { Service, useService }              from '../Service';
 import { TextFitter, FONT_FACE, JUSTIFY }   from '../textLayout';
 import handlebars                           from 'handlebars';
 import { action, computed, observable, }    from 'mobx';
@@ -56,13 +55,12 @@ const FONTS = {
 //================================================================//
 // TextFitterService
 //================================================================//
-class TextFitterService extends Service {
+class TextFitterService {
 
     @observable svg = [];
 
     //----------------------------------------------------------------//
     constructor ( values ) {
-        super ();
         this.fetchFontFiles ();
         this.resources = {
             fonts: {},
@@ -79,7 +77,7 @@ class TextFitterService extends Service {
 
         const fetchFont = async ( url ) => {
             if ( !url ) return false;
-            const response  = await this.revocableFetch ( url );
+            const response  = await this.revocable.fetch ( url );
             const buffer    = await response.arrayBuffer ();
             return opentype.parse ( buffer );
         }
@@ -102,6 +100,10 @@ class TextFitterService extends Service {
             }
         }
         this.testFonts ();
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
     }
 
     //----------------------------------------------------------------//

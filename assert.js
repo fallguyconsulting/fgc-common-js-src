@@ -2,5 +2,10 @@
 
 //----------------------------------------------------------------//
 export function assert ( condition, error ) {
-    if ( !condition ) throw error || 'Assetion failed.'
+
+    if ( !condition ) {
+        console.log ( error );
+        console.trace ();
+        throw error || 'Assetion failed.'
+    }
 }

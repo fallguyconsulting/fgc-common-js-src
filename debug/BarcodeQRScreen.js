@@ -1,7 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { Service, useService }          from '../Service';
 import { SingleColumnContainerView }    from '../SingleColumnContainerView'
 import * as qrcode                      from '../qrcode';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';

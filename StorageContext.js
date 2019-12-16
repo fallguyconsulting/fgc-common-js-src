@@ -1,6 +1,5 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import { Service }                          from './Service';
 import * as storage                         from './storage';
 import * as util                            from './util';
 import { extendObservable, runInAction }    from 'mobx';

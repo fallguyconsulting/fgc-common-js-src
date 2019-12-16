@@ -1,7 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
 import * as hooks                           from '../hooks';
-import { Service, useService }              from '../Service';
 import { action, computed, observable }     from "mobx";
 import { observer }                         from "mobx-react";
 import React                                from 'react';
@@ -9,14 +8,17 @@ import React                                from 'react';
 //================================================================//
 // MobXScreenStore
 //================================================================//
-class MobXScreenStore extends Service {
+class MobXScreenStore {
 
     @observable index = 0;
 
     //----------------------------------------------------------------//
     constructor ( values ) {
-        super ();
         this.values = values;
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
     }
 
     //----------------------------------------------------------------//
