@@ -1,5 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
+import * as hooks                           from '../hooks';
 import { Service, useService }              from '../Service';
 import { action, computed, observable }     from "mobx";
 import { observer }                         from "mobx-react";
@@ -37,7 +38,7 @@ class MobXScreenStore extends Service {
 //================================================================//
 export const MobXScreen = observer (( props ) => {
 
-    const store = useService (() => new MobXScreenStore ([ 'foo', 'doop', 'moop' ]));
+    const store = hooks.useFinalizable (() => new MobXScreenStore ([ 'foo', 'doop', 'moop' ]));
 
     const onKeyDown = ( e ) => {
         if ( e.keyCode === 38 ) {

@@ -1,6 +1,5 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { Service, useService }              from '../Service';
 import { SingleColumnContainerView }        from '../SingleColumnContainerView'
 import * as excel                           from '../excel'
 import { TextFitter, FONT_FACE, JUSTIFY }   from '../textLayout';

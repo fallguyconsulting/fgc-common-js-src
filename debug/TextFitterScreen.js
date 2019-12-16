@@ -1,5 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
+import * as hooks                           from '../hooks';
 import { Service, useService }              from '../Service';
 import { TextFitter, FONT_FACE, JUSTIFY }   from '../textLayout';
 import handlebars                           from 'handlebars';
@@ -195,7 +196,7 @@ class TextFitterService extends Service {
 //================================================================//
 export const TextFitterScreen = observer (( props ) => {
 
-    const service = useService (() => new TextFitterService ());
+    const service = hooks.useFinalizable (() => new TextFitterService ());
 
     return (
         <div>

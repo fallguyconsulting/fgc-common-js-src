@@ -22,6 +22,7 @@ module.exports = {
     },
     dom:                require ( './dom.js' ),
     excel:              require ( './excel.js' ),
+    hooks:              require ( './hooks.js' ),
     pdf417:             require ( './pdf417.js' ),
     pdf417Encoder:      require ( './pdf417Encoder.js' ),
     qrcode:             require ( './qrcode.js' ),

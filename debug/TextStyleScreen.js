@@ -1,6 +1,5 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { Service, useService }              from '../Service';
 import { SingleColumnContainerView }        from '../SingleColumnContainerView'
 import * as textStyle                       from '../textStyle';
 import { action, computed, extendObservable, runInAction, observable, observe } from 'mobx';

@@ -23,12 +23,6 @@ export class Service {
     }
 
     //----------------------------------------------------------------//
-    observeMember ( name, callback ) {
-
-        this.observerDisposers [ name ] = util.observeField ( this, name, callback );
-    }
-
-    //----------------------------------------------------------------//
     revocableAll ( promises ) {
         return this.revocablePromise ( Promise.all ( promises ));
     }
@@ -141,14 +135,14 @@ export class Service {
         return timeout;
     }
 
-    // //----------------------------------------------------------------//
-    // revoke ( revocable ) {
+    //----------------------------------------------------------------//
+    revoke ( revocable ) {
 
-    //     if ( map.has ( revocable )) {
-    //         map [ revocable ]();
-    //         map.delete ( revocable );
-    //     }
-    // }
+        if ( map.has ( revocable )) {
+            map [ revocable ]();
+            map.delete ( revocable );
+        }
+    }
 
     //----------------------------------------------------------------//
     revokeAll () {
@@ -160,36 +154,9 @@ export class Service {
     }
 
     //----------------------------------------------------------------//
-    shutdown () {
+    finalize () {
 
         this.revoked = true;
         this.revokeAll ();
     }
-}
-
-//================================================================//
-// hooks
-//================================================================//
-
-//----------------------------------------------------------------//
-export function useService ( factory ) {
-
-    const serviceRef = React.useRef ();
-    serviceRef.current = serviceRef.current || factory ();
-
-    React.useEffect (
-        () => {
-
-            const current = serviceRef.current;
-
-            return () => {
-                if ( current.shutdown ) {
-                    current.shutdown ();
-                }
-            };
-        },
-        []
-    );
-
-    return serviceRef.current;
 }

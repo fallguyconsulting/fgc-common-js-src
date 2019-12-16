@@ -4,6 +4,7 @@
 import { Service, useService }          from '../Service';
 import { SingleColumnContainerView }    from '../SingleColumnContainerView'
 import * as crypto                      from '../crypto';
+import * as hooks                       from '../hooks';
 import * as util                        from '../util';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';
@@ -53,7 +54,7 @@ class AESScreenController extends Service {
 //================================================================//
 export const AESScreen = observer (( props ) => {
 
-    const controller    = useService (() => new AESScreenController ());
+    const controller    = hooks.useFinalizable (() => new AESScreenController ());
 
     return (
         <SingleColumnContainerView title = 'Test AES Encryption'>
