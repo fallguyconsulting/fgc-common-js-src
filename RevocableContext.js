@@ -13,7 +13,7 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     constructor () {
 
-        this.revocables = new Map (); // need to use a propet set to contain objects
+        this.revocables = new Map (); // need to use a proper set to hold objects as keys
         this.finalized = false;
     }
 
