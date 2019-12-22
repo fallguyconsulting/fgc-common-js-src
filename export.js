@@ -33,6 +33,8 @@ module.exports = {
     textStyle:          require ( './textStyle.js' ),
     util:               require ( './util.js' ),
 
+    ClipboardMenuItem:              require ( './ClipboardMenuItem.js' ).ClipboardMenuItem,
+    FilePickerMenuItem:             require ( './FilePickerMenuItem.js' ).FilePickerMenuItem,
     InfiniteScrollView:             require ( './InfiniteScrollView.js' ).InfiniteScrollView,
     RevocableContext:               require ( './RevocableContext.js' ).RevocableContext,
     SingleColumnContainerView:      require ( './SingleColumnContainerView.js' ).SingleColumnContainerView,
