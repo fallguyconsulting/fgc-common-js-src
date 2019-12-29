@@ -119,8 +119,7 @@ export async function loadKeyAsync ( phraseOrPEM ) {
 
     try {
         if ( bip39.validateMnemonic ( phraseOrPEM )) {
-            const key = mnemonicToKey ( phraseOrPEM );
-            return key;
+            return mnemonicToKey ( phraseOrPEM );
         }
         console.log ( 'NOT A VALID MNEMONIC' );
     }
@@ -128,6 +127,26 @@ export async function loadKeyAsync ( phraseOrPEM ) {
         console.log ( error );
     }
     
+    try {
+        const json = JSON.parse ( phraseOrPEM );
+        if ( json && json.type ) {
+
+            switch ( json.type ) {
+
+                case 'EC_PEM':
+                    phraseOrPEM = json.privateKey;
+                    console.log ( 'PEM:', phraseOrPEM );
+                    break;
+
+                case 'EC_HEX':
+                    return keyFromPrivateHex ( json.privateKey )
+            }
+        }
+    }
+    catch ( error ) {
+        console.log ( 'NOT A JSON KEY' );
+    }
+
     try {
         const key = await pemToKeyAsync ( phraseOrPEM );
 

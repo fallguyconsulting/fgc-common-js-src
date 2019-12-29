@@ -9,10 +9,31 @@ import { Button, Icon, Menu }                               from 'semantic-ui-re
 //================================================================//
 export const FilePickerMenuItem = observer (( props ) => {
 
-    const { loadFile } = props;
+    const loadFile              = props.loadFile;
+    const format                = props.format || false;
+    const accept                = props.accept || '*.*';
 
     const [ file, setFile ]                 = useState ( false );
     const filePickerRef                     = useRef ();
+
+    const loadFileWithFormat = ( picked ) => {
+        const reader = new FileReader ();
+
+        reader.onabort = () => { console.log ( 'file reading was aborted' )}
+        reader.onerror = () => { console.log ( 'file reading has failed' )}
+        reader.onload = () => { loadFile ( reader.result )}
+
+        switch ( format ) {
+
+            case 'binary':
+                reader.readAsBinaryString ( picked );
+                break;
+
+            case 'text':
+                reader.readAsText ( picked );
+                break;
+        }
+    }
 
     const onFilePickerChange = ( event ) => {
         event.stopPropagation ();
@@ -20,12 +41,14 @@ export const FilePickerMenuItem = observer (( props ) => {
         if ( picked ) {
             setFile ( picked );
             if ( loadFile ) {
-                loadFile ( picked );
+                format ? loadFileWithFormat ( picked ) : loadFile ( picked );
             }
         }
     }
 
     const hasFile = ( file !== false );
+
+    // accept = '.xls, .xlsx'
 
     return (
         <React.Fragment>
@@ -35,7 +58,7 @@ export const FilePickerMenuItem = observer (( props ) => {
                 style = {{ display:'none' }}
                 ref = { filePickerRef }
                 type = 'file'
-                accept = '.xls, .xlsx'
+                accept = { accept }
                 onChange = { onFilePickerChange }
             />
 
