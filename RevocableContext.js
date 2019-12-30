@@ -3,7 +3,6 @@
 import * as util        from './util';
 import { observe }      from 'mobx';
 import React            from 'react';
-import { Redirect }     from 'react-router-dom';
 
 //================================================================//
 // RevocableContext

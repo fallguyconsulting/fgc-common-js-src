@@ -3,8 +3,6 @@
 import * as storage             from './storage';
 import { extendObservable, isObservable, observe } from 'mobx';
 import { deepObserve }          from 'mobx-utils';
-import React                    from 'react';
-import { Redirect }             from 'react-router';
 
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
@@ -14,20 +12,9 @@ export function caselessCompare ( a, b ) {
 }
 
 //----------------------------------------------------------------//
-export function getAccountId ( props ) {
-    let accountID = props.match.params && props.match.params.accountID;
-    return accountID && ( accountID.length > 0 ) && accountID;
-}
-
-//----------------------------------------------------------------//
 export function getMatch ( props, field, fallback ) {
     let match = props.match.params && props.match.params [ field ] || '';
     return match.length > 0 ? match : ( fallback || '' );
-}
-
-//----------------------------------------------------------------//
-export function getUserId ( props ) {
-    return props.match.params && props.match.params.userID;
 }
 
 //----------------------------------------------------------------//
