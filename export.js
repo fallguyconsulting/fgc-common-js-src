@@ -26,7 +26,7 @@ module.exports = {
     pdf417:             require ( './pdf417.js' ),
     pdf417Encoder:      require ( './pdf417Encoder.js' ),
     qrcode:             require ( './qrcode.js' ),
-    randomBytes:        require ( './randomBytes.js' ),
+    randomBytes:        require ( './randomBytes.js' ).randomBytes,
     rect:               require ( './rect.js' ),
     storage:            require ( './storage.js' ),
     textLayout:         require ( './textLayout.js' ),
