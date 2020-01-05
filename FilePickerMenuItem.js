@@ -35,20 +35,22 @@ export const FilePickerMenuItem = observer (( props ) => {
         }
     }
 
+    const reloadFile = ( picked ) => {
+        if ( picked && loadFile ) {
+            format ? loadFileWithFormat ( picked ) : loadFile ( picked );
+        }
+    }
+
     const onFilePickerChange = ( event ) => {
         event.stopPropagation ();
         const picked = event.target.files.length > 0 ? event.target.files [ 0 ] : false;
         if ( picked ) {
             setFile ( picked );
-            if ( loadFile ) {
-                format ? loadFileWithFormat ( picked ) : loadFile ( picked );
-            }
+            reloadFile ( picked );
         }
     }
 
     const hasFile = ( file !== false );
-
-    // accept = '.xls, .xlsx'
 
     return (
         <React.Fragment>
@@ -71,7 +73,7 @@ export const FilePickerMenuItem = observer (( props ) => {
             <Menu.Item>
                 <Button
                     disabled = { !hasFile }
-                    onClick = {() => { loadFile && loadFile ( file )}}
+                    onClick = {() => { reloadFile ( file )}}
                 >
                     { hasFile ? file.name : 'No File Chosen' }
                 </Button>

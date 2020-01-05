@@ -13,10 +13,9 @@ export const SingleColumnContainerView = ( props ) => {
     return (
         <div style = {{ margin: '10px 0 10px 0' }}>
             <Grid
-                textAlign = "center"
-                verticalAlign = "middle"
+                centered
             >
-                <Grid.Column style={ style }>
+                <Grid.Column style = { style }>
                     <If condition = { props.title && props.title.length > 0 }>
                         <Header as="h2" color="teal" textAlign="center">
                             { props.title }

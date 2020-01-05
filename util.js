@@ -65,6 +65,12 @@ export function observeField ( owner, field, callback ) {
 }
 
 //----------------------------------------------------------------//
+export function randomInt ( max ) {
+
+    return Math.floor ( Math.random () * Math.floor ( max ));
+}
+
+//----------------------------------------------------------------//
 export function toNumberOrFalse ( val, types ) {
 
     types = types || [ 'string', 'number' ];

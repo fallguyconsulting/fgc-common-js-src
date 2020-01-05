@@ -83,8 +83,8 @@ export class RevocableContext {
         this.revocables.set ( wrappedPromise, () => {
             isCancelled = true
             clearTimeout ( timer );
-            console.log ( 'REVOKED PROMISE!' );
         });
+        
         return wrappedPromise;
     };
 
@@ -95,7 +95,7 @@ export class RevocableContext {
         retries = retries || 0;
         max = typeof ( max ) == 'number' ? ( max > 0 ? max : false ) : wait * 10;
 
-        this.promise ( makePromise ())
+        return this.promise ( makePromise ())
 
         .then (() => {
             if ( asService ) {
@@ -104,14 +104,12 @@ export class RevocableContext {
         })
         
         .catch (( error ) => {
-
+            
             console.log ( error );
             
             retries = retries + 1;
             let retryDelay = wait * Math.pow ( 2, retries );
             retryDelay = ( max && ( retryDelay < max )) ? retryDelay : max;
-
-            console.log ( 'RETRY:', retries, retryDelay );
 
             this.timeout (() => { this.promiseWithBackoff ( makePromise, wait, asService, step, max, retries )}, retryDelay );
         },
@@ -131,7 +129,6 @@ export class RevocableContext {
 
         this.revocables.set ( timeout, () => {
             clearTimeout ( timeout );
-            console.log ( 'AUTO-REVOKED TIMEOUT!' );
         });
         return timeout;
     }
