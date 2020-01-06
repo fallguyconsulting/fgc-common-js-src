@@ -10,6 +10,18 @@ import { extendObservable, runInAction }    from 'mobx';
 export class StorageContext {
 
     //----------------------------------------------------------------//
+    clear () {
+        // storage.clear ();
+        this.reset ();
+    }
+
+    //----------------------------------------------------------------//
+    constructor ( prefix ) {
+        this.storageResetters   = {};
+        this.prefix             = prefix || '';
+    }
+
+    //----------------------------------------------------------------//
     persist ( owner, memberKey, storageKey, init, load, store ) {
 
         storageKey = this.prefix + storageKey;
@@ -30,19 +42,13 @@ export class StorageContext {
 
         this.storageResetters [ storageKey ] = () => {
             runInAction (() => {
-                owner [ memberKey ] = init;
+                owner [ memberKey ] = ( typeof ( init ) === 'function' ) ? init () : init;
             });
         }
 
         if ( !hasStoredValue ) {
             persistField ();
         }
-    }
-
-    //----------------------------------------------------------------//
-    constructor ( prefix ) {
-        this.storageResetters   = {};
-        this.prefix             = prefix || '';
     }
 
     //----------------------------------------------------------------//
