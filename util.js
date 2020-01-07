@@ -83,3 +83,15 @@ export function toStringOrFalse ( val, types ) {
     types = types || [ 'string', 'number' ];
     return types.includes ( typeof ( val ))  ? String ( val ) : false;
 }
+
+//----------------------------------------------------------------//
+export function wrapLines ( str, width ) {
+
+    const lines = [];
+
+    while ( str.length ) {
+        lines.push ( str.slice ( 0, width ));
+        str = str.slice ( width )
+    }
+    return lines.join ( '\n' );
+}
