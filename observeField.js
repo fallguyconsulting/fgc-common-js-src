@@ -1,6 +1,8 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import * as storage             from './storage';
+import { extendObservable, isObservable, observe } from 'mobx';
+import { deepObserve }          from 'mobx-utils';
 
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
@@ -28,6 +30,38 @@ export function javascriptEscape ( str ) {
         .replace ( /(\r)/g, `\\r` )
         .replace ( /(\t)/g, `\\t` )
         .replace ( /(\f)/g, `\\f` );
+}
+
+//----------------------------------------------------------------//
+export function lesser ( x, y ) {
+    return x < y ? x : y;
+}
+
+//----------------------------------------------------------------//
+export function observeField ( owner, field, callback ) {
+
+    let valueDisposer;
+
+    const setValueObserver = () => {
+
+        valueDisposer && valueDisposer (); // not strictly necessary, but why not?
+
+        if ( isObservable ( owner [ field ])) {
+            valueDisposer = deepObserve ( owner [ field ], callback );
+        }
+    }
+
+    setValueObserver ();
+
+    let fieldDisposer = observe ( owner, field, ( change ) => {
+        setValueObserver ();
+        callback ( change );
+    });
+
+    return () => {
+        fieldDisposer ();
+        valueDisposer && valueDisposer ();
+    }
 }
 
 //----------------------------------------------------------------//
