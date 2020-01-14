@@ -11,7 +11,7 @@ export class StorageContext {
 
     //----------------------------------------------------------------//
     clear () {
-        // storage.clear ();
+        storage.clear ();
         this.reset ();
     }
 
