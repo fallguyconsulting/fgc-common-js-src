@@ -31,6 +31,7 @@ module.exports = {
     storage:            require ( './storage.js' ),
     textLayout:         require ( './textLayout.js' ),
     textStyle:          require ( './textStyle.js' ),
+    token:              require ( './token.js' ),
     util:               require ( './util.js' ),
 
     ClipboardMenuItem:              require ( './ClipboardMenuItem.js' ).ClipboardMenuItem,
