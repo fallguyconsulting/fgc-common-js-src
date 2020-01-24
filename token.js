@@ -6,29 +6,6 @@ import secureRandom         from 'secure-random';
 //================================================================//
 
 //----------------------------------------------------------------//
-export async function auth ( request, result, next ) {
-
-    if ( request.method === 'OPTIONS' ) {
-        next ();
-        return;
-    }
-
-    const jwt64 = request.header ( 'X-Auth-Token' ) || false;
-
-    try {
-        if ( verify ( jwt64 )) {
-            next ();
-        }
-        else {
-            result.status ( 401 ).send ({});
-        }
-    }
-    catch ( error ) {
-        next ( error );
-    }
-}
-
-//----------------------------------------------------------------//
 export function create ( username, issuer, scope, signingKeyBase64 ) {
 
     const signingKey = Buffer.from ( signingKeyBase64, 'base64' );
@@ -49,6 +26,36 @@ export function create ( username, issuer, scope, signingKeyBase64 ) {
     }
     catch ( error ) {
         console.log ( error );
+    }
+}
+
+//----------------------------------------------------------------//
+export function makeMiddleware ( signingKey, fieldForTokenSub ) {
+
+    return async ( request, result, next ) => {
+
+        if ( request.method === 'OPTIONS' ) {
+            next ();
+            return;
+        }
+
+        const jwt64 = request.header ( 'X-Auth-Token' ) || false;
+
+        try {
+            const token = verify ( jwt64, signingKey );
+            if ( token ) {
+                request.token = token;
+                if ( fieldForTokenSub ) {
+                    request [ fieldForTokenSub ] = token.body.sub;
+                }
+                next ();
+                return;
+            }
+        }
+        catch ( error ) {
+            next ( error );
+        }
+        result.status ( 401 ).send ({});
     }
 }
 
