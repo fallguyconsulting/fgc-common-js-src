@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import * as storage                         from './storage';
+import { observeField }                     from './observeField';
 import * as util                            from './util';
 import { extendObservable, runInAction }    from 'mobx';
 
@@ -38,7 +39,7 @@ export class StorageContext {
             const newVal = owner [ memberKey ];
             storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
         }
-        util.observeField ( owner, memberKey, persistField );
+        observeField ( owner, memberKey, persistField );
 
         this.storageResetters [ storageKey ] = () => {
             runInAction (() => {
