@@ -15,6 +15,7 @@ const ROW_MARGIN = 20; // TODO: would be nicer to get the scroll size dynamicall
 export const InfiniteScrollView = ( props ) => {
 
     const { onGetCard, onGetSizerName, totalCards } = props;
+    const onRowLimit = props.onRowLimit || false;
 
     if ( totalCards === 0 ) {
         return (
@@ -57,6 +58,8 @@ export const InfiniteScrollView = ( props ) => {
 
     if ( recalculate && cardSizes && ( rowWidth > 0 )) {
 
+        const maxCardsPerRow = onRowLimit && onRowLimit ( rowWidth, cardSizes ) || 0;
+
         const rows = [];
         let fixedheight = true;
         let height = false;
@@ -74,6 +77,7 @@ export const InfiniteScrollView = ( props ) => {
             if ( !row ) return false;
             if ( row.height !== cardSize.height ) return false;
             if (( row.width + cardSize.width ) > rowWidth ) return false;
+            if (( maxCardsPerRow > 0 ) && ( row.cards.length >= maxCardsPerRow )) return false;
             row.cards.push ( i );
             row.width += cardSize.width;
             return true;
