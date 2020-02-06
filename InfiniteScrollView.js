@@ -26,7 +26,7 @@ export const InfiniteScrollView = ( props ) => {
 
     const sizerRefs = {};
     for ( let sizerName in sizers ) {
-        sizerRefs [ sizerName ] = useRef ();
+        sizerRefs [ sizerName ] = props.listRef || useRef ();
     }
 
     const [ rowWidth, setRowWidth ]         = useState ( 0 );
