@@ -1,7 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import { Parser }                   from 'saxen';
-import _                            from 'lodash';
 
 //================================================================//
 // dom
@@ -10,9 +9,9 @@ import _                            from 'lodash';
 //----------------------------------------------------------------//
 export function parse ( xml, multiroot ) {
 
-    var parser = new Parser ();
+    const parser = new Parser ();
 
-    let roots = [];
+    const roots = [];
     let stack = [];
     let top = -1;
 

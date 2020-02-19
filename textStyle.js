@@ -38,8 +38,6 @@ const PARAM_NAME = {
 //----------------------------------------------------------------//
 export function parse ( text, baseStyle ) {
 
-    // text = 'foop<$$esc> doop <$#ff007f  arial           b  i 7p>boop<$>de-boop';
-
     baseStyle = baseStyle || {};
 
     let index = 0;
@@ -54,7 +52,7 @@ export function parse ( text, baseStyle ) {
             index:  buffer.length,
             style:  _.last ( styleStack ),
         });
-    }
+    };
     changeStyle ();
 
     const popStyle = () => {
@@ -62,12 +60,28 @@ export function parse ( text, baseStyle ) {
             styleStack.pop ();
             changeStyle ();
         }
-    }
+    };
 
     const pushStyle = ( style ) => {
         styleStack.push ( _.merge ( _.cloneDeep ( _.last ( styleStack )), style ));
         changeStyle ();
-    }
+    };
+
+    const skip = () => {
+        buffer += text.slice ( 0, index + 1 ) + text.slice ( index + 2, next );
+    };
+
+    const fold = () => {
+        buffer += text.slice ( 0, next );
+    };
+
+    const flush = () => {
+        buffer += text.slice ( 0, index );
+    };
+
+    const tokenize = ( match ) => {
+        return match.slice ( 2, match.length - 1 ).split ( WS_REGEX );
+    };
 
     do {
 
@@ -80,22 +94,6 @@ export function parse ( text, baseStyle ) {
             index = result.index;
             next = index + match.length;
 
-            const skip = () => {
-                buffer += text.slice ( 0, index + 1 ) + text.slice ( index + 2, next );
-            }
-
-            const fold = () => {
-                buffer += text.slice ( 0, next );
-            }
-
-            const flush = () => {
-                buffer += text.slice ( 0, index );
-            }
-
-            const tokenize = () => {
-                return match.slice ( 2, match.length - 1 ).split ( WS_REGEX );
-            }
-
             switch ( match.charAt ( 1 )) {
 
                 case '@': {
@@ -106,9 +104,9 @@ export function parse ( text, baseStyle ) {
                     }
 
                     flush ();
-                    const iconNames = tokenize ();
+                    const iconNames = tokenize ( match );
 
-                    for ( let iconName of iconNames ) {
+                    for ( const iconName of iconNames ) {
                         pushStyle ({ icon: iconName });
                         buffer += '#';
                         popStyle ();
@@ -124,7 +122,7 @@ export function parse ( text, baseStyle ) {
                     }
 
                     flush ();
-                    const style = parseStyle ( tokenize ());
+                    const style = parseStyle ( tokenize ( match ));
 
                     if ( style ) {
                         pushStyle ( style );
@@ -145,7 +143,7 @@ export function parse ( text, baseStyle ) {
             index = -1;
         }
 
-    } while ( index != -1 );
+    } while ( index !== -1 );
     
     const styledChars = [];
 
@@ -173,7 +171,7 @@ export function parse ( text, baseStyle ) {
 }
 
 //----------------------------------------------------------------//
-const parseParam = ( param ) => {
+export function parseParam ( param ) {
 
 
     let type = PARAM_TYPE.STRING;
@@ -203,7 +201,7 @@ const parseParam = ( param ) => {
 }
 
 //----------------------------------------------------------------//
-const parseStyle = ( params ) => {
+export function parseStyle ( params ) {
 
     let style = false;
     for ( let param of params ) {
@@ -231,6 +229,8 @@ const parseStyle = ( params ) => {
                     break;
                 case 'c':
                     style.hJustify = JUSTIFY.HORIZONTAL.CENTER;
+                    break;
+                default:
                     break;
             }
         }
@@ -262,6 +262,8 @@ const parseStyle = ( params ) => {
                         style.underlineWeight = paramInfo.value;
                     }
                     break;
+                default:
+                    break;
             }
         }
         else {
@@ -287,6 +289,8 @@ const parseStyle = ( params ) => {
 
                 case PARAM_TYPE.STRING:
                     style.font = param;
+                    break;
+                default:
                     break;
             }
         }

@@ -5,14 +5,8 @@ import * as rect                from './rect';
 import * as textStyle           from './textStyle';
 import * as util                from './util';
 import _                        from 'lodash';
-import * as opentype            from 'opentype.js';
 
-const DEFAULT_ICON_SVG = `<g/>`;
-
-const SVG_CIRCLE_ICON = {
-    svg:    `<rect x = '0' y = '0' width = '1' height = '1'/>`,
-    width:  1,
-};
+const DEFAULT_ICON_SVG = '<g/>';
 
 const WHITESPACE_CHAR_CODES = [
     ' '.charCodeAt ( 0 ),
@@ -32,7 +26,7 @@ export const FONT_FACE = {
 export const ICON_FIT = {
     ASCENDER:   'ascender',
     NONE:       'none',
-}
+};
 
 export const JUSTIFY = {
     HORIZONTAL: {
@@ -45,7 +39,7 @@ export const JUSTIFY = {
         CENTER:     'CENTER',
         BOTTOM:     'BOTTOM',
     },
-}
+};
 
 const DEFAULT_MIN_SCALE_STEP = 0.01;
 
@@ -54,15 +48,6 @@ const OPENTYPE_OPTIONS = {
     features:   true,
     hinting:    false,
 };
-
-//----------------------------------------------------------------//
-export const fitText = ( text, font, fontSize, x, y, width, height, hJustify, vJustify ) => {
-
-    let fitter = new TextFitter ( x, y, width, height, vJustify || JUSTIFY.VERTICAL.TOP );
-    fitter.pushSection ( text, font, fontSize, hJustify || JUSTIFY.HORIZONTAL.LEFT )
-    fitter.fit ();
-    return fitter.toSVG ();
-}
 
 //================================================================//
 // TextLine
@@ -125,9 +110,9 @@ class TextLine {
                 const x = this.cursor;
                 const y = (( ascender - height ) / 2 ) - ( ascender + ( height * iconY ));
 
-                let bounds = rect.make ( x, y, x + width, y + height );
+                const bounds = rect.make ( x, y, x + width, y + height );
 
-                if ( x === NaN ) throw 'xOff is NaN!';
+                if ( isNaN ( x )) throw 'xOff is NaN!';
 
                 this.segments.push ({
                     svg:        `<g transform='translate ( ${ x }, ${ y }) scale ( ${ scale })'>${ icon.svg }</g>`,
@@ -717,4 +702,13 @@ export class TextFitter {
 
         return svg.join ();
     }
+}
+
+//----------------------------------------------------------------//
+export function fitText ( text, font, fontSize, x, y, width, height, hJustify, vJustify ) {
+
+    const fitter = new TextFitter ( x, y, width, height, vJustify || JUSTIFY.VERTICAL.TOP );
+    fitter.pushSection ( text, font, fontSize, hJustify || JUSTIFY.HORIZONTAL.LEFT );
+    fitter.fit ();
+    return fitter.toSVG ();
 }

@@ -13,11 +13,11 @@ export function create ( username, issuer, scope, signingKeyBase64 ) {
     const signingKey = Buffer.from ( signingKeyBase64, 'base64' );
 
     try {
-        let claims = {
+        const claims = {
             iss:        issuer, // https://pancakehermit.com
             sub:        username,
             scope:      scope, // 'self, admins'
-        }
+        };
         const jwt = njwt.create ( claims, signingKey );
 
         // disable expiration (for now)
@@ -58,7 +58,7 @@ export function makeMiddleware ( signingKey, fieldForTokenSub ) {
             next ( error );
         }
         result.status ( 401 ).send ({});
-    }
+    };
 }
 
 //----------------------------------------------------------------//
@@ -70,7 +70,7 @@ export function makeSigningKeyBase64 () {
 //----------------------------------------------------------------//
 export function verify ( jwt64, signingKeyBase64 ) {
 
-    if ( typeof ( jwt64 ) != 'string' ) return false;
+    if ( typeof ( jwt64 ) !== 'string' ) return false;
     if ( jwt64.length === 0 ) return false;
 
     const signingKey = Buffer.from ( signingKeyBase64, 'base64' );

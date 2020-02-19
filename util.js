@@ -1,7 +1,5 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import * as storage             from './storage';
-
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
     return (( typeof ( a ) === 'string' ) && ( typeof ( b ) === 'string' )) ?
@@ -11,7 +9,7 @@ export function caselessCompare ( a, b ) {
 
 //----------------------------------------------------------------//
 export function getMatch ( props, field, fallback ) {
-    let match = props.match.params && props.match.params [ field ] || '';
+    const match = props.match.params && props.match.params [ field ] || '';
     return match.length > 0 ? match : ( fallback || '' );
 }
 
@@ -23,11 +21,11 @@ export function greater ( x, y ) {
 //----------------------------------------------------------------//
 export function javascriptEscape ( str ) {
     return str
-        .replace ( /(\n)/g, `\\n` )
-        .replace ( /(\")/g, `\"` )
-        .replace ( /(\r)/g, `\\r` )
-        .replace ( /(\t)/g, `\\t` )
-        .replace ( /(\f)/g, `\\f` );
+        .replace ( /(\n)/g, '\\n' )
+        .replace ( /(")/g,  '"' )
+        .replace ( /(\r)/g, '\\r' )
+        .replace ( /(\t)/g, '\\t' )
+        .replace ( /(\f)/g, '\\f' );
 }
 
 //----------------------------------------------------------------//
@@ -42,7 +40,7 @@ export function shuffle ( array ) {
     array = array.slice ();
 
     for ( let i = array.length - 1; i > 0; i-- ) {
-        let j = Math.floor ( Math.random () * ( i + 1 )); // random index from 0 to i
+        const j = Math.floor ( Math.random () * ( i + 1 )); // random index from 0 to i
         [ array [ i ], array [ j ]] = [ array [ j ], array [ i ]];
     }
     return array;
@@ -69,7 +67,7 @@ export function wrapLines ( str, width ) {
 
     while ( str.length ) {
         lines.push ( str.slice ( 0, width ));
-        str = str.slice ( width )
+        str = str.slice ( width );
     }
     return lines.join ( '\n' );
 }
