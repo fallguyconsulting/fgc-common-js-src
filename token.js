@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
+
 import njwt                 from 'njwt';
 import secureRandom         from 'secure-random';
 

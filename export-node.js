@@ -12,8 +12,12 @@ module.exports = {
     qrcode:             require ( './qrcode.js' ),
     randomBytes:        require ( './randomBytes.js' ).randomBytes,
     rect:               require ( './rect.js' ),
+    redisClient:        require ( './redisClient.js' ),
     textLayout:         require ( './textLayout.js' ),
     textStyle:          require ( './textStyle.js' ),
     token:              require ( './token.js' ),
+    usersDB:            require ( './usersDB.js' ),
+    UsersREST:          require ( './UsersREST.js' ).UsersREST,
     util:               require ( './util.js' ),
+    UtilREST:           require ( './UtilREST.js' ).UtilREST,
 };

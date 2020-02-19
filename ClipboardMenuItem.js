@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
+// Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import { observer }                                         from 'mobx-react';
 import React, { Fragment, useState, useRef }                from 'react';
