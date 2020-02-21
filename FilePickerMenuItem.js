@@ -12,6 +12,8 @@ export const FilePickerMenuItem = observer (( props ) => {
     const loadFile              = props.loadFile;
     const format                = props.format || false;
     const accept                = props.accept || '*.*';
+    const disabled              = props.disabled || false;
+    const loading               = props.loading || false;
 
     const [ file, setFile ]                 = useState ( false );
     const filePickerRef                     = useRef ();
@@ -66,8 +68,16 @@ export const FilePickerMenuItem = observer (( props ) => {
 
             <Menu.Item
                 onClick = {() => filePickerRef.current.click ()}
+                disabled = { disabled }
             >
-                <Icon name = 'folder open outline'/>
+                <Choose>
+                    <When condition = { loading }>
+                        <Icon name = 'circle notched' loading/>
+                    </When>
+                    <Otherwise>
+                        <Icon name = 'folder open outline'/>
+                    </Otherwise>
+                </Choose>
             </Menu.Item>
 
             <Menu.Item>
