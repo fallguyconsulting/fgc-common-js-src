@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import { token }                    from './token';
+import * as token                   from './token';
 import Mailchimp                    from 'mailchimp-api-v3'; // https://mailchimp.com/developer/reference/
 import nodemailer                   from 'nodemailer';
 

@@ -1,9 +1,8 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import { assert }                   from './assert';
-import * as usersDB                 from './usersDB';
 import { Mailer }                   from './Mailer';
-import { token }                    from './token';
+import * as token                   from './token';
 import express                      from 'express';
 import bcrypt                       from 'bcrypt';
 import crypto                       from 'crypto';
@@ -19,11 +18,11 @@ const VERIFIER_ACTIONS = {
 export class UsersREST {
 
     //----------------------------------------------------------------//
-    constructor ( env, templates, db ) {
+    constructor ( env, templates, usersDB ) {
         
         this.env            = env;
-        this.templayes      = templates;
-        this.db             = db;
+        this.templates      = templates;
+        this.usersDB        = usersDB;
 
         this.mailer = new Mailer ( env );
 
@@ -43,7 +42,7 @@ export class UsersREST {
             session: {
                 token:          token.create ( user.userID, 'localhost', 'self', signingKey ),
                 userID:         user.userID,
-                publicName:     usersDB.userPublicName ( user ),
+                publicName:     this.usersDB.formatUserPublicName ( user ),
                 emailMD5:       user.emailMD5,
             },
         };
@@ -55,7 +54,7 @@ export class UsersREST {
         const userID = request.params.userID;
         console.log ( 'GET USER:', userID );
 
-        const user = await usersDB.getUserAsync ( this.db, userID );
+        const user = await this.usersDB.getUserAsync ( userID );
 
         if ( user ) {
 
@@ -68,7 +67,7 @@ export class UsersREST {
                 result.json ({
                     userID:         userID,
                     emailMD5:       user.emailMD5,
-                    publicName:     usersDB.userPublicName ( user ),
+                    publicName:     this.usersDB.formatUserPublicName ( user ),
                 });
             }
         }
@@ -88,7 +87,9 @@ export class UsersREST {
             const body      = request.body;
             const email     = body.email;
             const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-            const user      = await usersDB.getUserByEmailMD5Async ( this.db, emailMD5 );
+            const user      = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+
+            console.log ( email, emailMD5, user );
 
             if ( user ) {
                 console.log ( 'FOUND USER:', user.userID );
@@ -112,6 +113,8 @@ export class UsersREST {
 
         try {
 
+            console.log ( 'POST LOGIN WITH PASSWORD RESET' );
+
             const body          = request.body;
             const verifier      = body.verifier;
             const password      = body.password;
@@ -122,11 +125,11 @@ export class UsersREST {
             const verified = token.verify ( body.verifier, this.env.SIGNING_KEY_FOR_PASSWORD_RESET );
             assert ( verified && verified.body && verified.body.sub && ( verified.body.sub === email ));
 
-            const user = await usersDB.getUserByEmailMD5Async ( this.db, emailMD5 );
+            const user = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
             assert ( user );
 
             user.password = await bcrypt.hash ( password, this.env.SALT_ROUNDS );
-            await usersDB.setUserAsync ( this.db, user );
+            await this.usersDB.setUserAsync ( user );
 
             result.json ( this.formatLoginResponse ( user, this.env.SIGNING_KEY_FOR_SESSION ));
             return;
@@ -142,6 +145,8 @@ export class UsersREST {
     async postLoginWithRegisterUserAsync ( request, result ) {
 
         try {
+
+            console.log ( 'POST LOGIN WITH REGISTER USER' );
 
             const body          = request.body;
             const verifier      = body.verifier;
@@ -162,7 +167,7 @@ export class UsersREST {
                 emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
             };
 
-            await usersDB.affirmUserAsync ( this.db, user );
+            await this.usersDB.affirmUserAsync ( user );
 
             result.json ( this.formatLoginResponse ( user, this.env.SIGNING_KEY_FOR_SESSION ));
             return;
@@ -188,7 +193,7 @@ export class UsersREST {
 
             // if already exists, send a password reset email.
             // do this for both RESET and REGISTER actions.
-            const exists = await usersDB.hasUserByEmailMD5Async ( this.db, emailMD5 );
+            const exists = await this.usersDB.hasUserByEmailMD5Async ( emailMD5 );
             if ( exists ) {
 
                 console.log ( 'SENDING PASSWORD RESET EMAIL' );

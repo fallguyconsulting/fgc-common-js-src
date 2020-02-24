@@ -16,7 +16,7 @@ module.exports = {
     textLayout:         require ( './textLayout.js' ),
     textStyle:          require ( './textStyle.js' ),
     token:              require ( './token.js' ),
-    usersDB:            require ( './usersDB.js' ),
+    UsersDB:            require ( './UsersDB.js' ).UsersDB,
     UsersREST:          require ( './UsersREST.js' ).UsersREST,
     util:               require ( './util.js' ),
     UtilREST:           require ( './UtilREST.js' ).UtilREST,

@@ -8,12 +8,14 @@ bluebird.promisifyAll ( redis );
 //----------------------------------------------------------------//
 export function init ( host, port ) {
 
-    this.client = redis.createClient ({
+    const client = redis.createClient ({
         host:   host,
         port:   port,
     });
 
-    this.client.on ( 'error', ( err ) => {
+    client.on ( 'error', ( err ) => {
         console.log ( 'ERROR: ', err );
     });
+
+    return client;
 }
