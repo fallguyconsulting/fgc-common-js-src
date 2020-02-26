@@ -8,6 +8,12 @@ export function caselessCompare ( a, b ) {
 }
 
 //----------------------------------------------------------------//
+export function dateToISOString ( date ) {
+
+    return date.toISOString ().split ( 'T' )[ 0 ];
+}
+
+//----------------------------------------------------------------//
 export function getMatch ( props, field, fallback ) {
     const match = props.match.params && props.match.params [ field ] || '';
     return match.length > 0 ? match : ( fallback || '' );
@@ -16,6 +22,15 @@ export function getMatch ( props, field, fallback ) {
 //----------------------------------------------------------------//
 export function greater ( x, y ) {
     return x > y ? x : y;
+}
+
+//----------------------------------------------------------------//
+export function indexToDate ( startDate, index ) {
+
+    let date = new Date ( startDate );
+    date.setDate ( date.getDate () + index );
+
+    return dateToISOString ( date );
 }
 
 //----------------------------------------------------------------//
