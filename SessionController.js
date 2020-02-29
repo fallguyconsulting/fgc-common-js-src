@@ -66,4 +66,10 @@ export class SessionController {
     token () {
         return this.session.token || '';
     }
+
+    //----------------------------------------------------------------//
+    @computed get
+    userID () {
+        return this.session.userID || '';
+    }
 }
