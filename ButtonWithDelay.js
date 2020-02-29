@@ -13,19 +13,24 @@ export const ButtonWithDelay = observer (( props ) => {
     const [ busy, setBusy ]     = useState ( false );
     const [ timer, setTimer ]   = useState ( false );
 
-    hooks.useFinalizer (() => {
+    const setTimerFinalizer = hooks.useFinalizer (( timer ) => {
         if ( timer ) {
             clearTimeout ( timer );
         }
     });
 
+    if ( timer && click ) {
+        props.onClick ( event );
+        setClick ( false );
+    }
+
     const handleMouse = ( event ) => {
         
         document.removeEventListener ( 'mouseup', handleMouse );
 
-        props.onClick ( event );
         const delay = props.delay || 100;
-        setTimer ( setTimeout (() => { setBusy ( false )}, delay ));
+        setTimerFinalizer ( setTimeout (() => { setBusy ( false )}, delay ));
+        props.onClick ( event );
     };
     
     const handleMouseDown = ( event ) => {
