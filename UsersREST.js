@@ -3,6 +3,7 @@
 import { assert }                   from './assert';
 import { Mailer }                   from './Mailer';
 import * as token                   from './token';
+import { UsersODBM }                from './UsersODBM';
 import express                      from 'express';
 import bcrypt                       from 'bcrypt';
 import crypto                       from 'crypto';
@@ -18,11 +19,11 @@ const VERIFIER_ACTIONS = {
 export class UsersREST {
 
     //----------------------------------------------------------------//
-    constructor ( env, templates, usersDB ) {
+    constructor ( db, env, templates ) {
         
         this.env            = env;
         this.templates      = templates;
-        this.usersDB        = usersDB;
+        this.usersDB        = new UsersODBM ( db );
 
         this.mailer = new Mailer ( env );
 
