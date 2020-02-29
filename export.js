@@ -34,6 +34,7 @@ module.exports = {
     token:              require ( './token.js' ),
     util:               require ( './util.js' ),
 
+    ButtonWithDelay:                require ( './ButtonWithDelay.js' ).ButtonWithDelay,
     ClipboardMenuItem:              require ( './ClipboardMenuItem.js' ).ClipboardMenuItem,
     FilePickerMenuItem:             require ( './FilePickerMenuItem.js' ).FilePickerMenuItem,
     InfiniteScrollView:             require ( './InfiniteScrollView.js' ).InfiniteScrollView,

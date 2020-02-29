@@ -29,3 +29,15 @@ export function useFinalizable ( factory ) {
     );
     return serviceRef.current;
 }
+
+//----------------------------------------------------------------//
+export function useFinalizer ( finalizer ) {
+
+    React.useEffect (
+        () => {
+            return finalizer;
+        },
+        []
+    );
+}
+
