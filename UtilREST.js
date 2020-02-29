@@ -30,24 +30,4 @@ export class UtilREST {
         };
         result.json ( message );
     }
-
-    //----------------------------------------------------------------//
-    static makeAdminMiddleware ( headerName, password ) {
-
-        return async ( request, result, next ) => {
-
-            if ( request.method === 'OPTIONS' ) {
-                next ();
-                return;
-            }
-
-            const header = request.header ( headerName ) || false;
-
-            if ( header === password ) {
-                next ();
-                return;
-            }
-            result.status ( 401 ).send ({});
-        };
-    }
 }

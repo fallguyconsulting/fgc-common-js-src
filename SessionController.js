@@ -21,7 +21,23 @@ export class SessionController {
     }
 
     //----------------------------------------------------------------//
+    entitlement ( entitlement, fallback ) {
+        const entitlements = this.session.entitlements || {};
+        return _.has ( entitlements, entitlement ) ? entitlements [ entitlement ] : ( fallback || false );
+    }
+
+    //----------------------------------------------------------------//
     finalize () {
+    }
+
+    //----------------------------------------------------------------//
+    getHeaders ( headers ) {
+
+        if ( this.isLoggedIn ) {
+            headers = headers ? _.clone ( headers ) : {};
+            headers [ 'X-Auth-Token' ] = this.token;
+        }
+        return headers;
     }
 
     //----------------------------------------------------------------//
