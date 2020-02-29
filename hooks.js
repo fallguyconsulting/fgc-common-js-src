@@ -31,13 +31,23 @@ export function useFinalizable ( factory ) {
 }
 
 //----------------------------------------------------------------//
-export function useFinalizer ( finalizer ) {
+export function useFinalizer ( finalizer, defaultTarget ) {
+
+    const targetRef = React.useRef ({ target: defaultTarget });
 
     React.useEffect (
         () => {
-            return finalizer;
+
+            const current = targetRef.current;
+
+            return () => {
+                finalizer ( current.target )
+            };
         },
         []
     );
+    return ( target ) => {
+        targetRef.current.target = target
+    };
 }
 
