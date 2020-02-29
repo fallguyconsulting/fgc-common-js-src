@@ -2,11 +2,13 @@
 
 import { assert }                   from './assert';
 import { Mailer }                   from './Mailer';
+import { PasswordMiddleware }       from './PasswordMiddleware';
 import * as token                   from './token';
 import { UsersODBM }                from './UsersODBM';
 import express                      from 'express';
 import bcrypt                       from 'bcrypt';
 import crypto                       from 'crypto';
+import _                            from 'lodash';
 
 const VERIFIER_ACTIONS = {
     REGISTER:   'register',
@@ -28,11 +30,18 @@ export class UsersREST {
         this.mailer = new Mailer ( env );
 
         this.router = express.Router ();
-        this.router.post    ( '/login',                 this.postLoginAsync.bind ( this ));
-        this.router.post    ( '/login/reset',           this.postLoginWithPasswordResetAsync.bind ( this ));
-        this.router.post    ( '/login/register',        this.postLoginWithRegisterUserAsync.bind ( this ));
-        this.router.get     ( '/users/:userID',         this.getUserAsync.bind ( this ));
-        this.router.post    ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
+
+        this.router.post        ( '/login',                 this.postLoginAsync.bind ( this ));
+        this.router.post        ( '/login/reset',           this.postLoginWithPasswordResetAsync.bind ( this ));
+        this.router.post        ( '/login/register',        this.postLoginWithRegisterUserAsync.bind ( this ));
+        this.router.get         ( '/users/:userID',         this.getUserAsync.bind ( this ));
+        this.router.get         ( '/users',                 this.getUsersAsync.bind ( this ));
+        this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
+
+        if ( env.SERVER_ADMIN_PASSWORD ) {
+            const middleware = new PasswordMiddleware ( 'X-Admin-Password', env.SERVER_ADMIN_PASSWORD, 'adminPassword' );
+            this.router.post ( '/admin/entitlements', middleware.withPasswordAuth (), this.postUserEntitlements.bind ( this ));
+        }
     }
 
     //----------------------------------------------------------------//
@@ -45,6 +54,7 @@ export class UsersREST {
                 userID:         user.userID,
                 publicName:     this.usersDB.formatUserPublicName ( user ),
                 emailMD5:       user.emailMD5,
+                entitlements:   user.entitlements || {},
             },
         };
     }
@@ -55,16 +65,14 @@ export class UsersREST {
         const userID = request.params.userID;
         console.log ( 'GET USER:', userID );
 
-        const user = await this.usersDB.getUserAsync ( userID );
+        const user = await this.usersDB.getUserByIDAsync ( userID );
 
         if ( user ) {
 
-            if ( request.userID ) {
-                console.log ( 'USER IS LOGGED IN' );
+            if ( request.userID === userID ) {
                 result.json ( user );
             }
             else {
-                console.log ( 'PUBLIC USER' );
                 result.json ({
                     userID:         userID,
                     emailMD5:       user.emailMD5,
@@ -73,9 +81,44 @@ export class UsersREST {
             }
         }
         else {
-            console.log ( 'DID NOT FIND USER' );
             result.json ({});
         }
+    }
+
+    //----------------------------------------------------------------//
+    async getUsersAsync ( request, result ) {
+
+        const query     = request.query || {};
+        const base      = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
+        const count     = _.has ( query, 'count' ) ? parseInt ( query.count ) : 10;
+
+        const totalUsers = await this.usersDB.getCountAsync ();
+        
+        console.log ( 'TOTAL USERS', totalUsers );
+
+        let top = base + count;
+        top = top < totalUsers ? top : totalUsers;
+
+        console.log ( base, top );
+
+        const users = [];
+        for ( let i = base; i < top; ++i ) {
+            const userID = UsersODBM.formatUserID ( i );
+            console.log ( 'USER ID:', userID );
+            const user = await this.usersDB.getUserByIDAsync ( userID );
+            console.log ( user );
+            if ( user ) {
+                users.push ({
+                    userID:         userID,
+                    emailMD5:       user.emailMD5,
+                    publicName:     this.usersDB.formatUserPublicName ( user ),
+                });
+            }
+        }
+        result.json ({
+            totalUsers:     totalUsers,
+            users:          users,
+        });
     }
 
     //----------------------------------------------------------------//
@@ -177,6 +220,43 @@ export class UsersREST {
 
             console.log ( error );
         }
+        result.status ( 401 );
+    }
+
+    //----------------------------------------------------------------//
+    async postUserEntitlements ( request, result ) {
+
+        console.log ( 'POST ENTITLEMENTS' );
+
+        try {
+
+            const body = request.body;
+            const entitlements = body.entitlements || {};
+
+            let user = false;
+            if ( body.userID ) {
+
+                user            = await this.usersDB.getUserByIDAsync ( body.userID );
+            }
+            else if ( body.email ) {
+
+                const email     = body.email;
+                const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
+                user            = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+            }            
+
+            if ( user ) {
+                console.log ( 'ENTITLEMENTS:', JSON.stringify ( entitlements, null, 4 ));
+                user.entitlements = entitlements;
+                await this.usersDB.setUserAsync ( user );
+                result.json ({ status: 'OK', user: user });
+                return;
+            }
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+        result.json ({});
         result.status ( 401 );
     }
 

@@ -32,36 +32,6 @@ export function create ( username, issuer, scope, signingKeyBase64 ) {
 }
 
 //----------------------------------------------------------------//
-export function makeMiddleware ( signingKey, fieldForTokenSub ) {
-
-    return async ( request, result, next ) => {
-
-        if ( request.method === 'OPTIONS' ) {
-            next ();
-            return;
-        }
-
-        const jwt64 = request.header ( 'X-Auth-Token' ) || false;
-
-        try {
-            const token = verify ( jwt64, signingKey );
-            if ( token ) {
-                request.token = token;
-                if ( fieldForTokenSub ) {
-                    request [ fieldForTokenSub ] = token.body.sub;
-                }
-                next ();
-                return;
-            }
-        }
-        catch ( error ) {
-            next ( error );
-        }
-        result.status ( 401 ).send ({});
-    };
-}
-
-//----------------------------------------------------------------//
 export function makeSigningKeyBase64 () {
 
     return secureRandom ( 256, { type: 'Buffer' }).toString ( 'base64' );
@@ -81,5 +51,80 @@ export function verify ( jwt64, signingKeyBase64 ) {
     catch ( error ) {
         console.log ( error );
         return false;
+    }
+}
+
+//================================================================//
+// TokenMiddleware
+//================================================================//
+export class TokenMiddleware {
+
+    //----------------------------------------------------------------//
+    constructor ( signingKey, fieldForTokenSub ) {
+
+        this.signingKey = signingKey;
+        this.fieldForTokenSub = fieldForTokenSub;
+    }
+
+    //----------------------------------------------------------------//
+    async parseTokenAsync ( request ) {
+
+        const jwt64 = request.header ( 'X-Auth-Token' ) || false;
+
+        const token = verify ( jwt64, this.signingKey );
+        if ( token ) {
+            request.token = token;
+            if ( this.fieldForTokenSub ) {
+                request [ this.fieldForTokenSub ] = token.body.sub;
+            }
+        }
+    }
+
+    //----------------------------------------------------------------//
+    withToken () {
+
+        return async ( request, result, next ) => {
+
+            console.log ( 'WITH TOKEN', request.header ( 'X-Auth-Token' ));
+
+            if ( request.method === 'OPTIONS' ) {
+                next ();
+                return;
+            }
+
+            try {
+                await this.parseTokenAsync ( request );
+                console.log ( 'TOKEN', request.token );
+                console.log ( this.fieldForTokenSub, request [ this.fieldForTokenSub ]);
+            }
+            catch ( error ) {
+                console.log ( 'NOPE', error );
+            }
+            next ();
+        };
+    }
+
+    //----------------------------------------------------------------//
+    withTokenAuth () {
+
+        return async ( request, result, next ) => {
+
+            if ( request.method === 'OPTIONS' ) {
+                next ();
+                return;
+            }
+
+            try {
+                await this.parseTokenAsync ( request );
+                if ( request.token ) {
+                    next ();
+                    return;
+                }
+            }
+            catch ( error ) {
+                next ( error );
+            }
+            result.status ( 401 ).send ({});
+        };
     }
 }

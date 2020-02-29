@@ -46,9 +46,22 @@ export class UsersODBM {
     }
 
     //----------------------------------------------------------------//
+    static formatUserID ( index ) {
+
+        return TEMPLATES.USER_ID ({ index: index });
+    }
+
+    //----------------------------------------------------------------//
     formatUserPublicName ( user ) {
 
         return user.lastname ? `${ user.firstname } ${ user.lastname.charAt ( 0 )}.` : user.firstname;
+    }
+
+    //----------------------------------------------------------------//
+    async getCountAsync () {
+
+        const count = await this.db.getAsync ( keyFor.usersCount ());
+        return count ? parseInt ( count ) : 0;
     }
 
     //----------------------------------------------------------------//

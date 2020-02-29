@@ -10,8 +10,10 @@ import * as UI                                  from 'semantic-ui-react';
 //================================================================//
 export const ButtonWithDelay = observer (( props ) => {
 
-    const [ busy, setBusy ]     = useState ( false );
-    const [ timer, setTimer ]   = useState ( false );
+    const buttonRef = useRef ();
+
+    const [ disabled, setDisabled ] = useState ( props.disabled );
+    const [ timer, setTimer ] = useState ( false );
 
     hooks.useFinalizer (() => {
         if ( timer ) {
@@ -25,12 +27,12 @@ export const ButtonWithDelay = observer (( props ) => {
 
         props.onClick ( event );
         const delay = props.delay || 100;
-        setTimer ( setTimeout (() => { setBusy ( false )}, delay ));
+        setTimer ( setTimeout (() => { setDisabled ( false )}, delay ));
     };
     
     const handleMouseDown = ( event ) => {
 
-        setBusy ( true );
+        setDisabled ( true );
         event.stopPropagation ();
         event.preventDefault ();
         document.addEventListener ( 'mouseup', handleMouse );
@@ -39,9 +41,10 @@ export const ButtonWithDelay = observer (( props ) => {
     return (
         <UI.Button
             { ...props }
+            ref             = { buttonRef }
             onMouseDown     = { handleMouseDown }
             onClick         = {() => {}}
-            disabled        = { busy || props.disabled }
+            disabled        = { disabled }
         >
             { props.children }
         </UI.Button>
