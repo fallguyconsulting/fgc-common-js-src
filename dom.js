@@ -2,16 +2,113 @@
 
 import { Parser }                   from 'saxen';
 
+export const VISIT = {
+    CONTINUE:       'CONTINUE',
+    SKIP:           'SKIP',
+    DONE:           'DONE',
+};
+
+//================================================================//
+// helpers
+//================================================================//
+
+//----------------------------------------------------------------//
+function _findElementsByPath ( root, findAll, qualifiers ) {
+
+    let results = [];
+    let more = true;
+
+    let depth = 0;
+
+    const recurse = ( element ) => {
+
+        let didMatch = false;
+        if ( _matchElement ( element, qualifiers [ depth ])) {
+            didMatch = true;
+            depth++;
+        }
+
+        if ( depth === qualifiers.length ) {
+            results.push ( element );
+            more = findAll;
+        }
+        else {
+            for ( let child of element.children ) {
+                if ( !more ) return;
+                recurse ( child );
+            }
+        }
+
+        if ( didMatch ) {
+            depth--;
+        }
+    }
+    recurse ( root );
+    return findAll ? results : results [ 0 ];
+}
+
+//----------------------------------------------------------------//
+function _matchElement ( element, qualifier ) {
+
+    switch ( typeof ( qualifier )) {
+        case 'string':      return ( element.name === qualifier );
+        case 'function':    return qualifier ( element );
+    }
+    return true;
+}
+
 //================================================================//
 // dom
 //================================================================//
 
 //----------------------------------------------------------------//
+export function findElement ( root, qualifier ) {
+
+    let result;
+    visit ( root, qualifier, ( name, attr, elem ) => {
+        result = elem;
+        return VISIT.DONE;
+    });
+    return result;
+}
+
+//----------------------------------------------------------------//
+export function findElements ( root, qualifier ) {
+
+    let results = [];
+    visit ( root, qualifier, ( name, attr, elem ) => {
+        results.push ( elem );
+        return VISIT.SKIP;
+    });
+    return results;
+}
+
+//----------------------------------------------------------------//
+export function findElementByPath ( root, ...qualifiers ) {
+
+    return _findElementsByPath ( root, false, qualifiers );
+}
+
+//----------------------------------------------------------------//
+export function findElementsByPath ( root, ...qualifiers ) {
+
+    return _findElementsByPath ( root, true, qualifiers );
+}
+
+//----------------------------------------------------------------//
+export function matchHasAttribute ( attrName ) {
+
+    return ( element ) => {
+        return _has ( element, attrName );
+    }
+}
+
+//----------------------------------------------------------------//
 export function parse ( xml, multiroot ) {
 
-    const parser = new Parser ();
+    var parser = new Parser ();
 
-    const roots = [];
+    let roots = [];
     let stack = [];
     let top = -1;
 
@@ -46,4 +143,27 @@ export function parse ( xml, multiroot ) {
 
     parser.parse ( xml );
     return multiroot ? roots : roots [ 0 ];
+}
+
+//----------------------------------------------------------------//
+export function visit ( root, qualifier, visitor ) {
+
+    let status = VISIT.CONTINUE;
+
+    const recurse = ( element ) => {
+
+        if ( _matchElement ( element, qualifier )) {
+            status = visitor ( element.name, element.attr, element ) || VISIT.CONTINUE;
+            if ( status === VISIT.SKIP ) {
+                status = VISIT.CONTINUE;
+                return;
+            }
+        }
+
+        for ( let child of element.children ) {
+            if ( status === VISIT.DONE ) return;
+            recurse ( child );
+        }
+    }
+    recurse ( root );
 }
