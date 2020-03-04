@@ -21,10 +21,11 @@ const VERIFIER_ACTIONS = {
 export class UsersREST {
 
     //----------------------------------------------------------------//
-    constructor ( db, env, templates ) {
+    constructor ( db, env, templates, entitlements ) {
         
         this.env            = env;
         this.templates      = templates;
+        this.entitlements   = entitlements || {};
         this.usersDB        = new UsersODBM ( db );
 
         this.mailer = new Mailer ( env );
@@ -46,7 +47,7 @@ export class UsersREST {
 
     //----------------------------------------------------------------//
     formatLoginResponse ( user, signingKey ) {
-
+        
         return {
             status:             'OK',
             session: {
@@ -54,7 +55,7 @@ export class UsersREST {
                 userID:         user.userID,
                 publicName:     this.usersDB.formatUserPublicName ( user ),
                 emailMD5:       user.emailMD5,
-                entitlements:   user.entitlements || {},
+                entitlements:   this.env.SERVER_ADMIN_PASSWORD ? ( user.entitlements || {}) : this.entitlements,
             },
         };
     }
