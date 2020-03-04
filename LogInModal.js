@@ -99,7 +99,7 @@ export const LogInForm = observer (( props ) => {
     const error = controller.errors.hasFormError ();
 
     return (
-        <UI.Form error = { error }>
+        <UI.Form error = { Boolean ( error )}>
             <UI.Form.Input
                 fluid
                 icon = 'mail'

@@ -56,6 +56,7 @@ export class SessionController {
     @action
     login ( session ) {
         if ( session ) {
+            console.log ( 'SESSION:', JSON.stringify ( session, null, 4 ));
             this.session = session;
             this.isLoggingIn = false;
         }

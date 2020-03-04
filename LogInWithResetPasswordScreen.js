@@ -32,7 +32,7 @@ export const LogInWithResetPasswordScreen = observer (( props ) => {
 
     return (
         <SingleColumnContainerView title = 'Reset Password'>
-            <UI.Form error = { error }>
+            <UI.Form error = { Boolean ( error )}>
 
                 <center>
                     <UI.Header as = 'h3'>{ controller.email }</UI.Header>
