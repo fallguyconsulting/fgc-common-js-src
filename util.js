@@ -1,5 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import uuidv4                       from 'uuid/v4';
+
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
     return (( typeof ( a ) === 'string' ) && ( typeof ( b ) === 'string' )) ?
@@ -11,6 +13,12 @@ export function caselessCompare ( a, b ) {
 export function dateToISOString ( date ) {
 
     return date.toISOString ().split ( 'T' )[ 0 ];
+}
+
+//----------------------------------------------------------------//
+export function generateUUIDV4 () {
+
+    return uuidv4 ();
 }
 
 //----------------------------------------------------------------//
