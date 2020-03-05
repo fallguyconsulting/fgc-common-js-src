@@ -28,6 +28,7 @@ module.exports = {
     qrcode:             require ( './qrcode.js' ),
     randomBytes:        require ( './randomBytes.js' ).randomBytes,
     rect:               require ( './rect.js' ),
+    roles:              require ( './roles.js' ),
     storage:            require ( './storage.js' ),
     textLayout:         require ( './textLayout.js' ),
     textStyle:          require ( './textStyle.js' ),

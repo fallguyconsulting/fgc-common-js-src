@@ -1,18 +1,22 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import * as roles from './roles';
+
 //================================================================//
 // SessionMiddleware
 //================================================================//
 export class SessionMiddleware {
 
     //----------------------------------------------------------------//
-    constructor ( userDB ) {
+    constructor ( usersDB ) {
 
         this.usersDB = usersDB;
     }
 
     //----------------------------------------------------------------//
-    withUser ( roles ) {
+    withUser ( requiredRoles ) {
+
+        requiredRoles = ( requiredRoles && requiredRoles.length ) ? requiredRoles : false;
 
         return async ( request, result, next ) => {
 
@@ -21,16 +25,15 @@ export class SessionMiddleware {
                 return;
             }
 
-            const header = request.header ( this.headerName ) || false;
-
             if ( request.userID ) {
 
                 const user = await this.usersDB.getUserByIDAsync ( request.userID );
                 if ( user ) {
-
-                    request.user = user;
-                    next ();
-                    return;
+                    if (( requiredRoles === false ) || ( roles.intersect ( user.roles, requiredRoles ))) {
+                        request.user = user;
+                        next ();
+                        return;
+                    }
                 }
             }
             result.status ( 401 ).send ({});

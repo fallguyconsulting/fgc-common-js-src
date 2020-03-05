@@ -3,6 +3,7 @@
 import { assert }                   from './assert';
 import { Mailer }                   from './Mailer';
 import { PasswordMiddleware }       from './PasswordMiddleware';
+import * as roles                   from './roles';
 import { SessionMiddleware }        from './SessionMiddleware';
 import * as token                   from './token';
 import { UsersODBM }                from './UsersODBM';
@@ -22,11 +23,11 @@ const VERIFIER_ACTIONS = {
 export class UsersREST {
 
     //----------------------------------------------------------------//
-    constructor ( db, env, templates, roles ) {
+    constructor ( db, env, templates, defaultRoles ) {
         
         this.env            = env;
         this.templates      = templates;
-        this.roles          = roles || [];
+        this.roles          = defaultRoles || [];
         this.usersDB        = new UsersODBM ( db );
 
         this.mailer = new Mailer ( env );
@@ -46,7 +47,7 @@ export class UsersREST {
         this.router.post (
             '/invitations',
             tokenMiddleware.withTokenAuth (),
-            sessionMiddleware.withUser (),
+            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
             this.postInvitation.bind ( this )
         );
 
@@ -138,21 +139,11 @@ export class UsersREST {
 
         try {
 
-            const user = await this.usersDB.getUserByIDAsync ( request.userID );
-            const isDeveloper = user && user.roles && user.roles.developer || false;
-            if ( !isDeveloper ) {
-                result.status ( 401 );
-                return;
-            }
+            console.log ( 'POST INVITATION' );
 
-            const roles = request.body.roles || [];
-
-            for ( let role of roles ) {
-                if ( !user.roles.includes ( role )) {
-                    result.status ( 401 );
-                    return;
-                }
-            }
+            const user = request.user;
+            let roles = request.body.roles || [];
+            roles = roles.filter (( x ) => { return request.user.roles.includes ( x )});
 
             const email         = request.body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
@@ -169,6 +160,7 @@ export class UsersREST {
             else {
 
                 await this.sendVerifierEmailAsync (
+                    email,
                     token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.INVITE_USER_EMAIL_SUBJECT,
@@ -276,12 +268,15 @@ export class UsersREST {
             const payload = JSON.parse ( verified.body.sub );
             assert ( payload.email === email );
 
+            const usersCount = await this.usersDB.getCountAsync ();
+            const roles = usersCount === 0 ? this.roles : payload.roles;
+
             const user = {
                 firstname:      firstname,
                 lastname:       lastname,
                 password:       await bcrypt.hash ( password, this.env.SALT_ROUNDS ),
                 emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
-                roles:          payload.roles,
+                roles:          roles || [],
             };
 
             await this.usersDB.affirmUserAsync ( user );
@@ -353,6 +348,7 @@ export class UsersREST {
                 console.log ( 'SENDING PASSWORD RESET EMAIL' );
 
                 await this.sendVerifierEmailAsync (
+                    email,
                     token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_PASSWORD_RESET ),
                     false,
                     this.templates.RESET_PASSWORD_EMAIL_SUBJECT,
@@ -371,6 +367,7 @@ export class UsersREST {
 
                 // user doesn't exist, so send a create user email.
                 await this.sendVerifierEmailAsync (
+                    email,
                     token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.REGISTER_USER_EMAIL_SUBJECT,
@@ -390,7 +387,7 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
-    async sendVerifierEmailAsync ( verifier, redirect, subject, textTemplate, htmlTemplate ) {
+    async sendVerifierEmailAsync ( email, verifier, redirect, subject, textTemplate, htmlTemplate ) {
         
         const context = {
             verifier: verifier,

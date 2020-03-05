@@ -17,6 +17,8 @@ module.exports = {
     textStyle:              require ( './textStyle.js' ),
     token:                  require ( './token.js' ),
     PasswordMiddleware:     require ( './PasswordMiddleware.js' ).PasswordMiddleware,
+    SessionMiddleware:      require ( './SessionMiddleware.js' ).SessionMiddleware,
+    roles:                  require ( './roles.js' ),
     UsersODBM:              require ( './UsersODBM.js' ).UsersODBM,
     UsersREST:              require ( './UsersREST.js' ).UsersREST,
     util:                   require ( './util.js' ),
