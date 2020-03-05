@@ -145,6 +145,10 @@ export class UsersREST {
             let roles = request.body.roles || [];
             roles = roles.filter (( x ) => { return request.user.roles.includes ( x )});
 
+            console.log ( 'REQUESTED ROLES:', JSON.stringify ( request.body.roles || []));
+            console.log ( 'USER ROLES:', JSON.stringify ( user.roles ));
+            console.log ( 'ROLES:', JSON.stringify ( roles ));
+
             const email         = request.body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
@@ -154,6 +158,8 @@ export class UsersREST {
 
                 const invitee = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
                 assert ( invitee.userID !== user.userID );
+
+                console.log ( 'UPDATING ROLES:', invitee.userID, JSON.stringify ( roles ));
                 invitee.roles = roles;
                 this.usersDB.setUserAsync ( invitee );
             }
