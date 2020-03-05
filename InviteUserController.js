@@ -3,40 +3,39 @@
 import { assert }                               from './assert';
 import { FormErrors }                           from './FormErrors';
 import * as hooks                               from './hooks';
+import { SessionController }                    from './SessionController';
+import { SingleColumnContainerView }            from './SingleColumnContainerView';
 import * as util                                from './util';
 import { consts }                               from 'consts';
+import jwt_decode                               from 'jwt-decode';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                             from 'mobx-react';
+import React, { useState }                      from 'react';
+import { Redirect, useLocation }                from 'react-router-dom';
+import * as UI                                  from 'semantic-ui-react';
 import validator                                from 'validator';
 
 //================================================================//
-// VerifierController
+// InviteUserController
 //================================================================//
-export class VerifierController {
+export class InviteUserController {
 
-    static ACTION = {
-        CREATE_USER:        `${ consts.SERVICE_URL }/verifier/register`,
-        RESET_PASSWORD:     `${ consts.SERVICE_URL }/verifier/reset`,
-    };
-
-    static STEP = {
-        IDLE:   'IDLE',
-        BUSY:   'BUSY',
-        DONE:   'DONE',
-    };
-
-    @observable step        = VerifierController.STEP.IDLE;
-    @observable email       = '';
-    @observable errors      = new FormErrors ();
+    @observable email               = '';
+    @observable roles               = [];
+    @observable errors              = new FormErrors ();
 
     //----------------------------------------------------------------//
     @computed get
     canSubmit () {
-        return (( !this.errors.hasErrors ) && Boolean ( this.email ));
+
+        if ( this.errors.hasErrors ) return false;
+        return Boolean ( this.email );
     }
 
     //----------------------------------------------------------------//
-    constructor () {
+    constructor ( session ) {
+
+        this.session = session;
 
         this.errors.setValidator ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL, () => {
             return validator.isEmail ( this.email );
@@ -48,43 +47,27 @@ export class VerifierController {
     }
 
     //----------------------------------------------------------------//
-    @computed get
-    isActive () {
-
-        return Boolean ( this.email );
-    }
-
-    //----------------------------------------------------------------//
     @action
-    onSubmit ( url, redirect ) {
+    onSubmit ( redirect ) {
 
-        if ( !url ) return;
         if ( !this.errors.validate ()) return;
-
-        this.setStep ( VerifierController.STEP.BUSY );
 
         ( async () => {
 
             try {
-
-                const result = await fetch ( url, {
+                const result = await fetch ( `${ consts.SERVICE_URL }/invitations`, {
                     method: 'POST',
-                    headers: { 'content-type': 'application/json' },
+                    headers: this.session.getHeaders ({ 'content-type': 'application/json' }),
                     body: JSON.stringify ({
                         email:      this.email,
+                        roles:      this.roles,
                         redirect:   redirect || '',
                     })
                 });
-
-                const json = await result.json ();
-
-                this.setEmail ( '' );
-                this.setStep ( VerifierController.STEP.DONE );
             }
             catch ( error ) {
-
                 console.log ( error );
-                this.setStep ( VerifierController.STEP.IDLE );
+                this.errors.setFormError ( FormErrors.ERRORS.WEB_CALL );
             }
         })();
     }
@@ -92,22 +75,21 @@ export class VerifierController {
     //----------------------------------------------------------------//
     @action
     reset () {
-        this.step       = VerifierController.STEP.IDLE;
-        this.email      = '';
-
+        
+        this.email = '';
         this.errors.reset ();
     }
 
     //----------------------------------------------------------------//
     @action
     setEmail ( email ) {
-        this.errors.reset ();
+        this.errors.clearError ( FormErrors.FIELDS.EMAIL );
         this.email = email;
     }
 
     //----------------------------------------------------------------//
     @action
-    setStep ( step ) {
-        this.step = step;
+    setRoles ( roles ) {
+        this.roles = roles || [];
     }
 }

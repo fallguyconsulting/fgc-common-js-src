@@ -14,7 +14,7 @@ export class SessionMiddleware {
     //----------------------------------------------------------------//
     withUser ( roles ) {
 
-        return async ( userID ) => {
+        return async ( request, result, next ) => {
 
             if ( request.method === 'OPTIONS' ) {
                 next ();

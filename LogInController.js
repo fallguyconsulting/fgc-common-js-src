@@ -121,8 +121,11 @@ export class LogInController {
                 const decoded = jwt_decode ( verifier );
                 assert ( decoded && decoded.sub );
 
+                const payload = JSON.parse ( decoded.sub );
+                assert ( payload && payload.email );
+
                 this.verifier = verifier;
-                this.setEmail ( decoded.sub );
+                this.setEmail ( payload.email );
             }
         }
         catch ( error ) {

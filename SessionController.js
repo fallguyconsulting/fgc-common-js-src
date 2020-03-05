@@ -21,9 +21,9 @@ export class SessionController {
     }
 
     //----------------------------------------------------------------//
-    entitlement ( entitlement, fallback ) {
-        const entitlements = this.session.entitlements || {};
-        return _.has ( entitlements, entitlement ) ? entitlements [ entitlement ] : ( fallback || false );
+    @computed get
+    roles () {
+        return this.session.roles || [];
     }
 
     //----------------------------------------------------------------//
