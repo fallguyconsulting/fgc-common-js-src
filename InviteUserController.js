@@ -64,6 +64,7 @@ export class InviteUserController {
                         redirect:   redirect || '',
                     })
                 });
+                this.reset ();
             }
             catch ( error ) {
                 console.log ( error );
@@ -77,6 +78,7 @@ export class InviteUserController {
     reset () {
         
         this.email = '';
+        this.roles = [];
         this.errors.reset ();
     }
 
