@@ -5,9 +5,9 @@ import handlebars                   from 'handlebars';
 
 const TEMPLATES = {
     USER_ID:                            handlebars.compile ( 'user{{ index }}' ),
-    USERS:                              handlebars.compile ( 'users.{{ userID }}' ),                                    // user string by ID
+    USERS:                              handlebars.compile ( 'users.{{ userID }}' ), // user string by ID
     USERS_BY_EMAIL_MD5:                 handlebars.compile ( 'userIDsByEmailMD5.{{ emailMD5 }}' ),
-    USERS_COUNT:                        handlebars.compile ( 'usersCount' ), // TODO: fix me later
+    USERS_COUNT:                        handlebars.compile ( 'users.count' ),
 };
 
 //----------------------------------------------------------------//

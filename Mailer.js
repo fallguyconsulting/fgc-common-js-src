@@ -42,25 +42,4 @@ export class Mailer {
         // result.json ({});
     }
 
-    //----------------------------------------------------------------//
-    async sendVerifierEmailAsync ( email, redirect, subject, textTemplate, htmlTemplate, signingKey ) {
-        
-        const context = {
-            verifier: token.create ( email, 'localhost', 'self', signingKey ),
-            redirect: redirect || '/',
-        };
-
-        const text = textTemplate ( context );
-        const html = htmlTemplate ( context );
-
-        await this.mailTransport.sendMail ({
-            from:       'nodemailer@fallguyconsulting.com',
-            to:         email,
-            subject:    subject,
-            text:       text,
-            html:       html,
-        });
-
-        return context.verifier;
-    }
 }

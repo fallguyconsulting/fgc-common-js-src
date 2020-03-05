@@ -8,14 +8,14 @@ import secureRandom         from 'secure-random';
 //================================================================//
 
 //----------------------------------------------------------------//
-export function create ( username, issuer, scope, signingKeyBase64 ) {
+export function create ( subject, issuer, scope, signingKeyBase64 ) {
 
     const signingKey = Buffer.from ( signingKeyBase64, 'base64' );
 
     try {
         const claims = {
             iss:        issuer, // https://pancakehermit.com
-            sub:        username,
+            sub:        subject,
             scope:      scope, // 'self, admins'
         };
         const jwt = njwt.create ( claims, signingKey );

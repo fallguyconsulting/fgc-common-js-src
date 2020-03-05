@@ -3,6 +3,7 @@
 import { assert }                   from './assert';
 import { Mailer }                   from './Mailer';
 import { PasswordMiddleware }       from './PasswordMiddleware';
+import { SessionMiddleware }        from './SessionMiddleware';
 import * as token                   from './token';
 import { UsersODBM }                from './UsersODBM';
 import express                      from 'express';
@@ -21,11 +22,11 @@ const VERIFIER_ACTIONS = {
 export class UsersREST {
 
     //----------------------------------------------------------------//
-    constructor ( db, env, templates, entitlements ) {
+    constructor ( db, env, templates, roles ) {
         
         this.env            = env;
         this.templates      = templates;
-        this.entitlements   = entitlements || {};
+        this.roles          = roles || [];
         this.usersDB        = new UsersODBM ( db );
 
         this.mailer = new Mailer ( env );
@@ -39,9 +40,19 @@ export class UsersREST {
         this.router.get         ( '/users',                 this.getUsersAsync.bind ( this ));
         this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
 
+        const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
+        const sessionMiddleware     = new SessionMiddleware ( this.usersDB );
+
+        this.router.post (
+            '/invitations',
+            tokenMiddleware.withTokenAuth (),
+            sessionMiddleware.withUser (),
+            this.postInvitation.bind ( this )
+        );
+
         if ( env.SERVER_ADMIN_PASSWORD ) {
             const middleware = new PasswordMiddleware ( 'X-Admin-Password', env.SERVER_ADMIN_PASSWORD, 'adminPassword' );
-            this.router.post ( '/admin/entitlements', middleware.withPasswordAuth (), this.postUserEntitlements.bind ( this ));
+            this.router.post ( '/admin/roles', middleware.withPasswordAuth (), this.postUserRoles.bind ( this ));
         }
     }
 
@@ -55,7 +66,7 @@ export class UsersREST {
                 userID:         user.userID,
                 publicName:     this.usersDB.formatUserPublicName ( user ),
                 emailMD5:       user.emailMD5,
-                entitlements:   this.env.SERVER_ADMIN_PASSWORD ? ( user.entitlements || {}) : this.entitlements,
+                roles:          this.env.SERVER_ADMIN_PASSWORD ? ( user.roles || []) : this.roles,
             },
         };
     }
@@ -123,6 +134,60 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
+    async postInvitation ( request, result ) {
+
+        try {
+
+            const user = await this.usersDB.getUserByIDAsync ( request.userID );
+            const isDeveloper = user && user.roles && user.roles.developer || false;
+            if ( !isDeveloper ) {
+                result.status ( 401 );
+                return;
+            }
+
+            const roles = request.body.roles || [];
+
+            for ( let role of roles ) {
+                if ( !user.roles.includes ( role )) {
+                    result.status ( 401 );
+                    return;
+                }
+            }
+
+            const email         = request.body.email;
+            const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
+
+            // if already exists, just apply the roles and be done with it
+            const exists = await this.usersDB.hasUserByEmailMD5Async ( emailMD5 );
+            if ( exists ) {
+
+                const invitee = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+                assert ( invitee.userID !== user.userID );
+                invitee.roles = roles;
+                this.usersDB.setUserAsync ( invitee );
+            }
+            else {
+
+                await this.sendVerifierEmailAsync (
+                    token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_REGISTER_USER ),
+                    request.body.redirect,
+                    this.templates.INVITE_USER_EMAIL_SUBJECT,
+                    this.templates.INVITE_USER_EMAIL_TEXT_BODY_TEMPLATE,
+                    this.templates.INVITE_USER_EMAIL_HTML_BODY_TEMPLATE
+                );
+            }
+            result.json ({ status: 'OK' });
+            return;
+        }
+        catch ( error ) {
+
+            console.log ( error );
+        }
+        result.json ({});
+        result.status ( 400 );
+    }
+
+    //----------------------------------------------------------------//
     async postLoginAsync ( request, result ) {
 
         console.log ( 'POST LOGIN' );
@@ -168,7 +233,10 @@ export class UsersREST {
 
             assert ( verifier );
             const verified = token.verify ( body.verifier, this.env.SIGNING_KEY_FOR_PASSWORD_RESET );
-            assert ( verified && verified.body && verified.body.sub && ( verified.body.sub === email ));
+            assert ( verified && verified.body && verified.body.sub );
+
+            const payload = JSON.parse ( verified.body.sub );
+            assert ( payload.email === email );
 
             const user = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
             assert ( user );
@@ -203,13 +271,17 @@ export class UsersREST {
 
             assert ( verifier );
             const verified = token.verify ( body.verifier, this.env.SIGNING_KEY_FOR_REGISTER_USER );
-            assert ( verified && verified.body && verified.body.sub && ( verified.body.sub === email ));
+            assert ( verified && verified.body && verified.body.sub );
+
+            const payload = JSON.parse ( verified.body.sub );
+            assert ( payload.email === email );
 
             const user = {
                 firstname:      firstname,
                 lastname:       lastname,
                 password:       await bcrypt.hash ( password, this.env.SALT_ROUNDS ),
                 emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
+                roles:          payload.roles,
             };
 
             await this.usersDB.affirmUserAsync ( user );
@@ -225,14 +297,14 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
-    async postUserEntitlements ( request, result ) {
+    async postUserRoles ( request, result ) {
 
-        console.log ( 'POST ENTITLEMENTS' );
+        console.log ( 'POST ROLES' );
 
         try {
 
             const body = request.body;
-            const entitlements = body.entitlements || {};
+            const roles = body.roles || [];
 
             let user = false;
             if ( body.userID ) {
@@ -247,8 +319,8 @@ export class UsersREST {
             }            
 
             if ( user ) {
-                console.log ( 'ENTITLEMENTS:', JSON.stringify ( entitlements, null, 4 ));
-                user.entitlements = entitlements;
+                console.log ( 'ROLES:', JSON.stringify ( roles, null, 4 ));
+                user.roles = roles;
                 await this.usersDB.setUserAsync ( user );
                 result.json ({ status: 'OK', user: user });
                 return;
@@ -280,13 +352,12 @@ export class UsersREST {
 
                 console.log ( 'SENDING PASSWORD RESET EMAIL' );
 
-                await this.mailer.sendVerifierEmailAsync (
-                    email,
+                await this.sendVerifierEmailAsync (
+                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_PASSWORD_RESET ),
                     false,
                     this.templates.RESET_PASSWORD_EMAIL_SUBJECT,
                     this.templates.RESET_PASSWORD_EMAIL_TEXT_BODY_TEMPLATE,
-                    this.templates.RESET_PASSWORD_EMAIL_HTML_BODY_TEMPLATE,
-                    this.env.SIGNING_KEY_FOR_PASSWORD_RESET,
+                    this.templates.RESET_PASSWORD_EMAIL_HTML_BODY_TEMPLATE
                 );
                 result.json ({ status: 'OK' });
                 return;
@@ -299,13 +370,12 @@ export class UsersREST {
                 console.log ( 'SENDING SIGNUP EMAIL' );
 
                 // user doesn't exist, so send a create user email.
-                await this.mailer.sendVerifierEmailAsync (
-                    email,
+                await this.sendVerifierEmailAsync (
+                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.REGISTER_USER_EMAIL_SUBJECT,
                     this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,
-                    this.templates.REGISTER_USER_EMAIL_HTML_BODY_TEMPLATE,
-                    this.env.SIGNING_KEY_FOR_REGISTER_USER,
+                    this.templates.REGISTER_USER_EMAIL_HTML_BODY_TEMPLATE
                 );
                 result.json ({ status: 'OK' });
                 return;
@@ -317,5 +387,27 @@ export class UsersREST {
         }
         result.json ({});
         result.status ( 400 );
+    }
+
+    //----------------------------------------------------------------//
+    async sendVerifierEmailAsync ( verifier, redirect, subject, textTemplate, htmlTemplate ) {
+        
+        const context = {
+            verifier: verifier,
+            redirect: redirect || '/',
+        };
+
+        const text = textTemplate ( context );
+        const html = htmlTemplate ( context );
+
+        await this.mailer.mailTransport.sendMail ({
+            from:       'nodemailer@fallguyconsulting.com',
+            to:         email,
+            subject:    subject,
+            text:       text,
+            html:       html,
+        });
+
+        return context.verifier;
     }
 }
