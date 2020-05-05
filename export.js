@@ -43,6 +43,8 @@ module.exports = {
     LogInModal:                     require ( './LogInModal.js' ).LogInModal,
     LogInWithCreateUserScreen:      require ( './LogInWithCreateUserScreen.js' ).LogInWithCreateUserScreen,
     LogInWithResetPasswordScreen:   require ( './LogInWithResetPasswordScreen.js' ).LogInWithResetPasswordScreen,
+    ProgressController:             require ( './ProgressController.js' ).ProgressController,
+    ProgressSpinner:                require ( './ProgressSpinner.js' ).ProgressSpinner,
     RevocableContext:               require ( './RevocableContext.js' ).RevocableContext,
     SessionController:              require ( './SessionController.js' ).SessionController,
     SingleColumnContainerView:      require ( './SingleColumnContainerView.js' ).SingleColumnContainerView,
