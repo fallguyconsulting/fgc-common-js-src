@@ -56,7 +56,6 @@ export class StorageContext {
 
         const persistField = () => {
             const newVal = owner [ memberKey ];
-            console.log ( 'STORAGE:', memberKey );
             storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
         }
         observeField ( owner, memberKey, persistField );
