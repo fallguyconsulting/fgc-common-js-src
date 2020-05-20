@@ -6,8 +6,6 @@ import * as textStyle           from './textStyle';
 import * as util                from './util';
 import _                        from 'lodash';
 
-const DEFAULT_ICON_SVG = '<g/>';
-
 const WHITESPACE_CHAR_CODES = [
     ' '.charCodeAt ( 0 ),
     '\t'.charCodeAt ( 0 ),
@@ -86,7 +84,9 @@ class TextLine {
 
             if ( style.icon ) {
 
-                const icon = this.icons [ style.icon ] || DEFAULT_ICON_SVG;
+                const icon = this.icons [ style.icon ] || false;
+                if ( !icon ) return; // TODO: push error icon
+
                 const iconY = style.iconY || 0;
 
                 const fitMode = style.iconFit || ICON_FIT.ASCENDER;
