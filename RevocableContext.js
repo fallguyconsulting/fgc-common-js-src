@@ -146,4 +146,9 @@ export class RevocableContext {
         });
         this.revocables.clear ();
     }
+
+    //----------------------------------------------------------------//
+    sleep ( millis ) {
+        return this.promise ( new Promise ( r => setTimeout ( r, millis )));
+    }
 }

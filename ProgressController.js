@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
+import { RevocableContext }                     from './RevocableContext';
 import { action, computed, observable }         from 'mobx';
 
 //================================================================//
@@ -19,16 +20,23 @@ export class ProgressController {
 
     //----------------------------------------------------------------//
     constructor () {
+
+        this.revocable = new RevocableContext ();
     }
 
     //----------------------------------------------------------------//
     finalize () {
+
+        this.revocable.finalize ();
     }
 
     //----------------------------------------------------------------//
     @action
-    onProgress ( message ) {
-        this.message = message;
+    onProgress ( message, millis ) {
+        if ( message ) {
+            this.message = message;
+        }
+        return this.sleep ( millis )
     }
 
     //----------------------------------------------------------------//
@@ -39,5 +47,10 @@ export class ProgressController {
         if ( this.depth <= 0 ) {
             this.message = '';
         }
+    }
+
+    //----------------------------------------------------------------//
+    sleep ( millis ) {
+        return this.revocable.sleep ( millis || 1 );
     }
 }
