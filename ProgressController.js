@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { RevocableContext }                     from './RevocableContext';
-import { action, computed, observable }         from 'mobx';
+import { RevocableContext }                             from './RevocableContext';
+import { action, computed, observable, runInAction }    from 'mobx';
 
 //================================================================//
 // ProgressController
@@ -19,9 +19,13 @@ export class ProgressController {
     }
 
     //----------------------------------------------------------------//
-    constructor () {
+    constructor ( waiting ) {
 
         this.revocable = new RevocableContext ();
+
+        runInAction (() => {
+            this.waiting = waiting === undefined ? true : waiting;
+        });
     }
 
     //----------------------------------------------------------------//
