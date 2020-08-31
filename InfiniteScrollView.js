@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import { observer }                                             from 'mobx-react';
 import React, { Fragment, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Link }                                                 from 'react-router-dom';
 import AutoSizer                                                from 'react-virtualized-auto-sizer';
@@ -12,7 +13,7 @@ const ROW_MARGIN = 20; // TODO: would be nicer to get the scroll size dynamicall
 //================================================================//
 // InfiniteScrollView
 //================================================================//
-export const InfiniteScrollView = ( props ) => {
+export const InfiniteScrollView = observer (( props ) => {
 
     const { onGetCard, onGetSizerName, totalCards } = props;
     const onRowLimit = props.onRowLimit || false;
@@ -212,4 +213,4 @@ export const InfiniteScrollView = ( props ) => {
             </AutoSizer>
         </Fragment>
     );
-}
+});
