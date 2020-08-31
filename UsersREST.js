@@ -8,7 +8,7 @@ import { SessionMiddleware }        from './SessionMiddleware';
 import * as token                   from './token';
 import { UsersODBM }                from './UsersODBM';
 import express                      from 'express';
-import bcrypt                       from 'bcrypt';
+import bcrypt                       from 'bcryptjs';
 import crypto                       from 'crypto';
 import _                            from 'lodash';
 
