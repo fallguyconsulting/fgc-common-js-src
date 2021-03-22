@@ -1,10 +1,12 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import * as base64              from './base64';
 import { randomBytes }          from './randomBytes';
 import * as bip32               from 'bip32';
 import * as bip39               from 'bip39';
 import * as bitcoin             from 'bitcoinjs-lib';
 import CryptoJS                 from 'crypto-js';
+import JSEncrypt                from 'jsencrypt';
 import keyutils                 from 'js-crypto-key-utils';
 import * as secp256k1           from 'secp256k1'
 
@@ -16,40 +18,37 @@ import * as secp256k1           from 'secp256k1'
 class Key {
 
     //----------------------------------------------------------------//
-    constructor ( ecpair ) {
-
-        this.ecpair = ecpair;
+    constructor () {
     }
 
     //----------------------------------------------------------------//
     getKeyID () {
 
-        // TODO: make this shiz case insensitive!
-        return bitcoin.crypto.sha256 ( this.getPublicHex ()).toString ( 'hex' ).toLowerCase ();
+        return this._getKeyID ();
     }
 
     //----------------------------------------------------------------//
-    getPrivate () {
+    getPrivate ( format ) {
 
-        return this.ecpair.privateKey;
+        return this._getPrivate ( format );
     }
 
     //----------------------------------------------------------------//
     getPrivateHex () {
 
-        return this.getPrivate ().toString ( 'hex' ).toUpperCase ();
+        return this._getPrivate ( 'hex' );
     }
 
     //----------------------------------------------------------------//
-    getPublic () {
+    getPublic ( format ) {
 
-        return this.ecpair.publicKey;
+        return this._getPublic ( format );
     }
 
     //----------------------------------------------------------------//
     getPublicHex () {
 
-        return this.getPublic ().toString ( 'hex' ).toUpperCase ();
+        return this._getPublic ( 'hex' );
     }
 
     //----------------------------------------------------------------//
@@ -61,15 +60,166 @@ class Key {
     //----------------------------------------------------------------//
     sign ( message ) {
 
-        const signature = this.ecpair.sign ( bitcoin.crypto.sha256 ( message ))
-        return secp256k1.signatureExport ( signature ).toString ( 'hex' ).toUpperCase ();
+        return this._sign ( message );
     }
 
     //----------------------------------------------------------------//
     verify ( message, sigHex ) {
 
+        return this._verify ( message );
+    }
+}
+
+//================================================================//
+// ECKey
+//================================================================//
+class ECKey extends Key {
+
+    //----------------------------------------------------------------//
+    constructor ( ecpair ) {
+        super ();
+
+        this.ecpair     = ecpair;
+        this.type       = 'EC';
+    }
+
+    //----------------------------------------------------------------//
+    _getKeyID () {
+
+        // TODO: make this shiz case insensitive!
+        return bitcoin.crypto.sha256 ( this.getPublicHex ()).toString ( 'hex' ).toLowerCase ();
+    }
+
+    //----------------------------------------------------------------//
+    _getPrivate ( format ) {
+
+        switch ( format ) {
+
+            case 'hex': {
+                return this.getPrivate ().toString ( 'hex' ).toUpperCase ();
+            }
+
+            case 'json': {
+                return {
+                    type:           'EC_HEX',
+                    groupName:      'secp256k1',
+                    privateKey:     this.getPrivate ( 'hex' ),
+                };
+            }
+        }
+        return this.ecpair.privateKey;
+    }
+
+    //----------------------------------------------------------------//
+    _getPublic ( format ) {
+
+        switch ( format ) {
+
+            case 'hex': {
+                return this.getPublic ().toString ( 'hex' ).toUpperCase ();
+            }
+
+            case 'json': {
+                return {
+                    type:           'EC_HEX',
+                    groupName:      'secp256k1',
+                    publicKey:      this.getPublic ( 'hex' ),
+                };
+            }
+        }
+        return this.ecpair.publicKey;
+    }
+
+    //----------------------------------------------------------------//
+    _sign ( message ) {
+
+        const signature = this.ecpair.sign ( bitcoin.crypto.sha256 ( message ))
+        return secp256k1.signatureExport ( signature ).toString ( 'hex' ).toUpperCase ();
+    }
+
+    //----------------------------------------------------------------//
+    _verify ( message, sigHex ) {
+
         const signature = Buffer.from ( sigHex, 'hex' );
         return this.ecpair.verify ( bitcoin.crypto.sha256 ( message ), signature );
+    }
+}
+
+//================================================================//
+// RSAKey
+//================================================================//
+class RSAKey extends Key {
+
+    //----------------------------------------------------------------//
+    constructor ( pem ) {
+        super ();
+
+        const rsapair = new JSEncrypt ();
+        rsapair.setPrivateKey ( pem );
+
+        if ( !rsapair.key.d ) throw 'Not an RSA PEM.'
+
+        this.rsapair = rsapair;
+        this.type = 'RSA';
+    }
+
+    //----------------------------------------------------------------//
+    _getKeyID () {
+
+        // TODO:
+        return '';
+    }
+
+    //----------------------------------------------------------------//
+    _getPrivate ( format ) {
+
+        switch ( format ) {
+
+            case 'hex': {
+                throw 'Unsupported format';
+            }
+
+            case 'json': {
+                return {
+                    type:           'RSA_PEM',
+                    privateKey:     this.rsapair.getPrivateKey (),
+                };
+            }
+        }
+        return this.rsapair;
+    }
+
+    //----------------------------------------------------------------//
+    _getPublic ( format ) {
+
+        switch ( format ) {
+
+            case 'hex': {
+                throw 'Unsupported format';
+            }
+
+            case 'json': {
+                return {
+                    type:           'RSA_PEM',
+                    publicKey:      this.rsapair.getPublicKey (),
+                };
+            }
+        }
+        return this.rsapair;
+    }
+
+    //----------------------------------------------------------------//
+    _sign ( message ) {
+
+        const sig = this.rsapair.sign ( message, CryptoJS.SHA256, 'sha256' );
+        return base64.toHex ( sig ).toLowerCase ();
+    }
+
+    //----------------------------------------------------------------//
+    _verify ( message, sigHex ) {
+
+        const signature = Buffer.from ( sigHex, 'hex' );
+        return this.rsapair.verify ( message, signature, CryptoJS.SHA256 );
     }
 }
 
@@ -108,7 +258,7 @@ export function generateMnemonic ( bytes ) {
 //----------------------------------------------------------------//
 export function keyFromPrivateHex ( privateKeyHex ) {
 
-    return new Key ( bitcoin.ECPair.fromPrivateKey ( new Buffer ( privateKeyHex, 'hex' )));
+    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( new Buffer ( privateKeyHex, 'hex' )));
 }
 
 //----------------------------------------------------------------//
@@ -134,12 +284,13 @@ export async function loadKeyAsync ( phraseOrPEM ) {
             switch ( json.type ) {
 
                 case 'EC_PEM':
+                case 'RSA_PEM':
                     phraseOrPEM = json.privateKey;
                     console.log ( 'PEM:', phraseOrPEM );
                     break;
 
                 case 'EC_HEX':
-                    return keyFromPrivateHex ( json.privateKey )
+                    return keyFromPrivateHex ( json.privateKey );
             }
         }
     }
@@ -148,6 +299,14 @@ export async function loadKeyAsync ( phraseOrPEM ) {
     }
 
     try {
+
+        try {
+            return new RSAKey ( phraseOrPEM );
+        }
+        catch ( error ) {
+            console.log ( 'NOT AN RSA PEM' );
+        }
+
         const key = await pemToKeyAsync ( phraseOrPEM );
 
         console.log ( key );
@@ -161,6 +320,7 @@ export async function loadKeyAsync ( phraseOrPEM ) {
         return key;
     }
     catch ( error ) {
+        console.log ( error );
         console.log ( 'NOT A VALID PEM' );
     }
 
@@ -202,7 +362,7 @@ export function mnemonicToKey ( mnemonic, path ) {
     const address = bitcoin.payments.p2pkh ({ pubkey: key.publicKey }).address;
     console.log ( 'address:', address );
 
-    return new Key ( key );
+    return new ECKey ( key );
 }
 
 //----------------------------------------------------------------//
@@ -210,18 +370,17 @@ export function privateHexToKey ( privateKeyHex ) {
 
     const privKey = new Buffer ( privateKeyHex, 'hex' );
 
-    return new Key ( bitcoin.ECPair.fromPrivateKey ( privKey ));
+    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( privKey ));
 }
 
 //----------------------------------------------------------------//
 export async function pemToKeyAsync ( pem ) {
 
-    const keyObj = new keyutils.Key ( 'pem', pem );
-    const jwk = await keyObj.export ( 'jwk', { outputPublic: true });
+    const keyObj    = new keyutils.Key ( 'pem', pem );
+    const jwk       = await keyObj.export ( 'jwk', { outputPublic: false });
+    const privKey   = new Buffer ( jwk.d, 'base64' );
 
-    const privKey = new Buffer ( jwk.d, 'base64' );
-
-    return new Key ( bitcoin.ECPair.fromPrivateKey ( privKey ));
+    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( privKey ));
 }
 
 //----------------------------------------------------------------//
