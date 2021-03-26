@@ -48,43 +48,63 @@ export class StorageContext {
 
         let storedValue = storage.getItem ( storageKey );
         storedValue = ( load && ( storedValue !== null )) ? load ( storedValue ) : storedValue;
-
         const hasStoredValue = storedValue !== null;
 
         const member = hasStoredValue ? storedValue : init;
-        extendObservable ( owner, {[ memberKey ]: member });
+        if ( member != null ) {
 
-        const persistField = () => {
-            const newVal = owner [ memberKey ];
-            storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
+            extendObservable ( owner, {[ memberKey ]: member });
+
+            const persistField = () => {
+                const newVal = owner [ memberKey ];
+                storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
+            }
+            observeField ( owner, memberKey, persistField );
+
+            this.storageResetters [ storageKey ] = () => {
+                runInAction (() => {
+                    owner [ memberKey ] = ( typeof ( init ) === 'function' ) ? init () : init;
+                });
+            }
+
+            this.storageReloaders [ storageKey ] = ( newVal ) => {
+                console.log ( '##### STORAGE RELOAD: #####' );
+                console.log ( memberKey, storageKey );
+                runInAction (() => {
+                    newVal = JSON.parse ( newVal );
+                    owner [ memberKey ] = ( load && ( newVal !== null )) ? load ( newVal ) : newVal;
+                });
+            }
+
+            if ( !hasStoredValue ) {
+                persistField ();
+            }
         }
-        observeField ( owner, memberKey, persistField );
+        return owner [ memberKey ]; 
+    }
 
-        this.storageResetters [ storageKey ] = () => {
-            runInAction (() => {
-                owner [ memberKey ] = ( typeof ( init ) === 'function' ) ? init () : init;
-            });
-        }
+    //----------------------------------------------------------------//
+    remove ( owner, memberKey ) {
 
-        this.storageReloaders [ storageKey ] = ( newVal ) => {
-            console.log ( '##### STORAGE RELOAD: #####' );
-            console.log ( memberKey, storageKey );
-            runInAction (() => {
-                newVal = JSON.parse ( newVal );
-                owner [ memberKey ] = ( load && ( newVal !== null )) ? load ( newVal ) : newVal;
-            });
-        }
+        storage.removeItem ( memberKey );
 
-        if ( !hasStoredValue ) {
-            persistField ();
+        if ( memberKey && owner [ memberKey ]) {
+            delete owner [ memberKey ];
+            delete this.storageResetters [ memberKey ];
+            delete this.storageReloaders [ memberKey ];       
         }
     }
 
     //----------------------------------------------------------------//
-    reset () {
+    reset ( mk ) {
 
-        for ( let memberKey in this.storageResetters ) {
-            this.storageResetters [ memberKey ]();
+        if ( mk ) {
+            this.storageResetters [ mk ]();
+        }
+        else {
+            for ( let memberKey in this.storageResetters ) {
+                this.storageResetters [ memberKey ]();
+            }
         }
     }
 }
