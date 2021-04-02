@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import { assert }                           from './assert';
 import * as storage                         from './storage';
 import { observeField }                     from './observeField';
 import * as util                            from './util';
@@ -25,7 +26,7 @@ export class StorageContext {
         this.prefix             = prefix || '';
 
         this.onStorageEvent = ( event ) => {
-            console.log ( '##### STORAGE EVENT #####' );  
+            console.log ( '##### STORAGE EVENT #####' );
             console.log ( event.key );
 
             if ( _.has ( this.storageReloaders, event.key )) {
@@ -46,39 +47,52 @@ export class StorageContext {
 
         storageKey = this.prefix + storageKey;
 
+        if ( _.has ( this.storageResetters, storageKey )) return owner [ memberKey ];
+
         let storedValue = storage.getItem ( storageKey );
         storedValue = ( load && ( storedValue !== null )) ? load ( storedValue ) : storedValue;
         const hasStoredValue = storedValue !== null;
 
         const member = hasStoredValue ? storedValue : init;
-        if ( member != null ) {
+        assert ( member != null );
 
-            extendObservable ( owner, {[ memberKey ]: member });
+        extendObservable ( owner, {[ memberKey ]: member });
 
-            const persistField = () => {
-                const newVal = owner [ memberKey ];
-                storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
-            }
-            observeField ( owner, memberKey, persistField );
+        const persistField = () => {
+            const newVal = owner [ memberKey ];
+            storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
+        }
+        observeField ( owner, memberKey, persistField );
 
-            this.storageResetters [ storageKey ] = () => {
-                runInAction (() => {
-                    owner [ memberKey ] = ( typeof ( init ) === 'function' ) ? init () : init;
-                });
-            }
+        this.storageResetters [ memberKey ] = () => {
+            runInAction (() => {
+                owner [ memberKey ] = ( typeof ( init ) === 'function' ) ? init () : init;
+            });
+        }
 
-            this.storageReloaders [ storageKey ] = ( newVal ) => {
-                console.log ( '##### STORAGE RELOAD: #####' );
-                console.log ( memberKey, storageKey );
-                runInAction (() => {
+        this.storageReloaders [ storageKey ] = ( newVal ) => {
+            console.log ( '##### STORAGE RELOAD: #####' );
+            console.log ( memberKey, storageKey );
+
+            runInAction (() => {
+                if ( newVal === null ) {
+                    delete owner [ memberKey ];
+                    delete this.storageResetters [ memberKey ];
+                    delete this.storageReloaders [ storageKey ];
+                }
+                else {
                     newVal = JSON.parse ( newVal );
                     owner [ memberKey ] = ( load && ( newVal !== null )) ? load ( newVal ) : newVal;
-                });
-            }
+                }
+            });
+        }
 
-            if ( !hasStoredValue ) {
-                persistField ();
-            }
+        const storageKeysByMemberKey = this.storageKeysByMemberKey || {};
+        storageKeysByMemberKey [ memberKey ] = storageKey;
+        this.storageKeysByMemberKey = storageKeysByMemberKey;
+
+        if ( !hasStoredValue ) {
+            persistField ();
         }
         return owner [ memberKey ]; 
     }
@@ -86,12 +100,15 @@ export class StorageContext {
     //----------------------------------------------------------------//
     remove ( owner, memberKey ) {
 
-        storage.removeItem ( memberKey );
+        const storageKey = this.storageKeysByMemberKey [ memberKey ];
 
-        if ( memberKey && owner [ memberKey ]) {
+        if ( storageKey && memberKey && owner [ memberKey ]) {
+
+            storage.removeItem ( storageKey );
+
             delete owner [ memberKey ];
             delete this.storageResetters [ memberKey ];
-            delete this.storageReloaders [ memberKey ];       
+            delete this.storageReloaders [ storageKey ];
         }
     }
 
