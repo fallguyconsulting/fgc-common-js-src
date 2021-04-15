@@ -266,7 +266,6 @@ export function keyFromPrivateHex ( privateKeyHex ) {
 export async function loadKeyAsync ( phraseOrPEM ) {
 
     console.log ( 'LOAD KEY ASYNC' );
-    console.log ( phraseOrPEM );
 
     try {
         if ( bip39.validateMnemonic ( phraseOrPEM )) {
