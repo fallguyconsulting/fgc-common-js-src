@@ -14,6 +14,27 @@ export const clear = () => {
 }
 
 //----------------------------------------------------------------//
+export const dump = () => {
+
+    const length = localStorage.length;
+    const store = {};
+    for ( let i = 0; i < length; ++i ) {
+        const key = localStorage.key ( i );
+        store [ key ] = localStorage.getItem ( key );
+
+        try {
+            const json = JSON.parse ( store [ key ]);
+            if ( json ) {
+                store [ key ] = json;
+            }
+        }
+        catch ( error ) {
+        }
+    }
+    return store;
+}
+
+//----------------------------------------------------------------//
 export const getItem = ( k ) => {
 
     const v = localStorage.getItem ( k );

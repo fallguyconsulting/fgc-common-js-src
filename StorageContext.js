@@ -26,11 +26,19 @@ export class StorageContext {
         this.prefix             = prefix || '';
 
         this.onStorageEvent = ( event ) => {
+
+            const storageKey    = event.key;
+            const memberKey     = _.findKey ( this.storageKeysByMemberKey, storageKey );
+
             console.log ( '##### STORAGE EVENT #####' );
             console.log ( event.key );
 
-            if ( _.has ( this.storageReloaders, event.key )) {
-                this.storageReloaders [ event.key ]( event.newValue );
+            if ( event.newValue === null ) {
+                delete this.storageKeysByMemberKey [ memberKey ];
+                delete this.storageReloaders [ storageKey ];
+            }
+            else if ( _.has ( this.storageReloaders, storageKey )) {
+                this.storageReloaders [ storageKey ]( event.newValue );
             }
         };
 
