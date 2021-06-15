@@ -6,7 +6,7 @@ import * as hooks                               from './hooks';
 import { SessionController }                    from './SessionController';
 import { SingleColumnContainerView }            from './SingleColumnContainerView';
 import * as util                                from './util';
-import { consts }                               from 'consts';
+import * as consts                              from 'consts';
 import jwt_decode                               from 'jwt-decode';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                             from 'mobx-react';
