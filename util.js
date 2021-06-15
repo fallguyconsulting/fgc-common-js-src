@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import uuidv4                       from 'uuid/v4';
+import uuidv4                       from 'uuidv4';
 
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {

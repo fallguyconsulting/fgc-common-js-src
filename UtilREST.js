@@ -13,7 +13,6 @@ export class UtilREST {
         
         this.router = express.Router ();
         this.router.get     ( '/signing-key',       this.getSigningKeyAsync.bind ( this ));
-        this.router.get     ( '/',                  this.getStatusAsync.bind ( this ));
     }
 
     //----------------------------------------------------------------//
@@ -23,11 +22,8 @@ export class UtilREST {
     }
 
     //----------------------------------------------------------------//
-    async getStatusAsync ( request, result ) {
-
-        const message = {
-            message: 'This is the Travel backend.',
-        };
-        result.json ( message );
+    static async makeRouterAsync () {
+        
+        return new UtilREST ().router;
     }
 }

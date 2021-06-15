@@ -6,7 +6,7 @@ import { PasswordMiddleware }       from './PasswordMiddleware';
 import * as roles                   from './roles';
 import { SessionMiddleware }        from './SessionMiddleware';
 import * as token                   from './token';
-import { UsersODBM }                from './UsersODBM';
+import * as env                     from 'env';
 import express                      from 'express';
 import bcrypt                       from 'bcryptjs';
 import crypto                       from 'crypto';
@@ -23,12 +23,13 @@ const VERIFIER_ACTIONS = {
 export class UsersREST {
 
     //----------------------------------------------------------------//
-    constructor ( db, env, templates, defaultRoles ) {
+    constructor ( db, templates, defaultRoles ) {
         
-        this.env            = env;
+        assert ( templates );
+
         this.templates      = templates;
         this.roles          = defaultRoles || [];
-        this.usersDB        = new UsersODBM ( db );
+        this.db             = db;
 
         this.mailer = new Mailer ( env );
 
@@ -42,7 +43,7 @@ export class UsersREST {
         this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
 
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
-        const sessionMiddleware     = new SessionMiddleware ( this.usersDB );
+        const sessionMiddleware     = new SessionMiddleware ( this.db.users );
 
         this.router.post (
             '/invitations',
@@ -65,9 +66,9 @@ export class UsersREST {
             session: {
                 token:          token.create ( user.userID, 'localhost', 'self', signingKey ),
                 userID:         user.userID,
-                publicName:     this.usersDB.formatUserPublicName ( user ),
+                publicName:     this.db.users.formatUserPublicName ( user ),
                 emailMD5:       user.emailMD5,
-                roles:          this.env.SERVER_ADMIN_PASSWORD ? ( user.roles || []) : this.roles,
+                roles:          env.SERVER_ADMIN_PASSWORD ? ( user.roles || []) : this.roles,
             },
         };
     }
@@ -78,7 +79,8 @@ export class UsersREST {
         const userID = request.params.userID;
         console.log ( 'GET USER:', userID );
 
-        const user = await this.usersDB.getUserByIDAsync ( userID );
+        const conn = this.db.makeConnection ();
+        const user = await this.db.users.getUserByIDAsync ( conn, userID );
 
         if ( user ) {
 
@@ -89,7 +91,7 @@ export class UsersREST {
                 result.json ({
                     userID:         userID,
                     emailMD5:       user.emailMD5,
-                    publicName:     this.usersDB.formatUserPublicName ( user ),
+                    publicName:     this.db.users.formatUserPublicName ( conn, user ),
                 });
             }
         }
@@ -105,7 +107,8 @@ export class UsersREST {
         const base      = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
         const count     = _.has ( query, 'count' ) ? parseInt ( query.count ) : 10;
 
-        const totalUsers = await this.usersDB.getCountAsync ();
+        const conn = this.db.makeConnection ();
+        const totalUsers = await this.db.users.getCountAsync ( conn );
         
         console.log ( 'TOTAL USERS', totalUsers );
 
@@ -116,15 +119,15 @@ export class UsersREST {
 
         const users = [];
         for ( let i = base; i < top; ++i ) {
-            const userID = UsersODBM.formatUserID ( i );
+            const userID = UsersDBRedis.formatUserID ( i );
             console.log ( 'USER ID:', userID );
-            const user = await this.usersDB.getUserByIDAsync ( userID );
+            const user = await this.db.users.getUserByIDAsync ( conn, userID );
             console.log ( user );
             if ( user ) {
                 users.push ({
                     userID:         userID,
                     emailMD5:       user.emailMD5,
-                    publicName:     this.usersDB.formatUserPublicName ( user ),
+                    publicName:     this.db.users.formatUserPublicName ( user ),
                 });
             }
         }
@@ -132,6 +135,18 @@ export class UsersREST {
             totalUsers:     totalUsers,
             users:          users,
         });
+    }
+
+    //----------------------------------------------------------------//
+    static async makeRouterAsync ( db, templates, defaultRoles ) {
+
+        assert ( db );
+        assert ( db.users );
+        const connection = db.makeConnection ();
+        assert ( connection );
+        await db.users.updateDatabaseSchemaAsync ( connection );
+        
+        return new UsersREST ( db, templates, defaultRoles ).router;
     }
 
     //----------------------------------------------------------------//
@@ -153,21 +168,23 @@ export class UsersREST {
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
             // if already exists, just apply the roles and be done with it
-            const exists = await this.usersDB.hasUserByEmailMD5Async ( emailMD5 );
+            const conn = this.db.makeConnection ();
+            const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
+
             if ( exists ) {
 
-                const invitee = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+                const invitee = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
                 assert ( invitee.userID !== user.userID );
 
                 console.log ( 'UPDATING ROLES:', invitee.userID, JSON.stringify ( roles ));
                 invitee.roles = roles;
-                this.usersDB.setUserAsync ( invitee );
+                this.db.users.setUserAsync ( conn, invitee );
             }
             else {
 
                 await this.sendVerifierEmailAsync (
                     email,
-                    token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_REGISTER_USER ),
+                    token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.INVITE_USER_EMAIL_SUBJECT,
                     this.templates.INVITE_USER_EMAIL_TEXT_BODY_TEMPLATE,
@@ -192,10 +209,12 @@ export class UsersREST {
 
         try {
 
+            const conn      = this.db.makeConnection ();
+
             const body      = request.body;
             const email     = body.email;
             const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-            const user      = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+            const user      = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
 
             console.log ( email, emailMD5, user );
 
@@ -204,7 +223,7 @@ export class UsersREST {
 
                 if ( user && await bcrypt.compare ( body.password, user.password )) {
                     console.log ( 'PASSWORDS MATCHED' );
-                    result.json ( this.formatLoginResponse ( user, this.env.SIGNING_KEY_FOR_SESSION ));
+                    result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
                     return;
                 }
             }
@@ -223,6 +242,8 @@ export class UsersREST {
 
             console.log ( 'POST LOGIN WITH PASSWORD RESET' );
 
+            const conn          = this.db.makeConnection ();
+
             const body          = request.body;
             const verifier      = body.verifier;
             const password      = body.password;
@@ -230,19 +251,19 @@ export class UsersREST {
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
             assert ( verifier );
-            const verified = token.verify ( body.verifier, this.env.SIGNING_KEY_FOR_PASSWORD_RESET );
+            const verified = token.verify ( body.verifier, env.SIGNING_KEY_FOR_PASSWORD_RESET );
             assert ( verified && verified.body && verified.body.sub );
 
             const payload = JSON.parse ( verified.body.sub );
             assert ( payload.email === email );
 
-            const user = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+            const user = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
             assert ( user );
 
-            user.password = await bcrypt.hash ( password, this.env.SALT_ROUNDS );
-            await this.usersDB.setUserAsync ( user );
+            user.password = await bcrypt.hash ( password, env.SALT_ROUNDS );
+            await this.db.users.setUserAsync ( conn, user );
 
-            result.json ( this.formatLoginResponse ( user, this.env.SIGNING_KEY_FOR_SESSION ));
+            result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
             return;
         }
         catch ( error ) {
@@ -259,7 +280,12 @@ export class UsersREST {
 
             console.log ( 'POST LOGIN WITH REGISTER USER' );
 
+            const conn          = this.db.makeConnection ();
+
             const body          = request.body;
+
+            console.log ( 'BODY', body );
+
             const verifier      = body.verifier;
             const firstname     = body.firstname;
             const lastname      = body.lastname || '';
@@ -268,26 +294,25 @@ export class UsersREST {
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
             assert ( verifier );
-            const verified = token.verify ( body.verifier, this.env.SIGNING_KEY_FOR_REGISTER_USER );
+            const verified = token.verify ( body.verifier, env.SIGNING_KEY_FOR_REGISTER_USER );
             assert ( verified && verified.body && verified.body.sub );
 
             const payload = JSON.parse ( verified.body.sub );
             assert ( payload.email === email );
 
-            const usersCount = await this.usersDB.getCountAsync ();
+            const usersCount = await this.db.users.getCountAsync ( conn );
             const roles = usersCount === 0 ? this.roles : payload.roles;
 
-            const user = {
+            let user = {
                 firstname:      firstname,
                 lastname:       lastname,
-                password:       await bcrypt.hash ( password, this.env.SALT_ROUNDS ),
+                password:       await bcrypt.hash ( password, env.SALT_ROUNDS ),
                 emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
                 roles:          roles || [],
             };
 
-            await this.usersDB.affirmUserAsync ( user );
-
-            result.json ( this.formatLoginResponse ( user, this.env.SIGNING_KEY_FOR_SESSION ));
+            user = await this.db.users.affirmUserAsync ( conn, user );
+            result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
             return;
         }
         catch ( error ) {
@@ -304,25 +329,27 @@ export class UsersREST {
 
         try {
 
-            const body = request.body;
-            const roles = body.roles || [];
+            const conn      = this.db.makeConnection ();
+
+            const body      = request.body;
+            const roles     = body.roles || [];
 
             let user = false;
             if ( body.userID ) {
 
-                user            = await this.usersDB.getUserByIDAsync ( body.userID );
+                user            = await this.db.users.getUserByIDAsync ( conn, body.userID );
             }
             else if ( body.email ) {
 
                 const email     = body.email;
                 const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-                user            = await this.usersDB.getUserByEmailMD5Async ( emailMD5 );
+                user            = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
             }            
 
             if ( user ) {
                 console.log ( 'ROLES:', JSON.stringify ( roles, null, 4 ));
                 user.roles = roles;
-                await this.usersDB.setUserAsync ( user );
+                await this.db.users.setUserAsync ( conn, user );
                 result.json ({ status: 'OK', user: user });
                 return;
             }
@@ -343,19 +370,21 @@ export class UsersREST {
             console.log ( 'POST VERIFIER EMAIL REQUEST', actionID );
             assert ( Object.values ( VERIFIER_ACTIONS ).includes ( actionID ));
 
+            const conn          = this.db.makeConnection ();
+
             const email         = request.body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
             // if already exists, send a password reset email.
             // do this for both RESET and REGISTER actions.
-            const exists = await this.usersDB.hasUserByEmailMD5Async ( emailMD5 );
+            const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
             if ( exists ) {
 
                 console.log ( 'SENDING PASSWORD RESET EMAIL' );
 
                 await this.sendVerifierEmailAsync (
                     email,
-                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_PASSWORD_RESET ),
+                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', env.SIGNING_KEY_FOR_PASSWORD_RESET ),
                     false,
                     this.templates.RESET_PASSWORD_EMAIL_SUBJECT,
                     this.templates.RESET_PASSWORD_EMAIL_TEXT_BODY_TEMPLATE,
@@ -374,7 +403,7 @@ export class UsersREST {
                 // user doesn't exist, so send a create user email.
                 await this.sendVerifierEmailAsync (
                     email,
-                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', this.env.SIGNING_KEY_FOR_REGISTER_USER ),
+                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.REGISTER_USER_EMAIL_SUBJECT,
                     this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,

@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import * as token                   from './token';
+import * as env                     from 'env';
 import Mailchimp                    from 'mailchimp-api-v3'; // https://mailchimp.com/developer/reference/
 import nodemailer                   from 'nodemailer';
 
@@ -10,19 +11,24 @@ import nodemailer                   from 'nodemailer';
 export class Mailer {
 
     //----------------------------------------------------------------//
-    constructor ( env ) {
+    constructor () {
 
-        this.env = env;
+        console.log ( 'GMAIL USER:', env.GMAIL_USER );
 
         if ( env.MAILCHIMP_API_KEY ) {
-            this.mailchimp = new Mailchimp ( this.env.MAILCHIMP_API_KEY );
+            this.mailchimp = new Mailchimp ( env.MAILCHIMP_API_KEY );
         }
+
+        // NOTE: if gmail transport myseriously stops working, log in to the
+        // gmail account and make sure "allow less secure apps" is enabled
+        // under the security tab. Gmail will "helpfully" disable this
+        // setting if it hasn't been used in a while.
 
         this.mailTransport = nodemailer.createTransport ({
             service: 'gmail',
             auth: {
-                user: this.env.GMAIL_USER,
-                pass: this.env.GMAIL_PASSWORD,
+                user: env.GMAIL_USER,
+                pass: env.GMAIL_PASSWORD,
             },
         });
     }
