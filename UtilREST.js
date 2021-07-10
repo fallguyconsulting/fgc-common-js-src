@@ -20,10 +20,4 @@ export class UtilREST {
 
         result.json ({ keyBase64: token.makeSigningKeyBase64 ()});
     }
-
-    //----------------------------------------------------------------//
-    static async makeRouterAsync () {
-        
-        return new UtilREST ().router;
-    }
 }

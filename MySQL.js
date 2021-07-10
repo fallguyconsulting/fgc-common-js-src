@@ -81,6 +81,13 @@ export class MySQLConnection {
     }
 
     //----------------------------------------------------------------//
+    async escape ( str ) {
+
+        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+        return await this.connection.escape ( str );
+    }
+
+    //----------------------------------------------------------------//
     makeConnection () {
 
         return this;

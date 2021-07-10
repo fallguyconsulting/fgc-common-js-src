@@ -138,18 +138,6 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
-    static async makeRouterAsync ( db, templates, defaultRoles ) {
-
-        assert ( db );
-        assert ( db.users );
-        const connection = db.makeConnection ();
-        assert ( connection );
-        await db.users.updateDatabaseSchemaAsync ( connection );
-        
-        return new UsersREST ( db, templates, defaultRoles ).router;
-    }
-
-    //----------------------------------------------------------------//
     async postInvitation ( request, result ) {
 
         try {

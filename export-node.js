@@ -22,6 +22,7 @@ module.exports = {
     MySQLConnection:        require ( './MySQL.js' ).MySQLConnection,
     PasswordMiddleware:     require ( './PasswordMiddleware.js' ).PasswordMiddleware,
     SessionMiddleware:      require ( './SessionMiddleware.js' ).SessionMiddleware,
+    rest:                   require ( './rest.js' ),
     roles:                  require ( './roles.js' ),
     UsersDBInMemory:        require ( './UsersDBInMemory.js' ).UsersDBInMemory,
     UsersDBMySQL:           require ( './UsersDBMySQL.js' ).UsersDBMySQL,
