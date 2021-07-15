@@ -42,6 +42,12 @@ export function indexToDate ( startDate, index ) {
 }
 
 //----------------------------------------------------------------//
+export function isNumber ( number ) {
+
+    return (( typeof ( number ) === 'number' ) && !isNaN ( number ));
+}
+
+//----------------------------------------------------------------//
 export function javascriptEscape ( str ) {
     return str
         .replace ( /(\n)/g, '\\n' )
