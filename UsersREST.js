@@ -421,7 +421,7 @@ export class UsersREST {
         const html = htmlTemplate ( context );
 
         await this.mailer.mailTransport.sendMail ({
-            from:       'nodemailer@fallguyconsulting.com',
+            from:       env.GMAIL_USER,
             to:         email,
             subject:    subject,
             text:       text,
