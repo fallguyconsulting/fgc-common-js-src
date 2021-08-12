@@ -75,8 +75,8 @@ export const UserAccountPopup = observer (( props ) => {
                             </center>
                             <UI.Menu secondary vertical style = {{ margin: '0px' }}>
                                 <UI.Menu.Item
-                                href = '/'
-                                onClick = {() => { session.logout ()}}
+                                    href = '/'
+                                    onClick = {() => { session.logout ()}}
                                 >
                                     <UI.Icon name = 'power off'/>
                                     Log Out
