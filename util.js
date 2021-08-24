@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import uuidv4                       from 'uuid/v4';
+import { v4 as uuidv4 }     from 'uuid';
 
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
@@ -39,6 +39,12 @@ export function indexToDate ( startDate, index ) {
     date.setDate ( date.getDate () + index );
 
     return dateToISOString ( date );
+}
+
+//----------------------------------------------------------------//
+export function isNumber ( number ) {
+
+    return (( typeof ( number ) === 'number' ) && !isNaN ( number ));
 }
 
 //----------------------------------------------------------------//

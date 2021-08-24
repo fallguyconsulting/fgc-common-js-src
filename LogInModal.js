@@ -270,10 +270,12 @@ export const LogInModal = observer (( props ) => {
             onClose = { onClose }
         >   
             <UI.Modal.Content>
-                <UI.Header as = 'h4'>Sign Up</UI.Header>
-                <SignUpForm session = { sessionController } controller = { signUpController } disabled = { logInController.isActive }/>
+                
                 <UI.Header as = 'h4'>Log In</UI.Header>
                 <LogInForm session = { sessionController } controller = { logInController } disabled = { signUpController.isActive }/>
+                
+                <UI.Header as = 'h4'>Sign Up</UI.Header>
+                <SignUpForm session = { sessionController } controller = { signUpController } disabled = { logInController.isActive }/>
                 
                 <div style = {{ textAlign: 'center', color: 'blue', cursor: 'pointer' }}>
                     <p onClick = {() => { setResetPasswordModalOpen ( true )}}>

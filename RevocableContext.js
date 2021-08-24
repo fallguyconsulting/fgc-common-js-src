@@ -132,9 +132,9 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     revoke ( revocable ) {
 
-        if ( map.has ( revocable )) {
-            map [ revocable ]();
-            map.delete ( revocable );
+        if ( this.revocables.has ( revocable )) {
+            this.revocables.get ( revocable )();
+            this.revocables.delete ( revocable );
         }
     }
 

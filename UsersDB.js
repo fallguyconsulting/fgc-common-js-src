@@ -1,23 +1,17 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import { token }        from './token';
-import express          from 'express';
-
 //================================================================//
-// UtilREST
+// UsersDB
 //================================================================//
-export class UtilREST {
+export class UsersDB {
 
     //----------------------------------------------------------------//
     constructor () {
-        
-        this.router = express.Router ();
-        this.router.get     ( '/signing-key',       this.getSigningKeyAsync.bind ( this ));
     }
 
     //----------------------------------------------------------------//
-    async getSigningKeyAsync ( request, result ) {
+    formatUserPublicName ( user ) {
 
-        result.json ({ keyBase64: token.makeSigningKeyBase64 ()});
+        return user.lastname ? `${ user.firstname } ${ user.lastname.charAt ( 0 )}.` : user.firstname;
     }
 }

@@ -4,7 +4,7 @@ import { assert }                               from './assert';
 import { FormErrors }                           from './FormErrors';
 import * as hooks                               from './hooks';
 import * as util                                from './util';
-import { consts }                               from 'consts';
+import * as consts                              from 'consts';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                             from 'mobx-react';
 import validator                                from 'validator';

@@ -1,7 +1,9 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import { assert }                   from './assert';
+import { UsersDB }                  from './UsersDB';
 import handlebars                   from 'handlebars';
+import _                            from 'lodash';
 
 const TEMPLATES = {
     USER_ID:                            handlebars.compile ( 'user{{ index }}' ),
@@ -18,18 +20,19 @@ const keyFor = {
 };
 
 //================================================================//
-// UsersODBM
+// UsersDBRedis
 //================================================================//
-export class UsersODBM {
+export class UsersDBRedis  extends UsersDB {
 
     //----------------------------------------------------------------//
-    constructor ( db ) {
-
-        this.db = db;
+    constructor () {
+        super ();
     }
 
     //----------------------------------------------------------------//
-    async affirmUserAsync ( user ) {
+    async affirmUserAsync ( conn, user ) {
+
+        user = _.cloneDeep ( user );
 
         if ( await this.hasUserByEmailMD5Async ( user.emailMD5 )) {
             user.userID = await this.db.getAsync ( keyFor.usersByEmailMD5 ( user.emailMD5 ));
@@ -43,36 +46,32 @@ export class UsersODBM {
         }
         assert ( user.userID );
         await this.db.setAsync ( keyFor.users ( user.userID ), JSON.stringify ( user ));
+        
+        return user;
     }
 
     //----------------------------------------------------------------//
-    static formatUserID ( index ) {
+    static formatUserID ( conn, index ) {
 
         return TEMPLATES.USER_ID ({ index: index });
     }
 
     //----------------------------------------------------------------//
-    formatUserPublicName ( user ) {
-
-        return user.lastname ? `${ user.firstname } ${ user.lastname.charAt ( 0 )}.` : user.firstname;
-    }
-
-    //----------------------------------------------------------------//
-    async getCountAsync () {
+    async getCountAsync ( conn ) {
 
         const count = await this.db.getAsync ( keyFor.usersCount ());
         return count ? parseInt ( count ) : 0;
     }
 
     //----------------------------------------------------------------//
-    async getUserByEmailMD5Async ( emailMD5 ) {
+    async getUserByEmailMD5Async ( conn, emailMD5 ) {
 
         const userID = await this.db.getAsync ( keyFor.usersByEmailMD5 ( emailMD5 ));
         return userID ? await this.getUserByIDAsync ( userID ) : false;
     }
 
     //----------------------------------------------------------------//
-    async getUserByIDAsync ( userID ) {
+    async getUserByIDAsync ( conn, userID ) {
 
         try {
             const userJSON = await this.db.getAsync ( keyFor.users ( userID ));
@@ -85,20 +84,24 @@ export class UsersODBM {
     }
 
     //----------------------------------------------------------------//
-    async hasUserByEmailMD5Async ( emailMD5 ) {
+    async hasUserByEmailMD5Async ( conn, emailMD5 ) {
 
         return await this.db.existsAsync ( keyFor.usersByEmailMD5 ( emailMD5 ));
     }
 
     //----------------------------------------------------------------//
-    async hasUserByIDAsync ( userID ) {
+    async hasUserByIDAsync ( conn, userID ) {
 
         return await this.db.existsAsync ( keyFor.users ( userID ));
     }
 
     //----------------------------------------------------------------//
-    async setUserAsync ( user ) {
+    async setUserAsync ( conn, user ) {
 
         return await this.db.setAsync ( keyFor.users ( user.userID ), JSON.stringify ( user ));
+    }
+
+    //----------------------------------------------------------------//
+    async updateDatabaseSchemaAsync ( conn ) {
     }
 }
