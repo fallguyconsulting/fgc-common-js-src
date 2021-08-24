@@ -7,6 +7,9 @@ import * as util                            from './util';
 import _                                    from 'lodash';
 import { extendObservable, runInAction }    from 'mobx';
 
+//const debugLog = function () {}
+const debugLog = function ( ...args ) { console.log ( '@STORAGE CONTEXT:', ...args ); }
+
 //================================================================//
 // StorageContext
 //================================================================//
@@ -23,6 +26,7 @@ export class StorageContext {
 
         this.storageReloaders   = {}; // indexed by storage key
         this.storageResetters   = {};
+        this.observerDisposers  = {};
         this.prefix             = prefix || '';
 
         this.onStorageEvent = ( event ) => {
@@ -47,6 +51,11 @@ export class StorageContext {
 
     //----------------------------------------------------------------//
     finalize () {
+
+        for ( let memberKey in this.observerDisposers ) {
+            debugLog ( 'disposing observer', memberKey );
+            this.observerDisposers [ memberKey ]();
+        }
         window.removeEventListener ( 'storage', this.onStorageEvent );
     }
 
@@ -70,7 +79,7 @@ export class StorageContext {
             const newVal = owner [ memberKey ];
             storage.setItem ( storageKey, store ? store ( newVal ) : newVal );
         }
-        observeField ( owner, memberKey, persistField );
+        this.observerDisposers [ memberKey ] = observeField ( owner, memberKey, persistField );
 
         this.storageResetters [ memberKey ] = () => {
             runInAction (() => {
@@ -113,6 +122,9 @@ export class StorageContext {
         if ( storageKey && memberKey && owner [ memberKey ]) {
 
             storage.removeItem ( storageKey );
+
+            this.observerDisposers [ memberKey ]();
+            delete this.observerDisposers [ memberKey ];
 
             delete owner [ memberKey ];
             delete this.storageResetters [ memberKey ];
