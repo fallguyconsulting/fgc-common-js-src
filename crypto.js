@@ -6,7 +6,8 @@ import * as bip32               from 'bip32';
 import * as bip39               from 'bip39';
 import * as bitcoin             from 'bitcoinjs-lib';
 import CryptoJS                 from 'crypto-js';
-import JSEncrypt                from 'jsencrypt';
+// import JSEncrypt                from 'jsencrypt';
+import JSEncrypt                from 'node-jsencrypt';
 import keyutils                 from 'js-crypto-key-utils';
 import * as secp256k1           from 'secp256k1'
 
@@ -265,7 +266,6 @@ export function keyFromPrivateHex ( privateKeyHex ) {
 export async function loadKeyAsync ( phraseOrPEM ) {
 
     console.log ( 'LOAD KEY ASYNC' );
-    console.log ( phraseOrPEM );
 
     try {
         if ( bip39.validateMnemonic ( phraseOrPEM )) {
@@ -309,7 +309,7 @@ export async function loadKeyAsync ( phraseOrPEM ) {
 
         const key = await pemToKeyAsync ( phraseOrPEM );
 
-        console.log ( key );
+        // console.log ( key );
 
         // const publicKey = key.getPublicKeyBuffer ().toString ( 'hex' ).toUpperCase ();
         // console.log ( 'PUBLIC_KEY', publicKey );
