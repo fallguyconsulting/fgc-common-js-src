@@ -35,11 +35,11 @@ export const dump = () => {
 }
 
 //----------------------------------------------------------------//
-export const getItem = ( k ) => {
+export const getItem = ( k, fallback ) => {
 
     const v = localStorage.getItem ( k );
     //console.log ( "fromLocalStorage", k, v );
-    return v !== null ? JSON.parse ( v ) : null;
+    return v !== null ? JSON.parse ( v ) : ( fallback === undefined ? null : fallback );
 }
 
 //----------------------------------------------------------------//
