@@ -73,6 +73,26 @@ export const UserAccountPopup = observer (( props ) => {
                                 />
                                 <UI.Header as = 'h4'>{ session.publicName }</UI.Header>
                             </center>
+
+                            <If condition = { roles.canInviteUser ( session.roles )}>
+                                <UI.Menu secondary vertical style = {{ margin: '0px' }}>
+                                    <UI.Menu.Item
+                                        onClick = { onClickInviteUser }
+                                    >
+                                        <UI.Icon name = 'paper plane outline'/>
+                                        Invite
+                                    </UI.Menu.Item>
+                                </UI.Menu>
+                                <UI.Menu secondary vertical style = {{ margin: '0px' }}>
+                                    <UI.Menu.Item
+                                        href = '/'
+                                        // onClick = {() => { session.logout ()}}
+                                    >
+                                        <UI.Icon name = 'address card outline'/>
+                                        User Management
+                                    </UI.Menu.Item>
+                                </UI.Menu>
+                            </If>
                             <UI.Menu secondary vertical style = {{ margin: '0px' }}>
                                 <UI.Menu.Item
                                     href = '/'
@@ -82,20 +102,6 @@ export const UserAccountPopup = observer (( props ) => {
                                     Log Out
                                 </UI.Menu.Item>
                             </UI.Menu>
-
-                            <If condition = { roles.canInviteUser ( session.roles )}>
-                                <div
-                                    onClick = { onClickInviteUser }
-                                    style   = {{
-                                        fontSize:   '12px',
-                                        textAlign:  'center',
-                                        cursor:     'pointer',
-                                        color:      'blue',
-                                    }}
-                                >
-                                    Invite
-                                </div>
-                            </If>
                         </React.Fragment>
                     </UI.Popup>
                 </When>
