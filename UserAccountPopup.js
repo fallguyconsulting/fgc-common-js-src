@@ -85,8 +85,7 @@ export const UserAccountPopup = observer (( props ) => {
                                 </UI.Menu>
                                 <UI.Menu secondary vertical style = {{ margin: '0px' }}>
                                     <UI.Menu.Item
-                                        href = '/'
-                                        // onClick = {() => { session.logout ()}}
+                                        href = '/admin/usermanagement'
                                     >
                                         <UI.Icon name = 'address card outline'/>
                                         User Management
