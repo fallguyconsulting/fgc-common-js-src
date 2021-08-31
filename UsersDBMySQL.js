@@ -145,7 +145,7 @@ export class UsersDBMySQL extends UsersDB {
             lastname:   row.lastname,
             password:   row.password,
             emailMD5:   row.emailMD5,
-            roles:      [],
+            roles:      row.roles,
         };
     }
 }
