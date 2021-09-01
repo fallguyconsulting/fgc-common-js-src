@@ -33,6 +33,22 @@ export class UsersDBMySQL extends UsersDB {
     }
 
     //----------------------------------------------------------------//
+    async deleteBlockAsync ( conn, userID ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
+    
+            await conn.query (`
+                UPDATE  datadash_users
+                SET     block      = NULL
+                WHERE   id         = ${ userID }
+            `);
+
+        });
+    }
+    //----------------------------------------------------------------//
     async getCountAsync ( conn ) {
 
         return conn.runInConnectionAsync ( async () => {
@@ -44,6 +60,24 @@ export class UsersDBMySQL extends UsersDB {
             `))[ 0 ];
             
             return row && row.count || 0
+        });
+    }
+
+    //----------------------------------------------------------------//
+    async getUserIDAsync ( conn ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const data = ( await conn.query (`
+                SELECT      id
+                FROM        datadash_users 
+            `));
+           
+            const userID = data.map (( user ) => {
+                return user.id;
+            });
+        
+            return userID;
         });
     }
 
@@ -118,6 +152,22 @@ export class UsersDBMySQL extends UsersDB {
     }
 
     //----------------------------------------------------------------//
+    async updateBlockAsync ( conn, userID ) {
+
+        return conn.runInConnectionAsync ( async () => {
+            console.log('[TEST TEST LOG]',userID);
+            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
+
+            await conn.query (`
+                UPDATE  datadash_users
+                SET     block      = TRUE
+                WHERE   id         = ${ userID }
+            `);
+    
+        });
+    }
+    //----------------------------------------------------------------//
     async updateDatabaseSchemaAsync ( conn ) {
 
         conn.runInTransactionAsync ( async () => {
@@ -133,6 +183,22 @@ export class UsersDBMySQL extends UsersDB {
                     PRIMARY KEY ( id )
                 )
             `);
+
+            const block = await conn.query (`
+                SELECT      *
+                FROM        INFORMATION_SCHEMA.COLUMNS
+                WHERE       TABLE_SCHEMA    = 'diablo_golf'
+                    AND     TABLE_NAME      = 'datadash_users'
+                    AND     COLUMN_NAME     = 'block'
+                LIMIT       0, 1
+            `)
+
+            if ( block.length === 0 ) {
+                await conn.query (`
+                    ALTER TABLE datadash_users 
+                    ADD COLUMN block BOOL
+                `);
+            };
         });
     }
 
@@ -146,6 +212,7 @@ export class UsersDBMySQL extends UsersDB {
             password:   row.password,
             emailMD5:   row.emailMD5,
             roles:      row.roles,
+            block:      row.block,
         };
     }
 }

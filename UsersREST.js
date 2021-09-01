@@ -45,6 +45,9 @@ export class UsersREST {
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
         const sessionMiddleware     = new SessionMiddleware ( this.db.users );
 
+        this.router.delete      ( '/users/:userID/unblock',     tokenMiddleware.withTokenAuth (), this.deleteUserBlockAsync.bind ( this ));
+        this.router.put         ( '/users/:userID/block',       tokenMiddleware.withTokenAuth (), this.putUserBlockAsync.bind ( this ));
+
         this.router.post (
             '/invitations',
             tokenMiddleware.withTokenAuth (),
@@ -56,6 +59,27 @@ export class UsersREST {
             const middleware = new PasswordMiddleware ( 'X-Admin-Password', env.SERVER_ADMIN_PASSWORD, 'adminPassword' );
             this.router.post ( '/admin/roles', middleware.withPasswordAuth (), this.postUserRoles.bind ( this ));
         }
+    }
+
+    //----------------------------------------------------------------//
+    async deleteUserBlockAsync ( request, result ) {
+
+        try {
+            const userID = request.params.userID;
+            
+            const conn = this.db.makeConnection ();
+
+            await this.db.users.deleteBlockAsync ( conn, userID );
+
+            // rest.handleSuccess ( response );
+            result.json ({ status: 'OK' });
+            return;
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+        result.json ({});
+        result.status ( 401 );
     }
 
     //----------------------------------------------------------------//
@@ -117,17 +141,20 @@ export class UsersREST {
 
         console.log ( base, top );
 
+        const userIDs = await this.db.users.getUserIDAsync ( conn );
         const users = [];
+
         for ( let i = base; i < top; ++i ) {
-            const userID = UsersDBRedis.formatUserID ( i );
-            console.log ( 'USER ID:', userID );
+            // const userID = UsersDBRedis.formatUserID ( i );
+            let userID = userIDs [ i ];
             const user = await this.db.users.getUserByIDAsync ( conn, userID );
-            console.log ( user );
             if ( user ) {
                 users.push ({
                     userID:         userID,
                     emailMD5:       user.emailMD5,
                     publicName:     this.db.users.formatUserPublicName ( user ),
+                    roles:          user.roles,
+                    block:          user.block,
                 });
             }
         }
@@ -407,6 +434,25 @@ export class UsersREST {
         }
         result.json ({});
         result.status ( 400 );
+    }
+
+    //----------------------------------------------------------------//
+    async putUserBlockAsync ( request, result ) {
+
+        try {
+            const userID = request.params.userID;
+    
+            const conn = this.db.makeConnection ();
+            await this.db.users.updateBlockAsync ( conn, userID );
+
+            result.json ({ status: 'OK' });
+            return;
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+        result.json ({});
+        result.status ( 401 );
     }
 
     //----------------------------------------------------------------//
