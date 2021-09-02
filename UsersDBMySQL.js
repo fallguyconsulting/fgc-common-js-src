@@ -56,7 +56,7 @@ export class UsersDBMySQL extends UsersDB {
 
         return conn.runInConnectionAsync ( async () => {
 
-            const users = await conn.query (`
+            const data = await conn.query (`
                 SELECT      id
                 FROM        datadash_users 
                 WHERE
@@ -67,7 +67,11 @@ export class UsersDBMySQL extends UsersDB {
                LIMIT 0,10
             `);
 
-            return users;
+            const userID = data.map (( user ) => {
+                return user.id;
+            });
+
+            return userID;
         });
     }
 
@@ -207,15 +211,29 @@ export class UsersDBMySQL extends UsersDB {
                 )
             `);
 
-            await conn.query (`
-                ALTER TABLE datadash_users 
-                ADD FULLTEXT INDEX ( firstname )
-            `);
+            const firstNameIndex = await conn.query ( `
+                SHOW INDEXES FROM datadash_users
+                WHERE Key_name = 'firstname'
+            ` );
 
-            await conn.query (`
-                ALTER TABLE datadash_users 
-                ADD FULLTEXT INDEX ( lastname )
-            `);
+            if ( firstNameIndex.length === 0 ) {
+                await conn.query ( `
+                    ALTER TABLE datadash_users
+                    ADD FULLTEXT INDEX firstname ( firstname )
+                ` );
+            }
+
+            const lastNameIndex = await conn.query ( `
+                SHOW INDEXES FROM datadash_users
+                WHERE Key_name = 'lastname'
+            ` );
+
+            if ( firstNameIndex.length === 0 ) {
+                await conn.query ( `
+                    ALTER TABLE datadash_users
+                    ADD FULLTEXT INDEX firstname ( firstname )
+                ` );
+            }
 
             const block = await conn.query (`
                 SELECT      *

@@ -133,73 +133,41 @@ export class UsersREST {
 
         const conn = this.db.makeConnection ();
 
+        let top = base + count;
+        let userIDs = [];
+        let totalUsers = 0;
+        const users = [];
+        
         if ( searchTerm ) { 
-            const userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
-
-console.log(userIDs);
-            // const totalUsers = userIDs.length;
-            // console.log ( 'TOTAL USERS', totalUsers );
-            // let top = base + count;
-            // top = top < totalUsers ? top : totalUsers;
-    
-            // console.log ( base, top );
-
-            // const users = [];
-
-            // for ( let i = base; i < top; ++i ) {
-    
-            //     let userID = userIDs [ i ];
-            //     const user = await this.db.users.getUserByIDAsync ( conn, userID );
-                
-            //     if ( user ) {
-            //         users.push ({
-            //             userID:         userID,
-            //             emailMD5:       user.emailMD5,
-            //             publicName:     this.db.users.formatUserPublicName ( user ),
-            //             roles:          user.roles,
-            //             block:          user.block,
-            //         });
-            //     }
-            // }
-            result.json ({
-                // totalUsers:     totalUsers,
-                // users:          users,
-            });
-
+            userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
+            totalUsers = userIDs.length;
         }
         else {
-            const totalUsers = await this.db.users.getCountAsync ( conn );
-            
-            console.log ( 'TOTAL USERS', totalUsers );
-    
-            let top = base + count;
-            top = top < totalUsers ? top : totalUsers;
-    
-            console.log ( base, top );
-    
-            const userIDs = await this.db.users.getUserIDAsync ( conn );
-            const users = [];
-    
-            for ( let i = base; i < top; ++i ) {
-    
-                let userID = userIDs [ i ];
-                const user = await this.db.users.getUserByIDAsync ( conn, userID );
-                
-                if ( user ) {
-                    users.push ({
-                        userID:         userID,
-                        emailMD5:       user.emailMD5,
-                        publicName:     this.db.users.formatUserPublicName ( user ),
-                        roles:          user.roles,
-                        block:          user.block,
-                    });
-                }
-            }
-            result.json ({
-                totalUsers:     totalUsers,
-                users:          users,
-            });
+            userIDs = await this.db.users.getUserIDAsync ( conn );
+            totalUsers = await this.db.users.getCountAsync ( conn );
         }
+        
+        top = top < totalUsers ? top : totalUsers;
+
+        for ( let i = base; i < top; ++i ) {
+    
+            let userID = userIDs [ i ];
+            const user = await this.db.users.getUserByIDAsync ( conn, userID );
+            
+            if ( user ) {
+                users.push ({
+                    userID:         userID,
+                    emailMD5:       user.emailMD5,
+                    publicName:     this.db.users.formatUserPublicName ( user ),
+                    roles:          user.roles,
+                    block:          user.block,
+                });
+            }
+        }
+        result.json ({
+            totalUsers:     totalUsers,
+            users:          users,
+        });
     }
 
     //----------------------------------------------------------------//
