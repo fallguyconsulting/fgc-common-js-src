@@ -193,6 +193,27 @@ export class UsersDBMySQL extends UsersDB {
     
         });
     }
+
+    //----------------------------------------------------------------//
+    async updateRoleAsync ( conn, userID, role ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
+
+            if ( role === 'user' ) {
+                role ='';
+            } 
+         
+            await conn.query (`
+                UPDATE  datadash_users
+                SET     roles      = '${ role }'
+                WHERE   id         = ${ userID }
+            `);
+        });
+    }
+
     //----------------------------------------------------------------//
     async updateDatabaseSchemaAsync ( conn ) {
 

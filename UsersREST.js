@@ -47,6 +47,7 @@ export class UsersREST {
 
         this.router.delete      ( '/users/:userID/unblock',     tokenMiddleware.withTokenAuth (), this.deleteUserBlockAsync.bind ( this ));
         this.router.put         ( '/users/:userID/block',       tokenMiddleware.withTokenAuth (), this.putUserBlockAsync.bind ( this ));
+        this.router.put         ( '/users/:userID/role',        tokenMiddleware.withTokenAuth (), this.putUserRoleAsync.bind ( this ));
 
         this.router.post (
             '/invitations',
@@ -445,6 +446,26 @@ export class UsersREST {
     
             const conn = this.db.makeConnection ();
             await this.db.users.updateBlockAsync ( conn, userID );
+
+            result.json ({ status: 'OK' });
+            return;
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+        result.json ({});
+        result.status ( 401 );
+    }
+
+    //----------------------------------------------------------------//
+    async putUserRoleAsync ( request, result ) {
+
+        try {
+            const userID = request.params.userID;
+            const role = request.body.role;
+            
+            const conn = this.db.makeConnection ();
+            await this.db.users.updateRoleAsync ( conn, userID, role );
 
             result.json ({ status: 'OK' });
             return;
