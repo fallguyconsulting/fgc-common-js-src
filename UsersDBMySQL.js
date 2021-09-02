@@ -155,7 +155,7 @@ export class UsersDBMySQL extends UsersDB {
     async updateBlockAsync ( conn, userID ) {
 
         return conn.runInConnectionAsync ( async () => {
-            console.log('[TEST TEST LOG]',userID);
+            
             const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
             if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
 
