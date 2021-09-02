@@ -238,7 +238,14 @@ export class UsersREST {
             if ( user ) {
                 console.log ( 'FOUND USER:', user.userID );
 
-                if ( user && await bcrypt.compare ( body.password, user.password )) {
+                if ( user.block ) {
+                    console.log ( 'ACCOUNT BLOCKED' );
+                    result.json ({ status: 'BLOCKED' });
+                    result.status ( 403 );
+                    return;
+                }
+
+                if ( !user.block && await bcrypt.compare ( body.password, user.password )) {
                     console.log ( 'PASSWORDS MATCHED' );
                     result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
                     return;
@@ -463,8 +470,8 @@ export class UsersREST {
         try {
             const userID = request.params.userID;
             const role = request.body.role;
-            
             const conn = this.db.makeConnection ();
+
             await this.db.users.updateRoleAsync ( conn, userID, role );
 
             result.json ({ status: 'OK' });
