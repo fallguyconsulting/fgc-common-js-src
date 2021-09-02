@@ -128,16 +128,13 @@ export class UsersREST {
 
         const query         = request.query || {};
         const searchTerm    = query.search;
-        const base          = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
-        const count         = _.has ( query, 'count' ) ? parseInt ( query.count ) : 10;
 
-        const conn = this.db.makeConnection ();
-
-        let top = base + count;
         let userIDs = [];
         let totalUsers = 0;
         const users = [];
         
+        const conn = this.db.makeConnection ();
+
         if ( searchTerm ) { 
             userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
             totalUsers = userIDs.length;
@@ -146,10 +143,8 @@ export class UsersREST {
             userIDs = await this.db.users.getUserIDAsync ( conn );
             totalUsers = await this.db.users.getCountAsync ( conn );
         }
-        
-        top = top < totalUsers ? top : totalUsers;
 
-        for ( let i = base; i < top; ++i ) {
+        for ( let i = 0; i < totalUsers; ++i ) {
     
             let userID = userIDs [ i ];
             const user = await this.db.users.getUserByIDAsync ( conn, userID );

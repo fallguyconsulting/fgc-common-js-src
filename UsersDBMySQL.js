@@ -64,7 +64,6 @@ export class UsersDBMySQL extends UsersDB {
                     AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE ) OR
                     MATCH ( lastname )
                     AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE )
-               LIMIT 0,10
             `);
 
             const userID = data.map (( user ) => {
@@ -99,7 +98,7 @@ export class UsersDBMySQL extends UsersDB {
                 SELECT      id
                 FROM        datadash_users 
             `));
-           
+        
             const userID = data.map (( user ) => {
                 return user.id;
             });
@@ -228,7 +227,7 @@ export class UsersDBMySQL extends UsersDB {
                 WHERE Key_name = 'lastname'
             ` );
 
-            if ( firstNameIndex.length === 0 ) {
+            if ( lastNameIndex.length === 0 ) {
                 await conn.query ( `
                     ALTER TABLE datadash_users
                     ADD FULLTEXT INDEX firstname ( firstname )
