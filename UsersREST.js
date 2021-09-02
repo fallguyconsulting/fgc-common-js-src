@@ -39,7 +39,7 @@ export class UsersREST {
         this.router.post        ( '/login/reset',           this.postLoginWithPasswordResetAsync.bind ( this ));
         this.router.post        ( '/login/register',        this.postLoginWithRegisterUserAsync.bind ( this ));
         this.router.get         ( '/users/:userID',         this.getUserAsync.bind ( this ));
-        this.router.get         ( '/allusers',              this.getAllUsersAsync.bind ( this ));
+        this.router.get         ( '/users',                 this.getUsersAsync.bind ( this ));
         this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
 
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
@@ -47,7 +47,6 @@ export class UsersREST {
 
         this.router.delete      ( '/users/:userID/unblock',     tokenMiddleware.withTokenAuth (), this.deleteUserBlockAsync.bind ( this ));
         this.router.put         ( '/users/:userID/block',       tokenMiddleware.withTokenAuth (), this.putUserBlockAsync.bind ( this ));
-        this.router.get         ( '/users',                     tokenMiddleware.withTokenAuth (), this.getUsersAsync.bind ( this ));
 
         this.router.post (
             '/invitations',
@@ -125,62 +124,84 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
-    async getAllUsersAsync ( request, result ) {
-
-        const query     = request.query || {};
-        const base      = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
-        const count     = _.has ( query, 'count' ) ? parseInt ( query.count ) : 10;
-
-        const conn = this.db.makeConnection ();
-        const totalUsers = await this.db.users.getCountAsync ( conn );
-        
-        console.log ( 'TOTAL USERS', totalUsers );
-
-        let top = base + count;
-        top = top < totalUsers ? top : totalUsers;
-
-        console.log ( base, top );
-
-        const userIDs = await this.db.users.getUserIDAsync ( conn );
-        const users = [];
-
-        for ( let i = base; i < top; ++i ) {
-
-            let userID = userIDs [ i ];
-            const user = await this.db.users.getUserByIDAsync ( conn, userID );
-            
-            if ( user ) {
-                users.push ({
-                    userID:         userID,
-                    emailMD5:       user.emailMD5,
-                    publicName:     this.db.users.formatUserPublicName ( user ),
-                    roles:          user.roles,
-                    block:          user.block,
-                });
-            }
-        }
-        result.json ({
-            totalUsers:     totalUsers,
-            users:          users,
-        });
-    }
-
-    //----------------------------------------------------------------//
     async getUsersAsync ( request, result ) {
 
-        try {
-            const searchTerm = request.query.search;
+        const query         = request.query || {};
+        const searchTerm    = query.search;
+        const base          = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
+        const count         = _.has ( query, 'count' ) ? parseInt ( query.count ) : 10;
 
-            const conn = this.db.makeConnection ();
-            const searchResults = await this.db.users.findUsersAsync ( conn, searchTerm );
+        const conn = this.db.makeConnection ();
 
-            result.json ({ users : searchResults });
-            
+        if ( searchTerm ) { 
+            const userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
+
+console.log(userIDs);
+            // const totalUsers = userIDs.length;
+            // console.log ( 'TOTAL USERS', totalUsers );
+            // let top = base + count;
+            // top = top < totalUsers ? top : totalUsers;
+    
+            // console.log ( base, top );
+
+            // const users = [];
+
+            // for ( let i = base; i < top; ++i ) {
+    
+            //     let userID = userIDs [ i ];
+            //     const user = await this.db.users.getUserByIDAsync ( conn, userID );
+                
+            //     if ( user ) {
+            //         users.push ({
+            //             userID:         userID,
+            //             emailMD5:       user.emailMD5,
+            //             publicName:     this.db.users.formatUserPublicName ( user ),
+            //             roles:          user.roles,
+            //             block:          user.block,
+            //         });
+            //     }
+            // }
+            result.json ({
+                // totalUsers:     totalUsers,
+                // users:          users,
+            });
+
         }
-        catch ( error ) {
-            console.log ( error );
+        else {
+            const totalUsers = await this.db.users.getCountAsync ( conn );
+            
+            console.log ( 'TOTAL USERS', totalUsers );
+    
+            let top = base + count;
+            top = top < totalUsers ? top : totalUsers;
+    
+            console.log ( base, top );
+    
+            const userIDs = await this.db.users.getUserIDAsync ( conn );
+            const users = [];
+    
+            for ( let i = base; i < top; ++i ) {
+    
+                let userID = userIDs [ i ];
+                const user = await this.db.users.getUserByIDAsync ( conn, userID );
+                
+                if ( user ) {
+                    users.push ({
+                        userID:         userID,
+                        emailMD5:       user.emailMD5,
+                        publicName:     this.db.users.formatUserPublicName ( user ),
+                        roles:          user.roles,
+                        block:          user.block,
+                    });
+                }
+            }
+            result.json ({
+                totalUsers:     totalUsers,
+                users:          users,
+            });
         }
     }
+
     //----------------------------------------------------------------//
     async postInvitation ( request, result ) {
 

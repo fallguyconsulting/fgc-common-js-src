@@ -56,20 +56,18 @@ export class UsersDBMySQL extends UsersDB {
 
         return conn.runInConnectionAsync ( async () => {
 
-            const rows = await conn.query (`
-                SELECT      *
+            const users = await conn.query (`
+                SELECT      id
                 FROM        datadash_users 
                 WHERE
                     MATCH ( firstname )
+                    AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE ) OR
+                    MATCH ( lastname )
                     AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE )
                LIMIT 0,10
             `);
 
-            const searchResults = [];
-            for ( let row of rows ) {
-                searchResults.push ( this.userFromRow ( row ));
-            }
-            return searchResults;
+            return users;
         });
     }
 
@@ -207,6 +205,16 @@ export class UsersDBMySQL extends UsersDB {
                     roles       TEXT NOT NULL,
                     PRIMARY KEY ( id )
                 )
+            `);
+
+            await conn.query (`
+                ALTER TABLE datadash_users 
+                ADD FULLTEXT INDEX ( firstname )
+            `);
+
+            await conn.query (`
+                ALTER TABLE datadash_users 
+                ADD FULLTEXT INDEX ( lastname )
             `);
 
             const block = await conn.query (`
