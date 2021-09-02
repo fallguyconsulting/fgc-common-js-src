@@ -48,6 +48,31 @@ export class UsersDBMySQL extends UsersDB {
 
         });
     }
+
+    //----------------------------------------------------------------//
+    async findUsersAsync ( conn, searchTerm ) {
+        
+        if ( !searchTerm ) return [];
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const rows = await conn.query (`
+                SELECT      *
+                FROM        datadash_users 
+                WHERE
+                    MATCH ( firstname )
+                    AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE )
+               LIMIT 0,10
+            `);
+
+            const searchResults = [];
+            for ( let row of rows ) {
+                searchResults.push ( this.userFromRow ( row ));
+            }
+            return searchResults;
+        });
+    }
+
     //----------------------------------------------------------------//
     async getCountAsync ( conn ) {
 
@@ -155,7 +180,7 @@ export class UsersDBMySQL extends UsersDB {
     async updateBlockAsync ( conn, userID ) {
 
         return conn.runInConnectionAsync ( async () => {
-            
+
             const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
             if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
 

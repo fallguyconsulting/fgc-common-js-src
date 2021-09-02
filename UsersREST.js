@@ -39,7 +39,7 @@ export class UsersREST {
         this.router.post        ( '/login/reset',           this.postLoginWithPasswordResetAsync.bind ( this ));
         this.router.post        ( '/login/register',        this.postLoginWithRegisterUserAsync.bind ( this ));
         this.router.get         ( '/users/:userID',         this.getUserAsync.bind ( this ));
-        this.router.get         ( '/users',                 this.getUsersAsync.bind ( this ));
+        this.router.get         ( '/allusers',              this.getAllUsersAsync.bind ( this ));
         this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
 
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
@@ -47,6 +47,7 @@ export class UsersREST {
 
         this.router.delete      ( '/users/:userID/unblock',     tokenMiddleware.withTokenAuth (), this.deleteUserBlockAsync.bind ( this ));
         this.router.put         ( '/users/:userID/block',       tokenMiddleware.withTokenAuth (), this.putUserBlockAsync.bind ( this ));
+        this.router.get         ( '/users',                     tokenMiddleware.withTokenAuth (), this.getUsersAsync.bind ( this ));
 
         this.router.post (
             '/invitations',
@@ -71,7 +72,6 @@ export class UsersREST {
 
             await this.db.users.deleteBlockAsync ( conn, userID );
 
-            // rest.handleSuccess ( response );
             result.json ({ status: 'OK' });
             return;
         }
@@ -125,7 +125,7 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
-    async getUsersAsync ( request, result ) {
+    async getAllUsersAsync ( request, result ) {
 
         const query     = request.query || {};
         const base      = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
@@ -145,9 +145,10 @@ export class UsersREST {
         const users = [];
 
         for ( let i = base; i < top; ++i ) {
-            // const userID = UsersDBRedis.formatUserID ( i );
+
             let userID = userIDs [ i ];
             const user = await this.db.users.getUserByIDAsync ( conn, userID );
+            
             if ( user ) {
                 users.push ({
                     userID:         userID,
@@ -164,6 +165,22 @@ export class UsersREST {
         });
     }
 
+    //----------------------------------------------------------------//
+    async getUsersAsync ( request, result ) {
+
+        try {
+            const searchTerm = request.query.search;
+
+            const conn = this.db.makeConnection ();
+            const searchResults = await this.db.users.findUsersAsync ( conn, searchTerm );
+
+            result.json ({ users : searchResults });
+            
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+    }
     //----------------------------------------------------------------//
     async postInvitation ( request, result ) {
 
