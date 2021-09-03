@@ -153,8 +153,6 @@ export class UsersREST {
         let totalUsers = 0;
         const users = [];
         
-       
-
         const conn = this.db.makeConnection ();
 
         if ( searchTerm ) { 
@@ -165,12 +163,11 @@ export class UsersREST {
         else {
             userIDs = await this.db.users.getUserIDAsync ( conn );
             totalUsers = await this.db.users.getCountAsync ( conn );
+            console.log('[TOTAL USERS COUNT]', totalUsers);
         }
 
         let top = base + count;
         top = top < totalUsers ? top : totalUsers;
-
-        console.log ( base, top );
 
         for ( let i = base; i < top; ++i ) {
     
