@@ -43,16 +43,33 @@ export class UsersREST {
         this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
 
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
-        const sessionMiddleware     = new SessionMiddleware ( this.db.users );
+        const sessionMiddleware     = new SessionMiddleware ( this.db );
 
-        this.router.delete      ( '/users/:userID/unblock',     tokenMiddleware.withTokenAuth (), this.deleteUserBlockAsync.bind ( this ));
-        this.router.put         ( '/users/:userID/block',       tokenMiddleware.withTokenAuth (), this.putUserBlockAsync.bind ( this ));
-        this.router.put         ( '/users/:userID/role',        tokenMiddleware.withTokenAuth (), this.putUserRoleAsync.bind ( this ));
+        this.router.delete (
+            '/users/:userID/unblock',
+            tokenMiddleware.withTokenAuth (), 
+            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
+            this.deleteUserBlockAsync.bind ( this )
+        );
+
+        this.router.put (
+            '/users/:userID/block',
+            tokenMiddleware.withTokenAuth (),
+            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
+            this.putUserBlockAsync.bind ( this )
+        );
+
+        this.router.put (
+            '/users/:userID/role',
+            tokenMiddleware.withTokenAuth (),
+            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
+            this.putUserRoleAsync.bind ( this )
+        );
 
         this.router.post (
             '/invitations',
             tokenMiddleware.withTokenAuth (),
-            // sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
+            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
             this.postInvitation.bind ( this )
         );
 
