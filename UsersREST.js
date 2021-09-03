@@ -146,23 +146,33 @@ export class UsersREST {
 
         const query         = request.query || {};
         const searchTerm    = query.search;
+        const base      = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
+        const count     = _.has ( query, 'count' ) ? parseInt ( query.count ) : 50;
 
         let userIDs = [];
         let totalUsers = 0;
         const users = [];
         
+       
+
         const conn = this.db.makeConnection ();
 
         if ( searchTerm ) { 
             userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
             totalUsers = userIDs.length;
+            console.log('[TOTAL SEARCHED USERS COUNT]', totalUsers);
         }
         else {
             userIDs = await this.db.users.getUserIDAsync ( conn );
             totalUsers = await this.db.users.getCountAsync ( conn );
         }
 
-        for ( let i = 0; i < totalUsers; ++i ) {
+        let top = base + count;
+        top = top < totalUsers ? top : totalUsers;
+
+        console.log ( base, top );
+
+        for ( let i = base; i < top; ++i ) {
     
             let userID = userIDs [ i ];
             const user = await this.db.users.getUserByIDAsync ( conn, userID );
@@ -172,6 +182,8 @@ export class UsersREST {
                     userID:         userID,
                     emailMD5:       user.emailMD5,
                     publicName:     this.db.users.formatUserPublicName ( user ),
+                    firstname:      user.firstname,
+                    lastname:       user.lastname,
                     roles:          user.roles,
                     block:          user.block,
                 });
