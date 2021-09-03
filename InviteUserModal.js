@@ -19,14 +19,23 @@ export const InviteUserForm = observer (( props ) => {
 
     const { session, controller, disabled } = props;
 
-    const roleOptions = [];
-    for ( const role of session.roles ) {
-        roleOptions.push ({
-            key:role,
-            text: role,
-            value: role,
-        });
-    }
+    const roleOptions = [
+        {
+            key: 'user',
+            text: 'User',
+            value: 'user',
+        },
+        {
+            key: 'developer',
+            text: 'Developer',
+            value: 'developer',
+        },
+        {
+            key: 'admin',
+            text: 'Admin',
+            value: 'admin',
+        },
+    ]
 
     const handleRolesChange = ( e, {value} ) => {
         controller.setRoles ( value );
@@ -50,7 +59,6 @@ export const InviteUserForm = observer (( props ) => {
             <UI.Form.Input fluid>
                 <UI.Dropdown
                     fluid
-                    multiple
                     selection
                     placeholder = 'Roles' 
                     options     = { roleOptions }
