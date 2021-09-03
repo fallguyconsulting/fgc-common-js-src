@@ -158,12 +158,10 @@ export class UsersREST {
         if ( searchTerm ) { 
             userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
             totalUsers = userIDs.length;
-            console.log('[TOTAL SEARCHED USERS COUNT]', totalUsers);
         }
         else {
             userIDs = await this.db.users.getUserIDAsync ( conn );
             totalUsers = await this.db.users.getCountAsync ( conn );
-            console.log('[TOTAL USERS COUNT]', totalUsers);
         }
 
         let top = base + count;
