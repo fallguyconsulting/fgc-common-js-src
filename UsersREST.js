@@ -52,7 +52,7 @@ export class UsersREST {
         this.router.post (
             '/invitations',
             tokenMiddleware.withTokenAuth (),
-            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
+            // sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
             this.postInvitation.bind ( this )
         );
 
@@ -173,32 +173,29 @@ export class UsersREST {
 
             console.log ( 'POST INVITATION' );
 
-            const user = request.user;
-            let roles = request.body.roles || [];
-            roles = roles.filter (( x ) => { return request.user.roles.includes ( x )});
-
-            console.log ( 'REQUESTED ROLES:', JSON.stringify ( request.body.roles || []));
-            console.log ( 'USER ROLES:', JSON.stringify ( user.roles ));
-            console.log ( 'ROLES:', JSON.stringify ( roles ));
-
+            const userID        = request.userID;
+            const roles         = request.body.roles || [];
             const email         = request.body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
+    
+            // console.log ( 'REQUESTED ROLES:', JSON.stringify ( request.body.roles || []));
+
 
             // if already exists, just apply the roles and be done with it
             const conn = this.db.makeConnection ();
             const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
 
             if ( exists ) {
-
+                console.log('ALREADY HAS AN ACCOUNT');
                 const invitee = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
-                assert ( invitee.userID !== user.userID );
+                assert ( invitee.userID !== userID );
 
                 console.log ( 'UPDATING ROLES:', invitee.userID, JSON.stringify ( roles ));
                 invitee.roles = roles;
                 this.db.users.setUserAsync ( conn, invitee );
             }
             else {
-
+                console.log('NEW INVITE');
                 await this.sendVerifierEmailAsync (
                     email,
                     token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
@@ -212,7 +209,6 @@ export class UsersREST {
             return;
         }
         catch ( error ) {
-
             console.log ( error );
         }
         result.json ({});

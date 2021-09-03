@@ -22,7 +22,7 @@ export class UsersDBMySQL extends UsersDB {
             const result = await conn.query (`
                 REPLACE
                 INTO        datadash_users ( firstname, lastname, password, emailMD5, roles )
-                VALUES      ( '${ user.firstname }', '${ user.lastname }', '${ user.password }', '${ user.emailMD5 }', '' )
+                VALUES      ( '${ user.firstname }', '${ user.lastname }', '${ user.password }', '${ user.emailMD5 }', '${ user.roles }' )
             `)
 
             assert ( typeof ( result.insertId ) === 'number' );
