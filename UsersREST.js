@@ -178,31 +178,23 @@ export class UsersREST {
             const email         = request.body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
     
-            // console.log ( 'REQUESTED ROLES:', JSON.stringify ( request.body.roles || []));
-
-
             // if already exists, just apply the roles and be done with it
             const conn = this.db.makeConnection ();
             const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
 
             if ( exists ) {
-                console.log('ALREADY HAS AN ACCOUNT');
                 const invitee = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
                 assert ( invitee.userID !== userID );
-
-                console.log ( 'UPDATING ROLES:', invitee.userID, JSON.stringify ( roles ));
-                invitee.roles = roles;
-                this.db.users.setUserAsync ( conn, invitee );
+                this.db.users.updateRoleAsync ( conn, invitee.userID, roles );
             }
             else {
-                console.log('NEW INVITE');
                 await this.sendVerifierEmailAsync (
                     email,
                     token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.INVITE_USER_EMAIL_SUBJECT,
-                    this.templates.INVITE_USER_EMAIL_TEXT_BODY_TEMPLATE,
-                    this.templates.INVITE_USER_EMAIL_HTML_BODY_TEMPLATE
+                    this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,
+                    this.templates.REGISTER_USER_EMAIL_HTML_BODY_TEMPLATE
                 );
             }
             result.json ({ status: 'OK' });
