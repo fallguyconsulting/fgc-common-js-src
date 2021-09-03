@@ -17,25 +17,7 @@ import * as UI                                  from 'semantic-ui-react';
 //================================================================//
 export const InviteUserForm = observer (( props ) => {
 
-    const { session, controller, disabled } = props;
-
-    const roleOptions = [
-        {
-            key: 'user',
-            text: 'User',
-            value: 'user',
-        },
-        {
-            key: 'developer',
-            text: 'Developer',
-            value: 'developer',
-        },
-        {
-            key: 'admin',
-            text: 'Admin',
-            value: 'admin',
-        },
-    ]
+    const { controller, disabled } = props;
 
     const handleRolesChange = ( e, {value} ) => {
         controller.setRoles ( value );
@@ -61,7 +43,7 @@ export const InviteUserForm = observer (( props ) => {
                     fluid
                     selection
                     placeholder = 'Roles' 
-                    options     = { roleOptions }
+                    options     = { controller.roleOptions }
                     onChange    = { handleRolesChange }
                 />
             </UI.Form.Input>
