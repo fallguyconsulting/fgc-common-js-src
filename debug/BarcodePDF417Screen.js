@@ -49,7 +49,6 @@ export const BarcodePDF417Screen = observer (( props ) => {
                         version = '1.1'
                         baseProfile = 'basic'
                         xmlns = 'http://www.w3.org/2000/svg'
-                        xmlnsXlink = 'http://www.w3.org/1999/xlink'
                         width = { `${ docWidth }in` }
                         height = { `${ docHeight }in` }
                         viewBox = { `0 0 ${ w } ${ h }` }
