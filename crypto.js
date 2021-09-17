@@ -6,7 +6,8 @@ import * as bip32               from 'bip32';
 import * as bip39               from 'bip39';
 import * as bitcoin             from 'bitcoinjs-lib';
 import CryptoJS                 from 'crypto-js';
-import JSEncrypt                from 'jsencrypt';
+// import JSEncrypt                from 'jsencrypt';
+import JSEncrypt                from 'node-jsencrypt';
 import keyutils                 from 'js-crypto-key-utils';
 import * as secp256k1           from 'secp256k1'
 
