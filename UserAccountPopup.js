@@ -74,6 +74,14 @@ export const UserAccountPopup = observer (( props ) => {
                                 <UI.Header as = 'h4'>{ session.publicName }</UI.Header>
                             </center>
 
+                            <UI.Menu secondary vertical style = {{ margin: '0px' }}>
+                                <UI.Menu.Item
+                                    href = '/challenges'
+                                >
+                                    <UI.Icon name = 'tasks'/>
+                                    Challenges
+                                </UI.Menu.Item>
+                            </UI.Menu>
                             <If condition = { roles.canInviteUser ( session.roles )}>
                                 <UI.Menu secondary vertical style = {{ margin: '0px' }}>
                                     <UI.Menu.Item
