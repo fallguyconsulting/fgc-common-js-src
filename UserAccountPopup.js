@@ -76,10 +76,10 @@ export const UserAccountPopup = observer (( props ) => {
 
                             <UI.Menu secondary vertical style = {{ margin: '0px' }}>
                                 <UI.Menu.Item
-                                    href = '/challenges'
+                                    href = '/tasks'
                                 >
                                     <UI.Icon name = 'tasks'/>
-                                    Challenges
+                                    Tasks
                                 </UI.Menu.Item>
                             </UI.Menu>
                             <If condition = { roles.canInviteUser ( session.roles )}>
