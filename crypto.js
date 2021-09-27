@@ -266,7 +266,6 @@ export function keyFromPrivateHex ( privateKeyHex ) {
 export async function loadKeyAsync ( phraseOrPEM ) {
 
     console.log ( 'LOAD KEY ASYNC' );
-    console.log ( phraseOrPEM );
 
     try {
         if ( bip39.validateMnemonic ( phraseOrPEM )) {
@@ -310,7 +309,7 @@ export async function loadKeyAsync ( phraseOrPEM ) {
 
         const key = await pemToKeyAsync ( phraseOrPEM );
 
-        console.log ( key );
+        // console.log ( key );
 
         // const publicKey = key.getPublicKeyBuffer ().toString ( 'hex' ).toUpperCase ();
         // console.log ( 'PUBLIC_KEY', publicKey );
