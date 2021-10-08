@@ -19,6 +19,7 @@ export class FormErrors {
         INVALID_PASSWORD:       'INVALID_PASSWORD',
         LOGIN_FAILED:           'LOGIN_FAILED',
         WEB_CALL:               'WEB_CALL',
+        ACCOUNT_BLOCKED:        'ACCOUNT_BLOCKED'
     };
 
     static FIELDS = {
@@ -67,6 +68,7 @@ export class FormErrors {
             case FormErrors.ERRORS.INVALID_PASSWORD:    return 'Password contains illegal characters.';
             case FormErrors.ERRORS.LOGIN_FAILED:        return 'Login failed.';
             case FormErrors.ERRORS.WEB_CALL:            return 'Web error. Please report or try again later.';
+            case FormErrors.ERRORS.ACCOUNT_BLOCKED:     return 'Account has been blocked.';
         }
         return 'Validation error.';
     }
