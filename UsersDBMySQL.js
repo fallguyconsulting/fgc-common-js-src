@@ -251,7 +251,7 @@ export class UsersDBMySQL extends UsersDB {
             if ( lastNameIndex.length === 0 ) {
                 await conn.query ( `
                     ALTER TABLE datadash_users
-                    ADD FULLTEXT INDEX firstname ( firstname )
+                    ADD FULLTEXT INDEX lastname ( lastname )
                 ` );
             }
 
