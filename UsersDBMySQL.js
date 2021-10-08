@@ -22,13 +22,55 @@ export class UsersDBMySQL extends UsersDB {
             const result = await conn.query (`
                 REPLACE
                 INTO        datadash_users ( firstname, lastname, password, emailMD5, roles )
-                VALUES      ( '${ user.firstname }', '${ user.lastname }', '${ user.password }', '${ user.emailMD5 }', '' )
+                VALUES      ( '${ user.firstname }', '${ user.lastname }', '${ user.password }', '${ user.emailMD5 }', '${ user.roles }' )
             `)
 
             assert ( typeof ( result.insertId ) === 'number' );
             user.userID = result.insertId;
 
             return user;
+        });
+    }
+
+    //----------------------------------------------------------------//
+    async deleteBlockAsync ( conn, userID ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
+    
+            await conn.query (`
+                UPDATE  datadash_users
+                SET     block      = NULL
+                WHERE   id         = ${ userID }
+            `);
+
+        });
+    }
+
+    //----------------------------------------------------------------//
+    async findUsersAsync ( conn, searchTerm ) {
+        
+        if ( !searchTerm ) return [];
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const data = await conn.query (`
+                SELECT      id
+                FROM        datadash_users 
+                WHERE
+                    MATCH ( firstname )
+                    AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE ) OR
+                    MATCH ( lastname )
+                    AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE )
+            `);
+
+            const userID = data.map (( user ) => {
+                return user.id;
+            });
+
+            return userID;
         });
     }
 
@@ -44,6 +86,24 @@ export class UsersDBMySQL extends UsersDB {
             `))[ 0 ];
             
             return row && row.count || 0
+        });
+    }
+
+    //----------------------------------------------------------------//
+    async getUserIDAsync ( conn ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const data = ( await conn.query (`
+                SELECT      id
+                FROM        datadash_users 
+            `));
+        
+            const userID = data.map (( user ) => {
+                return user.id;
+            });
+        
+            return userID;
         });
     }
 
@@ -118,6 +178,43 @@ export class UsersDBMySQL extends UsersDB {
     }
 
     //----------------------------------------------------------------//
+    async updateBlockAsync ( conn, userID ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
+
+            await conn.query (`
+                UPDATE  datadash_users
+                SET     block      = TRUE
+                WHERE   id         = ${ userID }
+            `);
+    
+        });
+    }
+
+    //----------------------------------------------------------------//
+    async updateRoleAsync ( conn, userID, role ) {
+
+        return conn.runInConnectionAsync ( async () => {
+
+            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
+
+            if ( role === 'user' ) {
+                role ='';
+            } 
+         
+            await conn.query (`
+                UPDATE  datadash_users
+                SET     roles      = '${ role }'
+                WHERE   id         = ${ userID }
+            `);
+        });
+    }
+
+    //----------------------------------------------------------------//
     async updateDatabaseSchemaAsync ( conn ) {
 
         conn.runInTransactionAsync ( async () => {
@@ -133,6 +230,46 @@ export class UsersDBMySQL extends UsersDB {
                     PRIMARY KEY ( id )
                 )
             `);
+
+            const firstNameIndex = await conn.query ( `
+                SHOW INDEXES FROM datadash_users
+                WHERE Key_name = 'firstname'
+            ` );
+
+            if ( firstNameIndex.length === 0 ) {
+                await conn.query ( `
+                    ALTER TABLE datadash_users
+                    ADD FULLTEXT INDEX firstname ( firstname )
+                ` );
+            }
+
+            const lastNameIndex = await conn.query ( `
+                SHOW INDEXES FROM datadash_users
+                WHERE Key_name = 'lastname'
+            ` );
+
+            if ( lastNameIndex.length === 0 ) {
+                await conn.query ( `
+                    ALTER TABLE datadash_users
+                    ADD FULLTEXT INDEX firstname ( firstname )
+                ` );
+            }
+
+            const block = await conn.query (`
+                SELECT      *
+                FROM        INFORMATION_SCHEMA.COLUMNS
+                WHERE       TABLE_SCHEMA    = 'diablo_golf'
+                    AND     TABLE_NAME      = 'datadash_users'
+                    AND     COLUMN_NAME     = 'block'
+                LIMIT       0, 1
+            `)
+
+            if ( block.length === 0 ) {
+                await conn.query (`
+                    ALTER TABLE datadash_users 
+                    ADD COLUMN block BOOL
+                `);
+            };
         });
     }
 
@@ -145,7 +282,8 @@ export class UsersDBMySQL extends UsersDB {
             lastname:   row.lastname,
             password:   row.password,
             emailMD5:   row.emailMD5,
-            roles:      [],
+            roles:      row.roles,
+            block:      row.block,
         };
     }
 }

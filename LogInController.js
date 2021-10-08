@@ -191,6 +191,9 @@ export class LogInController {
                     this.session.login ( json.session );
                     this.reset ();
                 }
+                else if ( json.status === 'BLOCKED' ) {
+                    this.errors.setFormError ( FormErrors.ERRORS.ACCOUNT_BLOCKED );
+                }
                 else {
                     this.errors.setFormError ( FormErrors.ERRORS.LOGIN_FAILED );
                 }
