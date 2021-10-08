@@ -83,6 +83,28 @@ export class InviteUserController {
     }
 
     //----------------------------------------------------------------//
+    get
+    roleOptions () {
+        return ([
+            {
+                key: 'user',
+                text: 'User',
+                value: 'user',
+            },
+            {
+                key: 'developer',
+                text: 'Developer',
+                value: 'developer',
+            },
+            {
+                key: 'admin',
+                text: 'Admin',
+                value: 'admin',
+            },
+        ]);
+    }
+
+    //----------------------------------------------------------------//
     @action
     setEmail ( email ) {
         this.errors.clearError ( FormErrors.FIELDS.EMAIL );
