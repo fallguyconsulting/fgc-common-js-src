@@ -104,6 +104,7 @@ export class MySQLConnection {
         }
         catch ( error ) {
             await this.endConnectionAsync ();
+            console.log ( error );
             throw error;
         }
     }
@@ -120,6 +121,7 @@ export class MySQLConnection {
                 return result;
             }
             catch ( error ) {
+                console.log ( error );
                 await this.abortTransactionAsync ();
                 throw error;
             }

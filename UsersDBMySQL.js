@@ -3,6 +3,7 @@
 import { assert }                       from './assert';
 import { ModelError, ERROR_STATUS }     from './ModelError';
 import { UsersDB }                      from './UsersDB';
+import * as consts                      from 'consts';
 
 //================================================================//
 // UsersDBMySQL
@@ -21,7 +22,7 @@ export class UsersDBMySQL extends UsersDB {
 
             const result = await conn.query (`
                 REPLACE
-                INTO        datadash_users ( firstname, lastname, password, emailMD5, roles )
+                INTO        ${ consts.USERSDB_MYSQL_TABLE } ( firstname, lastname, password, emailMD5, roles )
                 VALUES      ( '${ user.firstname }', '${ user.lastname }', '${ user.password }', '${ user.emailMD5 }', '${ user.roles }' )
             `)
 
@@ -37,11 +38,11 @@ export class UsersDBMySQL extends UsersDB {
 
         return conn.runInConnectionAsync ( async () => {
 
-            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            const row = ( await conn.query ( `SELECT * FROM ${ consts.USERSDB_MYSQL_TABLE } WHERE id = ${ userID }` ))[ 0 ];
             if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
     
             await conn.query (`
-                UPDATE  datadash_users
+                UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
                 SET     block      = NULL
                 WHERE   id         = ${ userID }
             `);
@@ -58,7 +59,7 @@ export class UsersDBMySQL extends UsersDB {
 
             const data = await conn.query (`
                 SELECT      id
-                FROM        datadash_users 
+                FROM        ${ consts.USERSDB_MYSQL_TABLE } 
                 WHERE
                     MATCH ( firstname )
                     AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE ) OR
@@ -82,7 +83,7 @@ export class UsersDBMySQL extends UsersDB {
             const row = ( await conn.query (`
                 SELECT      COUNT ( id )
                 AS          count
-                FROM        datadash_users
+                FROM        ${ consts.USERSDB_MYSQL_TABLE }
             `))[ 0 ];
             
             return row && row.count || 0
@@ -96,7 +97,7 @@ export class UsersDBMySQL extends UsersDB {
 
             const data = ( await conn.query (`
                 SELECT      id
-                FROM        datadash_users 
+                FROM        ${ consts.USERSDB_MYSQL_TABLE } 
             `));
         
             const userID = data.map (( user ) => {
@@ -114,7 +115,7 @@ export class UsersDBMySQL extends UsersDB {
 
             const row = ( await conn.query (`
                 SELECT      *
-                FROM        datadash_users 
+                FROM        ${ consts.USERSDB_MYSQL_TABLE } 
                 WHERE       emailMD5 = '${ emailMD5 }'
             `))[ 0 ];
             
@@ -130,7 +131,7 @@ export class UsersDBMySQL extends UsersDB {
 
             const row = ( await conn.query (`
                 SELECT      *
-                FROM        datadash_users 
+                FROM        ${ consts.USERSDB_MYSQL_TABLE } 
                 WHERE       id = ${ userID }
             `))[ 0 ];
             
@@ -147,7 +148,7 @@ export class UsersDBMySQL extends UsersDB {
             const row = ( await conn.query (`
                 SELECT      COUNT ( id )
                 AS          count
-                FROM        datadash_users
+                FROM        ${ consts.USERSDB_MYSQL_TABLE }
                 WHERE       emailMD5 = '${ emailMD5 }'
             `))[ 0 ];
             
@@ -163,7 +164,7 @@ export class UsersDBMySQL extends UsersDB {
             const row = ( await conn.query (`
                 SELECT      COUNT ( id )
                 AS          count
-                FROM        datadash_users
+                FROM        ${ consts.USERSDB_MYSQL_TABLE }
                 WHERE       id = ${ userID }
             `))[ 0 ];
             
@@ -182,11 +183,11 @@ export class UsersDBMySQL extends UsersDB {
 
         return conn.runInConnectionAsync ( async () => {
 
-            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            const row = ( await conn.query ( `SELECT * FROM ${ consts.USERSDB_MYSQL_TABLE } WHERE id = ${ userID }` ))[ 0 ];
             if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
 
             await conn.query (`
-                UPDATE  datadash_users
+                UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
                 SET     block      = TRUE
                 WHERE   id         = ${ userID }
             `);
@@ -199,7 +200,7 @@ export class UsersDBMySQL extends UsersDB {
 
         return conn.runInConnectionAsync ( async () => {
 
-            const row = ( await conn.query ( `SELECT * FROM datadash_users WHERE id = ${ userID }` ))[ 0 ];
+            const row = ( await conn.query ( `SELECT * FROM ${ consts.USERSDB_MYSQL_TABLE } WHERE id = ${ userID }` ))[ 0 ];
             if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
 
             if ( role === 'user' ) {
@@ -207,7 +208,7 @@ export class UsersDBMySQL extends UsersDB {
             } 
          
             await conn.query (`
-                UPDATE  datadash_users
+                UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
                 SET     roles      = '${ role }'
                 WHERE   id         = ${ userID }
             `);
@@ -217,10 +218,10 @@ export class UsersDBMySQL extends UsersDB {
     //----------------------------------------------------------------//
     async updateDatabaseSchemaAsync ( conn ) {
 
-        conn.runInTransactionAsync ( async () => {
+        return conn.runInTransactionAsync ( async () => {
 
             await conn.query (`
-                CREATE TABLE IF NOT EXISTS datadash_users (
+                CREATE TABLE IF NOT EXISTS ${ consts.USERSDB_MYSQL_TABLE } (
                     id          INT NOT NULL AUTO_INCREMENT,
                     firstname   TEXT NOT NULL,
                     lastname    TEXT NOT NULL,
@@ -232,25 +233,25 @@ export class UsersDBMySQL extends UsersDB {
             `);
 
             const firstNameIndex = await conn.query ( `
-                SHOW INDEXES FROM datadash_users
+                SHOW INDEXES FROM ${ consts.USERSDB_MYSQL_TABLE }
                 WHERE Key_name = 'firstname'
             ` );
 
             if ( firstNameIndex.length === 0 ) {
                 await conn.query ( `
-                    ALTER TABLE datadash_users
+                    ALTER TABLE ${ consts.USERSDB_MYSQL_TABLE }
                     ADD FULLTEXT INDEX firstname ( firstname )
                 ` );
             }
 
             const lastNameIndex = await conn.query ( `
-                SHOW INDEXES FROM datadash_users
+                SHOW INDEXES FROM ${ consts.USERSDB_MYSQL_TABLE }
                 WHERE Key_name = 'lastname'
             ` );
 
             if ( lastNameIndex.length === 0 ) {
                 await conn.query ( `
-                    ALTER TABLE datadash_users
+                    ALTER TABLE ${ consts.USERSDB_MYSQL_TABLE }
                     ADD FULLTEXT INDEX lastname ( lastname )
                 ` );
             }
@@ -258,15 +259,15 @@ export class UsersDBMySQL extends UsersDB {
             const block = await conn.query (`
                 SELECT      *
                 FROM        INFORMATION_SCHEMA.COLUMNS
-                WHERE       TABLE_SCHEMA    = 'diablo_golf'
-                    AND     TABLE_NAME      = 'datadash_users'
+                WHERE       TABLE_SCHEMA    = '${ consts.USERSDB_MYSQL_SCHEMA }'
+                    AND     TABLE_NAME      = '${ consts.USERSDB_MYSQL_TABLE }'
                     AND     COLUMN_NAME     = 'block'
                 LIMIT       0, 1
             `)
 
             if ( block.length === 0 ) {
                 await conn.query (`
-                    ALTER TABLE datadash_users 
+                    ALTER TABLE ${ consts.USERSDB_MYSQL_TABLE } 
                     ADD COLUMN block BOOL
                 `);
             };
