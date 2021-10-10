@@ -38,6 +38,7 @@ export class SessionController {
         if ( this.isLoggedIn ) {
             headers = headers ? _.clone ( headers ) : {};
             headers [ 'X-Auth-Token' ] = this.token;
+            headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
         }
         return headers;
     }

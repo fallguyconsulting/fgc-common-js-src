@@ -74,32 +74,8 @@ export const UserAccountPopup = observer (( props ) => {
                                 <UI.Header as = 'h4'>{ session.publicName }</UI.Header>
                             </center>
 
-                            <UI.Menu secondary vertical style = {{ margin: '0px' }}>
-                                <UI.Menu.Item
-                                    href = '/tasks'
-                                >
-                                    <UI.Icon name = 'tasks'/>
-                                    Tasks
-                                </UI.Menu.Item>
-                            </UI.Menu>
-                            <If condition = { roles.canInviteUser ( session.roles )}>
-                                <UI.Menu secondary vertical style = {{ margin: '0px' }}>
-                                    <UI.Menu.Item
-                                        onClick = { onClickInviteUser }
-                                    >
-                                        <UI.Icon name = 'paper plane outline'/>
-                                        Invite
-                                    </UI.Menu.Item>
-                                </UI.Menu>
-                                <UI.Menu secondary vertical style = {{ margin: '0px' }}>
-                                    <UI.Menu.Item
-                                        href = '/admin/usermanagement'
-                                    >
-                                        <UI.Icon name = 'address card outline'/>
-                                        User Management
-                                    </UI.Menu.Item>
-                                </UI.Menu>
-                            </If>
+                            { props.children }
+
                             <UI.Menu secondary vertical style = {{ margin: '0px' }}>
                                 <UI.Menu.Item
                                     href = '/'
