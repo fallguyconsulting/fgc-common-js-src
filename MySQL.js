@@ -69,6 +69,14 @@ export class MySQLConnection {
     }
 
     //----------------------------------------------------------------//
+    async countAsync ( fromWhere ) {
+
+        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+        const row = ( await this.connection.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
+        return row && row.count || 0;
+    }
+
+    //----------------------------------------------------------------//
     async endConnectionAsync () {
 
         if ( this.connectionDepth > 0 ) {
