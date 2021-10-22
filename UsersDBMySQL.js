@@ -2,13 +2,12 @@
 
 import { assert }                       from './assert';
 import { ModelError, ERROR_STATUS }     from './ModelError';
-import { UsersDB }                      from './UsersDB';
 import * as consts                      from 'consts';
 
 //================================================================//
 // UsersDBMySQL
 //================================================================//
-export class UsersDBMySQL extends UsersDB {
+export class UsersDBMySQL {
 
     //----------------------------------------------------------------//
     constructor () {
@@ -73,6 +72,12 @@ export class UsersDBMySQL extends UsersDB {
 
             return userID;
         });
+    }
+
+    //----------------------------------------------------------------//
+    formatUserPublicName ( user ) {
+
+        return user.lastname ? `${ user.firstname } ${ user.lastname.charAt ( 0 )}.` : user.firstname;
     }
 
     //----------------------------------------------------------------//
@@ -205,8 +210,8 @@ export class UsersDBMySQL extends UsersDB {
 
             if ( role === 'user' ) {
                 role ='';
-            } 
-         
+            }
+            
             await conn.query (`
                 UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
                 SET     roles      = '${ role }'
@@ -278,13 +283,13 @@ export class UsersDBMySQL extends UsersDB {
     userFromRow ( row ) {
 
         return {
-            userID:     row.id,
-            firstname:  row.firstname,
-            lastname:   row.lastname,
-            password:   row.password,
-            emailMD5:   row.emailMD5,
-            roles:      row.roles,
-            block:      row.block,
+            userID:         row.id,
+            firstname:      row.firstname,
+            lastname:       row.lastname,
+            password:       row.password,
+            emailMD5:       row.emailMD5,
+            roles:          row.roles,
+            block:          row.block,
         };
     }
 }
