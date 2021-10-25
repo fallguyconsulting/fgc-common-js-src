@@ -43,17 +43,9 @@ export const LogInWithCreateUserScreen = observer (( props ) => {
                     fluid
                     icon = 'user'
                     iconPosition = 'left'
-                    placeholder = 'First Name'
-                    value = { controller.firstname }
-                    onChange = {( e ) => { controller.setFirstname ( e.target.value )}}
-                />
-                <UI.Form.Input
-                    fluid
-                    icon = 'user'
-                    iconPosition = 'left'
-                    placeholder = 'Last Name'
-                    value = { controller.lastname }
-                    onChange = {( e ) => { controller.setLastname ( e.target.value )}}
+                    placeholder = 'Username'
+                    value = { controller.username }
+                    onChange = {( e ) => { controller.setUsername ( e.target.value )}}
                 />
                 <UI.Form.Input
                     fluid

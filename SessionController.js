@@ -78,7 +78,7 @@ export class SessionController {
     //----------------------------------------------------------------//
     @computed get
     publicName () {
-        return this.session.publicName || '';
+        return this.session.username || '';
     }
 
     //----------------------------------------------------------------//

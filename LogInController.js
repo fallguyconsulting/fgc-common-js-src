@@ -37,8 +37,7 @@ export class LogInController {
 
     @observable confirmPassword     = '';
     @observable email               = '';
-    @observable firstname           = '';
-    @observable lastname            = '';
+    @observable username            = '';
     @observable password            = '';
     @observable errors              = new FormErrors ();
 
@@ -58,8 +57,7 @@ export class LogInController {
                 return {
                     verifier:   this.verifier,
                     email:      this.email,
-                    firstname:  this.firstname,
-                    lastname:   this.lastname,
+                    username:   this.username,
                     password:   this.password,
                 }
 
@@ -91,7 +89,7 @@ export class LogInController {
                 return (
                     this.verifier &&
                     this.email &&
-                    this.firstname &&
+                    this.username &&
                     this.password &&
                     this.confirmPassword
                 );
@@ -156,8 +154,7 @@ export class LogInController {
         return Boolean (
             this.confirmPassword ||
             this.email ||
-            this.firstname ||
-            this.lastname ||
+            this.username ||
             this.password
         );
     }
@@ -212,8 +209,7 @@ export class LogInController {
         this.step               = LogInController.STEP.IDLE;
         this.confirmPassword    = '';
         this.email              = '';
-        this.firstname          = '';
-        this.lastname           = '';
+        this.username           = '';
         this.password           = '';
 
         this.errors.reset ();
@@ -235,18 +231,6 @@ export class LogInController {
 
     //----------------------------------------------------------------//
     @action
-    setFirstname ( firstname ) {
-        this.firstname = firstname;
-    }
-
-    //----------------------------------------------------------------//
-    @action
-    setLastname ( lastname ) {
-        this.lastname = lastname;
-    }
-
-    //----------------------------------------------------------------//
-    @action
     setPassword ( password ) {
         this.errors.clearError ( FormErrors.FIELDS.PASSWORD );
         this.password = password;
@@ -256,6 +240,12 @@ export class LogInController {
     @action
     setStep ( step ) {
         this.step = step;
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    setUsername ( username ) {
+        this.username = username;
     }
 
     //----------------------------------------------------------------//

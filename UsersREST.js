@@ -45,20 +45,6 @@ export class UsersREST {
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
         const sessionMiddleware     = new SessionMiddleware ( this.db );
 
-        this.router.delete (
-            '/users/:userID/unblock',
-            tokenMiddleware.withTokenAuth (), 
-            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
-            this.deleteUserBlockAsync.bind ( this )
-        );
-
-        this.router.put (
-            '/users/:userID/block',
-            tokenMiddleware.withTokenAuth (),
-            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
-            this.putUserBlockAsync.bind ( this )
-        );
-
         this.router.put (
             '/users/:userID/role',
             tokenMiddleware.withTokenAuth (),
@@ -73,10 +59,10 @@ export class UsersREST {
             this.postInvitation.bind ( this )
         );
 
-        if ( env.SERVER_ADMIN_PASSWORD ) {
-            const middleware = new PasswordMiddleware ( 'X-Admin-Password', env.SERVER_ADMIN_PASSWORD, 'adminPassword' );
-            this.router.post ( '/admin/roles', middleware.withPasswordAuth (), this.postUserRoles.bind ( this ));
-        }
+        // if ( env.SERVER_ADMIN_PASSWORD ) {
+        //     const middleware = new PasswordMiddleware ( 'X-Admin-Password', env.SERVER_ADMIN_PASSWORD, 'adminPassword' );
+        //     this.router.post ( '/admin/roles', middleware.withPasswordAuth (), this.postUserRoles.bind ( this ));
+        // }
     }
 
     //----------------------------------------------------------------//
@@ -107,9 +93,9 @@ export class UsersREST {
             session: {
                 token:          token.create ( user.userID, 'localhost', 'self', signingKey ),
                 userID:         user.userID,
-                publicName:     this.db.users.formatUserPublicName ( user ),
+                username:       user.username,
                 emailMD5:       user.emailMD5,
-                roles:          env.SERVER_ADMIN_PASSWORD ? ( user.roles || []) : this.roles,
+                role:           user.role,
             },
         };
     }
@@ -132,7 +118,8 @@ export class UsersREST {
                 result.json ({
                     userID:         userID,
                     emailMD5:       user.emailMD5,
-                    publicName:     this.db.users.formatUserPublicName ( conn, user ),
+                    username:       user.username,
+                    role:           user.role,
                 });
             }
         }
@@ -173,15 +160,7 @@ export class UsersREST {
             const user = await this.db.users.getUserByIDAsync ( conn, userID );
             
             if ( user ) {
-                users.push ({
-                    userID:         userID,
-                    emailMD5:       user.emailMD5,
-                    publicName:     this.db.users.formatUserPublicName ( user ),
-                    firstname:      user.firstname,
-                    lastname:       user.lastname,
-                    roles:          user.roles,
-                    block:          user.block,
-                });
+                users.push ( user );
             }
         }
         result.json ({
@@ -198,23 +177,23 @@ export class UsersREST {
             console.log ( 'POST INVITATION' );
 
             const userID        = request.userID;
-            const roles         = request.body.roles || [];
+            const role          = request.body.role || consts.USERSDM_MYSQL_DEFAULT_ROLE;
             const email         = request.body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
     
-            // if already exists, just apply the roles and be done with it
+            // if already exists, just apply the role and be done with it
             const conn = this.db.makeConnection ();
             const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
 
             if ( exists ) {
                 const invitee = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
                 assert ( invitee.userID !== userID );
-                this.db.users.updateRoleAsync ( conn, invitee.userID, roles );
+                this.db.users.updateRoleAsync ( conn, invitee.userID, role );
             }
             else {
                 await this.sendVerifierEmailAsync (
                     email,
-                    token.create ( JSON.stringify ({ email: email, roles: roles }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
+                    token.create ( JSON.stringify ({ email: email, role: role }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
                     this.templates.INVITE_USER_EMAIL_SUBJECT,
                     this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,
@@ -250,14 +229,14 @@ export class UsersREST {
             if ( user ) {
                 console.log ( 'FOUND USER:', user.userID );
 
-                if ( user.block ) {
-                    console.log ( 'ACCOUNT BLOCKED' );
-                    result.json ({ status: 'BLOCKED' });
-                    result.status ( 403 );
-                    return;
-                }
+                // if ( user.block ) {
+                //     console.log ( 'ACCOUNT BLOCKED' );
+                //     result.json ({ status: 'BLOCKED' });
+                //     result.status ( 403 );
+                //     return;
+                // }
 
-                if ( !user.block && await bcrypt.compare ( body.password, user.password )) {
+                if ( await bcrypt.compare ( body.password, user.password )) {
                     console.log ( 'PASSWORDS MATCHED' );
                     result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
                     return;
@@ -323,8 +302,7 @@ export class UsersREST {
             console.log ( 'BODY', body );
 
             const verifier      = body.verifier;
-            const firstname     = body.firstname;
-            const lastname      = body.lastname || '';
+            const username      = body.username;
             const password      = body.password;
             const email         = body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
@@ -336,15 +314,11 @@ export class UsersREST {
             const payload = JSON.parse ( verified.body.sub );
             assert ( payload.email === email );
 
-            const usersCount = await this.db.users.getCountAsync ( conn );
-            const roles = usersCount === 0 ? this.roles : payload.roles;
-
             let user = {
-                firstname:      firstname,
-                lastname:       lastname,
-                password:       await bcrypt.hash ( password, env.SALT_ROUNDS ),
+                username:       username,
+                password:       await bcrypt.hash ( password, consts.USERSDM_MYSQL_SALT_ROUNDS ),
                 emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
-                roles:          roles || [],
+                role:           payload.role || consts.USERSDM_MYSQL_DEFAULT_ROLE,
             };
 
             user = await this.db.users.affirmUserAsync ( conn, user );
@@ -359,43 +333,43 @@ export class UsersREST {
     }
 
     //----------------------------------------------------------------//
-    async postUserRoles ( request, result ) {
+    // async postUserRoles ( request, result ) {
 
-        console.log ( 'POST ROLES' );
+    //     console.log ( 'POST ROLES' );
 
-        try {
+    //     try {
 
-            const conn      = this.db.makeConnection ();
+    //         const conn      = this.db.makeConnection ();
 
-            const body      = request.body;
-            const roles     = body.roles || [];
+    //         const body      = request.body;
+    //         const roles     = body.role || [];
 
-            let user = false;
-            if ( body.userID ) {
+    //         let user = false;
+    //         if ( body.userID ) {
 
-                user            = await this.db.users.getUserByIDAsync ( conn, body.userID );
-            }
-            else if ( body.email ) {
+    //             user            = await this.db.users.getUserByIDAsync ( conn, body.userID );
+    //         }
+    //         else if ( body.email ) {
 
-                const email     = body.email;
-                const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-                user            = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
-            }            
+    //             const email     = body.email;
+    //             const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
+    //             user            = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
+    //         }            
 
-            if ( user ) {
-                console.log ( 'ROLES:', JSON.stringify ( roles, null, 4 ));
-                user.roles = roles;
-                await this.db.users.setUserAsync ( conn, user );
-                result.json ({ status: 'OK', user: user });
-                return;
-            }
-        }
-        catch ( error ) {
-            console.log ( error );
-        }
-        result.json ({});
-        result.status ( 401 );
-    }
+    //         if ( user ) {
+    //             console.log ( 'ROLES:', JSON.stringify ( roles, null, 4 ));
+    //             user.roles = roles;
+    //             await this.db.users.setUserAsync ( conn, user );
+    //             result.json ({ status: 'OK', user: user });
+    //             return;
+    //         }
+    //     }
+    //     catch ( error ) {
+    //         console.log ( error );
+    //     }
+    //     result.json ({});
+    //     result.status ( 401 );
+    // }
 
     //----------------------------------------------------------------//
     async postVerifierEmailRequestAsync ( request, result ) {
@@ -455,25 +429,6 @@ export class UsersREST {
         }
         result.json ({});
         result.status ( 400 );
-    }
-
-    //----------------------------------------------------------------//
-    async putUserBlockAsync ( request, result ) {
-
-        try {
-            const userID = request.params.userID;
-    
-            const conn = this.db.makeConnection ();
-            await this.db.users.updateBlockAsync ( conn, userID );
-
-            result.json ({ status: 'OK' });
-            return;
-        }
-        catch ( error ) {
-            console.log ( error );
-        }
-        result.json ({});
-        result.status ( 401 );
     }
 
     //----------------------------------------------------------------//

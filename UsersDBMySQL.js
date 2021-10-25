@@ -2,7 +2,9 @@
 
 import { assert }                       from './assert';
 import { ModelError, ERROR_STATUS }     from './ModelError';
+import bcrypt                           from 'bcryptjs';
 import * as consts                      from 'consts';
+import crypto                           from 'crypto';
 
 //================================================================//
 // UsersDBMySQL
@@ -11,7 +13,6 @@ export class UsersDBMySQL {
 
     //----------------------------------------------------------------//
     constructor () {
-        super ();
     }
 
     //----------------------------------------------------------------//
@@ -19,33 +20,39 @@ export class UsersDBMySQL {
 
         return conn.runInConnectionAsync ( async () => {
 
-            const result = await conn.query (`
-                REPLACE
-                INTO        ${ consts.USERSDB_MYSQL_TABLE } ( firstname, lastname, password, emailMD5, roles )
-                VALUES      ( '${ user.firstname }', '${ user.lastname }', '${ user.password }', '${ user.emailMD5 }', '${ user.roles }' )
-            `)
+            const role = user.role || consts.USERSDM_MYSQL_DEFAULT_ROLE;
 
-            assert ( typeof ( result.insertId ) === 'number' );
-            user.userID = result.insertId;
+            const existingUser = ( await conn.query (`
+                SELECT      id
+                FROM        ${ consts.USERSDB_MYSQL_TABLE } 
+                WHERE       emailMD5 = '${ user.emailMD5 }'
+            `))[ 0 ];
+
+            if ( existingUser ) {
+
+                await conn.query (`
+                    UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
+                    SET     username    = '${ user.username }',
+                            role        = '${ role }',
+                            password    = '${ user.password }'
+                    WHERE   id          = ${ existingUser.id }
+                `);
+
+                user.userID = existingUser.id;
+            }
+            else {
+
+                const result = await conn.query (`
+                    INSERT
+                    INTO        ${ consts.USERSDB_MYSQL_TABLE } ( username, password, emailMD5, role )
+                    VALUES      ( '${ user.username }', '${ user.password }', '${ user.emailMD5 }', '${ role }' )
+                `);
+
+                assert ( typeof ( result.insertId ) === 'number' );
+                user.userID = result.insertId;
+            }
 
             return user;
-        });
-    }
-
-    //----------------------------------------------------------------//
-    async deleteBlockAsync ( conn, userID ) {
-
-        return conn.runInConnectionAsync ( async () => {
-
-            const row = ( await conn.query ( `SELECT * FROM ${ consts.USERSDB_MYSQL_TABLE } WHERE id = ${ userID }` ))[ 0 ];
-            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
-    
-            await conn.query (`
-                UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
-                SET     block      = NULL
-                WHERE   id         = ${ userID }
-            `);
-
         });
     }
 
@@ -60,9 +67,7 @@ export class UsersDBMySQL {
                 SELECT      id
                 FROM        ${ consts.USERSDB_MYSQL_TABLE } 
                 WHERE
-                    MATCH ( firstname )
-                    AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE ) OR
-                    MATCH ( lastname )
+                    MATCH ( username )
                     AGAINST ( '${ searchTerm }*' IN BOOLEAN MODE )
             `);
 
@@ -77,40 +82,7 @@ export class UsersDBMySQL {
     //----------------------------------------------------------------//
     formatUserPublicName ( user ) {
 
-        return user.lastname ? `${ user.firstname } ${ user.lastname.charAt ( 0 )}.` : user.firstname;
-    }
-
-    //----------------------------------------------------------------//
-    async getCountAsync ( conn ) {
-
-        return conn.runInConnectionAsync ( async () => {
-
-            const row = ( await conn.query (`
-                SELECT      COUNT ( id )
-                AS          count
-                FROM        ${ consts.USERSDB_MYSQL_TABLE }
-            `))[ 0 ];
-            
-            return row && row.count || 0
-        });
-    }
-
-    //----------------------------------------------------------------//
-    async getUserIDAsync ( conn ) {
-
-        return conn.runInConnectionAsync ( async () => {
-
-            const data = ( await conn.query (`
-                SELECT      id
-                FROM        ${ consts.USERSDB_MYSQL_TABLE } 
-            `));
-        
-            const userID = data.map (( user ) => {
-                return user.id;
-            });
-        
-            return userID;
-        });
+        return user.username;
     }
 
     //----------------------------------------------------------------//
@@ -184,37 +156,16 @@ export class UsersDBMySQL {
     }
 
     //----------------------------------------------------------------//
-    async updateBlockAsync ( conn, userID ) {
-
-        return conn.runInConnectionAsync ( async () => {
-
-            const row = ( await conn.query ( `SELECT * FROM ${ consts.USERSDB_MYSQL_TABLE } WHERE id = ${ userID }` ))[ 0 ];
-            if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
-
-            await conn.query (`
-                UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
-                SET     block      = TRUE
-                WHERE   id         = ${ userID }
-            `);
-    
-        });
-    }
-
-    //----------------------------------------------------------------//
     async updateRoleAsync ( conn, userID, role ) {
 
         return conn.runInConnectionAsync ( async () => {
 
             const row = ( await conn.query ( `SELECT * FROM ${ consts.USERSDB_MYSQL_TABLE } WHERE id = ${ userID }` ))[ 0 ];
             if ( !row ) throw new ModelError ( ERROR_STATUS.NOT_FOUND, 'User does not exist.' );
-
-            if ( role === 'user' ) {
-                role ='';
-            }
             
             await conn.query (`
                 UPDATE  ${ consts.USERSDB_MYSQL_TABLE }
-                SET     roles      = '${ role }'
+                SET     role       = '${ role || consts.USERSDM_MYSQL_DEFAULT_ROLE }'
                 WHERE   id         = ${ userID }
             `);
         });
@@ -228,54 +179,33 @@ export class UsersDBMySQL {
             await conn.query (`
                 CREATE TABLE IF NOT EXISTS ${ consts.USERSDB_MYSQL_TABLE } (
                     id          INT NOT NULL AUTO_INCREMENT,
-                    firstname   TEXT NOT NULL,
-                    lastname    TEXT NOT NULL,
+                    username    TEXT NOT NULL,
                     password    TEXT NOT NULL,
                     emailMD5    TEXT NOT NULL,
-                    roles       TEXT NOT NULL,
-                    PRIMARY KEY ( id )
+                    role        TEXT NOT NULL,
+                    PRIMARY KEY ( id ),
+                    FULLTEXT name_fulltext ( username )
                 )
             `);
 
-            const firstNameIndex = await conn.query ( `
-                SHOW INDEXES FROM ${ consts.USERSDB_MYSQL_TABLE }
-                WHERE Key_name = 'firstname'
-            ` );
+            const userCount = await conn.countAsync ( `FROM ${ consts.USERSDB_MYSQL_TABLE }` );
 
-            if ( firstNameIndex.length === 0 ) {
-                await conn.query ( `
-                    ALTER TABLE ${ consts.USERSDB_MYSQL_TABLE }
-                    ADD FULLTEXT INDEX firstname ( firstname )
-                ` );
+            if ( userCount === 0 ) {
+
+                const username      = consts.USERSDM_MYSQL_ADMIN_NAME;
+                const password      = consts.USERSDM_MYSQL_ADMIN_PW;
+                const email         = consts.USERSDM_MYSQL_ADMIN_EMAIL;
+                const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
+
+                let user = {
+                    username:       username,
+                    password:       await bcrypt.hash ( password, consts.USERSDM_MYSQL_SALT_ROUNDS ),
+                    emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
+                    role:           'admin',
+                };
+
+                await this.affirmUserAsync ( conn, user );
             }
-
-            const lastNameIndex = await conn.query ( `
-                SHOW INDEXES FROM ${ consts.USERSDB_MYSQL_TABLE }
-                WHERE Key_name = 'lastname'
-            ` );
-
-            if ( lastNameIndex.length === 0 ) {
-                await conn.query ( `
-                    ALTER TABLE ${ consts.USERSDB_MYSQL_TABLE }
-                    ADD FULLTEXT INDEX lastname ( lastname )
-                ` );
-            }
-
-            const block = await conn.query (`
-                SELECT      *
-                FROM        INFORMATION_SCHEMA.COLUMNS
-                WHERE       TABLE_SCHEMA    = '${ consts.USERSDB_MYSQL_SCHEMA }'
-                    AND     TABLE_NAME      = '${ consts.USERSDB_MYSQL_TABLE }'
-                    AND     COLUMN_NAME     = 'block'
-                LIMIT       0, 1
-            `)
-
-            if ( block.length === 0 ) {
-                await conn.query (`
-                    ALTER TABLE ${ consts.USERSDB_MYSQL_TABLE } 
-                    ADD COLUMN block BOOL
-                `);
-            };
         });
     }
 
@@ -284,12 +214,10 @@ export class UsersDBMySQL {
 
         return {
             userID:         row.id,
-            firstname:      row.firstname,
-            lastname:       row.lastname,
+            username:       row.username,
             password:       row.password,
             emailMD5:       row.emailMD5,
-            roles:          row.roles,
-            block:          row.block,
+            role:           row.role,
         };
     }
 }

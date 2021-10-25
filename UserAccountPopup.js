@@ -71,7 +71,7 @@ export const UserAccountPopup = observer (( props ) => {
                                     src         = { session.gravatar }
                                     style       = {{ 'fontSize': '42px' }}
                                 />
-                                <UI.Header as = 'h4'>{ session.publicName }</UI.Header>
+                                <UI.Header as = 'h4'>{ session.username }</UI.Header>
                             </center>
 
                             { props.children }
