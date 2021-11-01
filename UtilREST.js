@@ -16,8 +16,8 @@ export class UtilREST {
     }
 
     //----------------------------------------------------------------//
-    async getSigningKeyAsync ( request, result ) {
+    async getSigningKeyAsync ( request, response ) {
 
-        result.json ({ keyBase64: token.makeSigningKeyBase64 ()});
+        response.json ({ keyBase64: token.makeSigningKeyBase64 ()});
     }
 }

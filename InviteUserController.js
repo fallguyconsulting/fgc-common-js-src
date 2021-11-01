@@ -21,7 +21,6 @@ import validator                                from 'validator';
 export class InviteUserController {
 
     @observable email               = '';
-    @observable roles               = [];
     @observable errors              = new FormErrors ();
 
     //----------------------------------------------------------------//
@@ -60,7 +59,6 @@ export class InviteUserController {
                     headers: this.session.getHeaders ({ 'content-type': 'application/json' }),
                     body: JSON.stringify ({
                         email:      this.email,
-                        roles:      this.roles,
                         redirect:   redirect || '',
                     })
                 });
@@ -83,37 +81,9 @@ export class InviteUserController {
     }
 
     //----------------------------------------------------------------//
-    get
-    roleOptions () {
-        return ([
-            {
-                key: 'user',
-                text: 'User',
-                value: 'user',
-            },
-            {
-                key: 'developer',
-                text: 'Developer',
-                value: 'developer',
-            },
-            {
-                key: 'admin',
-                text: 'Admin',
-                value: 'admin',
-            },
-        ]);
-    }
-
-    //----------------------------------------------------------------//
     @action
     setEmail ( email ) {
         this.errors.clearError ( FormErrors.FIELDS.EMAIL );
         this.email = email;
-    }
-
-    //----------------------------------------------------------------//
-    @action
-    setRoles ( roles ) {
-        this.roles = roles || [];
     }
 }

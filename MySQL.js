@@ -71,8 +71,7 @@ export class MySQLConnection {
     //----------------------------------------------------------------//
     async countAsync ( fromWhere ) {
 
-        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
-        const row = ( await this.connection.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
+        const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
         return row && row.count || 0;
     }
 
@@ -93,6 +92,12 @@ export class MySQLConnection {
 
         assert ( this.connection, 'MISSING MYSQL CONNECTION' );
         return await this.connection.escape ( str );
+    }
+
+    //----------------------------------------------------------------//
+    async hasAsync ( fromWhere ) {
+
+        return (( await this.countAsync ( fromWhere )) > 0 );
     }
 
     //----------------------------------------------------------------//
@@ -139,8 +144,10 @@ export class MySQLConnection {
     //----------------------------------------------------------------//
     async query ( sql ) {
 
-        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
-        return await this.connection.query ( sql );
+        return this.runInConnectionAsync ( async () => {
+            assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+            return await this.connection.query ( sql );
+        });
     }
 }
 

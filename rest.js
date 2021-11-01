@@ -8,10 +8,16 @@ export const REST_STATUS = {
 };
 
 //----------------------------------------------------------------//
-export function handleError ( response, error ) {
-    response.status ( error.status ? error.status : 400 ).json ({
+export function handleError ( response, statusOrErrorObj, message ) {
+
+    const errorObj = ( typeof ( statusOrErrorObj ) === 'object' ) ? statusOrErrorObj : false;
+
+    const status = ( errorObj ? errorObj.status : statusOrErrorObj ) || 400;
+    message = ( errorObj ? errorObj.message : message ) || '';
+
+    response.status ( status ).json ({
         status: REST_STATUS.ERROR,
-        message: error.message, 
+        message: message, 
     });
 }
 

@@ -68,14 +68,14 @@ export const SignUpForm = observer (( props ) => {
                     <UI.Form>
                         <UI.Form.Input
                             fluid
-                            icon = 'mail'
-                            iconPosition = 'left'
-                            placeholder = 'Email'
-                            type = 'email'
-                            value = { controller.email }
-                            disabled = { disabled }
-                            onChange = {( e ) => { controller.setEmail ( e.target.value )}}
-                            error = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
+                            icon            = 'mail'
+                            iconPosition    = 'left'
+                            placeholder     = 'Email'
+                            type            = 'email'
+                            value           = { controller.email }
+                            disabled        = { disabled }
+                            onChange        = {( e ) => { controller.setEmail ( e.target.value )}}
+                            error           = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
                         />
                     </UI.Form>
                 </Otherwise>
@@ -102,30 +102,30 @@ export const LogInForm = observer (( props ) => {
         <UI.Form error = { Boolean ( error )}>
             <UI.Form.Input
                 fluid
-                icon = 'mail'
-                iconPosition = 'left'
-                placeholder = 'Email'
-                type = 'email'
-                value = { controller.email }
-                disabled = { disabled }
-                onChange = {( e ) => { controller.setEmail ( e.target.value )}}
-                error = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
+                icon            = 'mail'
+                iconPosition    = 'left'
+                placeholder     = 'Email'
+                type            = 'email'
+                value           = { controller.email }
+                disabled        = { disabled }
+                onChange        = {( e ) => { controller.setEmail ( e.target.value )}}
+                error           = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
             />
             <UI.Form.Input
                 fluid
-                icon = 'lock'
-                iconPosition = 'left'
-                placeholder = 'Password'
-                type = 'password'
-                value = { controller.password }
-                disabled = { disabled }
-                onChange = {( e ) => { controller.setPassword ( e.target.value )}}
-                error = { controller.errors.hasError ( FormErrors.FIELDS.PASSWORD, FormErrors.ERRORS.INVALID_PASSWORD )}
+                icon            = 'lock'
+                iconPosition    = 'left'
+                placeholder     = 'Password'
+                type            = 'password'
+                value           = { controller.password }
+                disabled        = { disabled }
+                onChange        = {( e ) => { controller.setPassword ( e.target.value )}}
+                error           = { controller.errors.hasError ( FormErrors.FIELDS.PASSWORD, FormErrors.ERRORS.INVALID_PASSWORD )}
             />
             <UI.Message
               error
-              header = 'Error Logging In'
-              content = { error }
+              header            = 'Error Logging In'
+              content           = { error }
             />
         </UI.Form>
     );
@@ -170,14 +170,14 @@ const ResetPasswordModal = observer (( props ) => {
                         <UI.Form error = { error }>
                             <UI.Form.Input
                                 fluid
-                                icon = 'mail'
-                                iconPosition = 'left'
-                                placeholder = 'Email'
-                                type = 'email'
-                                value = { controller.email }
-                                disabled = { controller.step !== VerifierController.STEP.IDLE }
-                                onChange = {( e ) => { controller.setEmail ( e.target.value )}}
-                                error = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
+                                icon            = 'mail'
+                                iconPosition    = 'left'
+                                placeholder     = 'Email'
+                                type            = 'email'
+                                value           = { controller.email }
+                                disabled        = { controller.step !== VerifierController.STEP.IDLE }
+                                onChange        = {( e ) => { controller.setEmail ( e.target.value )}}
+                                error           = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
                             />
                             <UI.Message
                               error
@@ -192,8 +192,8 @@ const ResetPasswordModal = observer (( props ) => {
                             <When condition = { controller.step === VerifierController.STEP.IDLE }>
                                 <UI.Button
                                     positive
-                                    onClick = { onSubmit }
-                                    disabled = { !controller.canSubmit }
+                                    onClick     = { onSubmit }
+                                    disabled    = { !controller.canSubmit }
                                 >
                                     Submit
                                 </UI.Button>

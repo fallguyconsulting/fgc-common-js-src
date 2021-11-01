@@ -38,15 +38,6 @@ export const InviteUserForm = observer (( props ) => {
                 onChange        = {( e ) => { controller.setEmail ( e.target.value )}}
                 error           = { controller.errors.hasError ( FormErrors.FIELDS.EMAIL, FormErrors.ERRORS.INVALID_EMAIL )}
             />
-            <UI.Form.Input fluid>
-                <UI.Dropdown
-                    fluid
-                    selection
-                    placeholder = 'Roles' 
-                    options     = { controller.roleOptions }
-                    onChange    = { handleRolesChange }
-                />
-            </UI.Form.Input>
             <UI.Message
               error
               header            = 'Error Sending Invitation'

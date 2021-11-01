@@ -9,14 +9,18 @@ export class SessionMiddleware {
 
     //----------------------------------------------------------------//
     constructor ( db ) {
-        this.db      = db;
+        
+        this.db         = db;
     }
 
     //----------------------------------------------------------------//
-    withUser ( requiredRoles ) {
+    checkEntitlement ( entitlement ) {
+        
+        return this.checkUser (( user ) => { return roles.check ( user.role, entitlement ); });
+    }
 
-        requiredRoles = ( requiredRoles && requiredRoles.length ) ? requiredRoles : false;
-        const conn          = this.db.makeConnection ();
+    //----------------------------------------------------------------//
+    checkUser ( checkUser ) {
         
         return async ( request, result, next ) => {
 
@@ -27,9 +31,11 @@ export class SessionMiddleware {
 
             if ( request.userID ) {
           
+                const conn = this.db.makeConnection ();
                 const user = await this.db.users.getUserByIDAsync ( conn, request.userID );
+
                 if ( user ) {
-                    if (( requiredRoles === false ) || ( roles.canInviteUser ( user.roles ))) {
+                    if ( !checkUser || checkUser ( user )) {
                         request.user = user;
                         next ();
                         return;
@@ -38,5 +44,11 @@ export class SessionMiddleware {
             }
             result.status ( 401 ).send ({});
         };
+    }
+
+    //----------------------------------------------------------------//
+    isAdmin () {
+        
+        return this.checkUser (( user ) => { return ( user.role === roles.STANDARD_ROLES.ADMIN ); });
     }
 }

@@ -3,9 +3,11 @@
 import { assert }                   from './assert';
 import { Mailer }                   from './Mailer';
 import { PasswordMiddleware }       from './PasswordMiddleware';
+import * as rest                    from './rest';
 import * as roles                   from './roles';
 import { SessionMiddleware }        from './SessionMiddleware';
 import * as token                   from './token';
+import * as consts                  from 'consts';
 import * as env                     from 'env';
 import express                      from 'express';
 import bcrypt                       from 'bcryptjs';
@@ -35,223 +37,193 @@ export class UsersREST {
 
         this.router = express.Router ();
 
-        this.router.post        ( '/login',                 this.postLoginAsync.bind ( this ));
-        this.router.post        ( '/login/reset',           this.postLoginWithPasswordResetAsync.bind ( this ));
-        this.router.post        ( '/login/register',        this.postLoginWithRegisterUserAsync.bind ( this ));
-        this.router.get         ( '/users/:userID',         this.getUserAsync.bind ( this ));
-        this.router.get         ( '/users',                 this.getUsersAsync.bind ( this ));
-        this.router.post        ( '/verifier/:actionID',    this.postVerifierEmailRequestAsync.bind ( this ));
+        this.router.post ( '/login',                this.postLoginAsync.bind ( this ));
+        this.router.post ( '/login/reset',          this.postLoginWithPasswordResetAsync.bind ( this ));
+        this.router.post ( '/login/register',       this.postLoginWithRegisterUserAsync.bind ( this ));
+        this.router.post ( '/verifier/:actionID',   this.postVerifierEmailRequestAsync.bind ( this ));
 
         const tokenMiddleware       = new token.TokenMiddleware ( env.SIGNING_KEY_FOR_SESSION, 'userID' );
         const sessionMiddleware     = new SessionMiddleware ( this.db );
+        
+        this.router.get (
+            '/users/:userID',
+            tokenMiddleware.withTokenAuth (),
+            this.getUserAsync.bind ( this )
+        );
+        
+        this.router.get (
+            '/users',
+            tokenMiddleware.withTokenAuth (),
+            this.getUsersAsync.bind ( this )
+        );
+
+        // roles
 
         this.router.put (
             '/users/:userID/role',
             tokenMiddleware.withTokenAuth (),
-            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
+            sessionMiddleware.isAdmin (),
             this.putUserRoleAsync.bind ( this )
         );
 
-        this.router.post (
-            '/invitations',
+        // invitations
+
+        this.router.get (
+            '/invitations/:emailMD5',
             tokenMiddleware.withTokenAuth (),
-            sessionMiddleware.withUser ( roles.ENTITLEMENT_SETS.CAN_INVITE_USER ),
-            this.postInvitation.bind ( this )
+            sessionMiddleware.isAdmin (),
+            this.getInvitation.bind ( this )
         );
 
-        // if ( env.SERVER_ADMIN_PASSWORD ) {
-        //     const middleware = new PasswordMiddleware ( 'X-Admin-Password', env.SERVER_ADMIN_PASSWORD, 'adminPassword' );
-        //     this.router.post ( '/admin/roles', middleware.withPasswordAuth (), this.postUserRoles.bind ( this ));
-        // }
+        this.router.put (
+            '/invitations/:emailMD5',
+            tokenMiddleware.withTokenAuth (),
+            sessionMiddleware.isAdmin (),
+            this.putInvitation.bind ( this )
+        );
+
+        this.router.delete (
+            '/invitations/:emailMD5',
+            tokenMiddleware.withTokenAuth (),
+            sessionMiddleware.isAdmin (),
+            this.deleteInvitation.bind ( this )
+        );
     }
 
     //----------------------------------------------------------------//
-    async deleteUserBlockAsync ( request, result ) {
+    async deleteInvitation ( request, response ) {
 
         try {
-            const userID = request.params.userID;
-            
+            console.log ( 'DELETE INVITATION' );
+            const emailMD5 = request.params.emailMD5;
+
             const conn = this.db.makeConnection ();
-
-            await this.db.users.deleteBlockAsync ( conn, userID );
-
-            result.json ({ status: 'OK' });
-            return;
+            await this.db.users.deleteInvitationAsync ( conn, emailMD5 );   
         }
         catch ( error ) {
             console.log ( error );
+            rest.handleError ( response, error );
+            return;
         }
-        result.json ({});
-        result.status ( 401 );
+        rest.handleSuccess ( response );
     }
 
     //----------------------------------------------------------------//
-    formatLoginResponse ( user, signingKey ) {
-        
-        return {
-            status:             'OK',
-            session: {
-                token:          token.create ( user.userID, 'localhost', 'self', signingKey ),
-                userID:         user.userID,
-                username:       user.username,
-                emailMD5:       user.emailMD5,
-                role:           user.role,
-            },
-        };
+    async getInvitation ( request, response ) {
+
+        try {
+
+            console.log ( 'GET INVITATION' );
+            const emailMD5 = request.params.emailMD5;
+
+            const conn = this.db.makeConnection ();
+            const user = await this.db.users.findUserAsync ( conn, emailMD5 );
+
+            if ( user ) {
+                rest.handleSuccess ( response, { user : user });
+                return;
+            }
+
+            if ( await this.db.users.hasInvitationAsync ( conn, emailMD5 )) {
+                rest.handleSuccess ( response, { hasInvitation : true });
+                return;
+            }
+        }
+        catch ( error ) {
+            rest.handleError ( response, error );
+            return;
+        }
+        rest.handleError ( response, 404 );
     }
 
     //----------------------------------------------------------------//
-    async getUserAsync ( request, result ) {
+    async getUserAsync ( request, response ) {
 
         const userID = request.params.userID;
         console.log ( 'GET USER:', userID );
 
-        const conn = this.db.makeConnection ();
-        const user = await this.db.users.getUserByIDAsync ( conn, userID );
-
-        if ( user ) {
-
-            if ( request.userID === userID ) {
-                result.json ( user );
-            }
-            else {
-                result.json ({
-                    userID:         userID,
-                    emailMD5:       user.emailMD5,
-                    username:       user.username,
-                    role:           user.role,
-                });
-            }
-        }
-        else {
-            result.json ({});
-        }
-    }
-
-    //----------------------------------------------------------------//
-    async getUsersAsync ( request, result ) {
-
-        const query         = request.query || {};
-        const searchTerm    = query.search;
-        const base      = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
-        const count     = _.has ( query, 'count' ) ? parseInt ( query.count ) : 50;
-
-        let userIDs = [];
-        let totalUsers = 0;
-        const users = [];
-        
-        const conn = this.db.makeConnection ();
-
-        if ( searchTerm ) { 
-            userIDs = await this.db.users.findUsersAsync ( conn, searchTerm );
-            totalUsers = userIDs.length;
-        }
-        else {
-            userIDs = await this.db.users.getUserIDAsync ( conn );
-            totalUsers = await this.db.users.getCountAsync ( conn );
-        }
-
-        let top = base + count;
-        top = top < totalUsers ? top : totalUsers;
-
-        for ( let i = base; i < top; ++i ) {
-    
-            let userID = userIDs [ i ];
+        try {
+            const conn = this.db.makeConnection ();
             const user = await this.db.users.getUserByIDAsync ( conn, userID );
-            
-            if ( user ) {
-                users.push ( user );
-            }
+            rest.handleSuccess ( response, { user : user });
         }
-        result.json ({
-            totalUsers:     totalUsers,
-            users:          users,
-        });
+        catch ( error ) {
+            rest.handleError ( response, error );
+        }
     }
 
     //----------------------------------------------------------------//
-    async postInvitation ( request, result ) {
+    async getUsersAsync ( request, response ) {
 
         try {
 
-            console.log ( 'POST INVITATION' );
+            const query             = request.query || {};
+            const searchTerm        = query.search;
 
-            const userID        = request.userID;
-            const role          = request.body.role || consts.USERSDM_MYSQL_DEFAULT_ROLE;
-            const email         = request.body.email;
-            const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-    
-            // if already exists, just apply the role and be done with it
+            const base              = _.has ( query, 'base' ) ? parseInt ( query.base ) : 0;
+            const count             = _.has ( query, 'count' ) ? parseInt ( query.count ) : 20;
+
+            console.log ( searchTerm, base, count );
+
             const conn = this.db.makeConnection ();
-            const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
+            const searchResults = await this.db.users.findUsersAsync ( conn, searchTerm, base, count );
 
-            if ( exists ) {
-                const invitee = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
-                assert ( invitee.userID !== userID );
-                this.db.users.updateRoleAsync ( conn, invitee.userID, role );
-            }
-            else {
-                await this.sendVerifierEmailAsync (
-                    email,
-                    token.create ( JSON.stringify ({ email: email, role: role }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
-                    request.body.redirect,
-                    this.templates.INVITE_USER_EMAIL_SUBJECT,
-                    this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,
-                    this.templates.REGISTER_USER_EMAIL_HTML_BODY_TEMPLATE
-                );
-            }
-            result.json ({ status: 'OK' });
-            return;
+            console.log ( searchResults );
+
+            rest.handleSuccess ( response, { users : searchResults });
         }
         catch ( error ) {
-            console.log ( error );
+            rest.handleError ( response, error );
         }
-        result.json ({});
-        result.status ( 400 );
     }
 
     //----------------------------------------------------------------//
-    async postLoginAsync ( request, result ) {
+    makeSession ( user, signingKey ) {
+
+        return {
+            token:          token.create ( user.userID, 'localhost', 'self', signingKey ),
+            userID:         user.userID,
+            username:       user.username,
+            emailMD5:       user.emailMD5,
+            role:           user.role,
+        };
+    }
+
+    //----------------------------------------------------------------//
+    async postLoginAsync ( request, response ) {
 
         console.log ( 'POST LOGIN' );
 
         try {
 
-            const conn      = this.db.makeConnection ();
+            const conn          = this.db.makeConnection ();
 
-            const body      = request.body;
-            const email     = body.email;
-            const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-            const user      = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
+            const body          = request.body;
+            const email         = body.email;
+            const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
-            console.log ( email, emailMD5, user );
+            console.log ( email, emailMD5 );
 
-            if ( user ) {
-                console.log ( 'FOUND USER:', user.userID );
+            const user          = await this.db.users.getUserAsync ( conn, emailMD5 );
+            const password      = await this.db.users.getUserPasswordAsync ( conn, user.userID );
 
-                // if ( user.block ) {
-                //     console.log ( 'ACCOUNT BLOCKED' );
-                //     result.json ({ status: 'BLOCKED' });
-                //     result.status ( 403 );
-                //     return;
-                // }
+            console.log ( user.username, emailMD5 );
 
-                if ( await bcrypt.compare ( body.password, user.password )) {
-                    console.log ( 'PASSWORDS MATCHED' );
-                    result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
-                    return;
-                }
+            if ( roles.check ( user.role, roles.ENTITLEMENTS.CAN_LOGIN ) && ( await bcrypt.compare ( body.password, password ))) {
+                rest.handleSuccess ( response, { session: this.makeSession ( user, env.SIGNING_KEY_FOR_SESSION )});
+                return;
             }
         }
         catch ( error ) {
             console.log ( error );
+            rest.handleError ( response, error );
+            return;
         }
-        result.json ({});
-        result.status ( 401 );
+        rest.handleError ( response, 401 );
     }
 
     //----------------------------------------------------------------//
-    async postLoginWithPasswordResetAsync ( request, result ) {
+    async postLoginWithPasswordResetAsync ( request, response ) {
 
         try {
 
@@ -272,24 +244,26 @@ export class UsersREST {
             const payload = JSON.parse ( verified.body.sub );
             assert ( payload.email === email );
 
-            const user = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
-            assert ( user );
+            const user = await this.db.users.getUserAsync ( conn, emailMD5 );
 
-            user.password = await bcrypt.hash ( password, env.SALT_ROUNDS );
-            await this.db.users.setUserAsync ( conn, user );
+            if ( roles.check ( user.role, roles.ENTITLEMENTS.CAN_RESET_PASSWORD ) && roles.check ( user.role, roles.ENTITLEMENTS.CAN_LOGIN )) {
 
-            result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
-            return;
+                user.password = await bcrypt.hash ( password, env.SALT_ROUNDS );
+                await this.db.users.affirmUserAsync ( conn, user );
+
+                rest.handleSuccess ( response, { session: this.makeSession ( user, env.SIGNING_KEY_FOR_SESSION )});
+                return;
+            }
         }
         catch ( error ) {
-
-            console.log ( error );
+            rest.handleError ( response, error );
+            return;
         }
-        result.status ( 401 );
+        rest.handleError ( response, 401 );
     }
 
     //----------------------------------------------------------------//
-    async postLoginWithRegisterUserAsync ( request, result ) {
+    async postLoginWithRegisterUserAsync ( request, response ) {
 
         try {
 
@@ -307,72 +281,37 @@ export class UsersREST {
             const email         = body.email;
             const emailMD5      = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
 
-            assert ( verifier );
-            const verified = token.verify ( body.verifier, env.SIGNING_KEY_FOR_REGISTER_USER );
-            assert ( verified && verified.body && verified.body.sub );
+            // do not overwrite existing users
+            if ( await this.db.users.canRegisterUserAsync ( conn, username, emailMD5 )) {
 
-            const payload = JSON.parse ( verified.body.sub );
-            assert ( payload.email === email );
+                assert ( verifier );
+                const verified = token.verify ( body.verifier, env.SIGNING_KEY_FOR_REGISTER_USER );
+                assert ( verified && verified.body && verified.body.sub );
 
-            let user = {
-                username:       username,
-                password:       await bcrypt.hash ( password, consts.USERSDM_MYSQL_SALT_ROUNDS ),
-                emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
-                role:           payload.role || consts.USERSDM_MYSQL_DEFAULT_ROLE,
-            };
+                const payload = JSON.parse ( verified.body.sub );
+                assert ( payload.email === email );
 
-            user = await this.db.users.affirmUserAsync ( conn, user );
-            result.json ( this.formatLoginResponse ( user, env.SIGNING_KEY_FOR_SESSION ));
-            return;
+                let user = {
+                    username:       username,
+                    password:       await bcrypt.hash ( password, consts.USERSDM_MYSQL_SALT_ROUNDS ),
+                    emailMD5:       emailMD5, // TODO: encrypt plaintext email with user's password and store
+                };
+
+                user = await this.db.users.affirmUserAsync ( conn, user );
+                rest.handleSuccess ( response, { session: this.makeSession ( user, env.SIGNING_KEY_FOR_SESSION )});
+                return;
+            }
         }
         catch ( error ) {
-
             console.log ( error );
+            rest.handleError ( response, error );
+            return;
         }
-        result.status ( 401 );
+        rest.handleError ( response, 401 );
     }
 
     //----------------------------------------------------------------//
-    // async postUserRoles ( request, result ) {
-
-    //     console.log ( 'POST ROLES' );
-
-    //     try {
-
-    //         const conn      = this.db.makeConnection ();
-
-    //         const body      = request.body;
-    //         const roles     = body.role || [];
-
-    //         let user = false;
-    //         if ( body.userID ) {
-
-    //             user            = await this.db.users.getUserByIDAsync ( conn, body.userID );
-    //         }
-    //         else if ( body.email ) {
-
-    //             const email     = body.email;
-    //             const emailMD5  = crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' );
-    //             user            = await this.db.users.getUserByEmailMD5Async ( conn, emailMD5 );
-    //         }            
-
-    //         if ( user ) {
-    //             console.log ( 'ROLES:', JSON.stringify ( roles, null, 4 ));
-    //             user.roles = roles;
-    //             await this.db.users.setUserAsync ( conn, user );
-    //             result.json ({ status: 'OK', user: user });
-    //             return;
-    //         }
-    //     }
-    //     catch ( error ) {
-    //         console.log ( error );
-    //     }
-    //     result.json ({});
-    //     result.status ( 401 );
-    // }
-
-    //----------------------------------------------------------------//
-    async postVerifierEmailRequestAsync ( request, result ) {
+    async postVerifierEmailRequestAsync ( request, response ) {
 
         try {
 
@@ -387,68 +326,129 @@ export class UsersREST {
 
             // if already exists, send a password reset email.
             // do this for both RESET and REGISTER actions.
-            const exists = await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 );
-            if ( exists ) {
+            const user = await this.db.users.findUserAsync ( conn, emailMD5 );
 
-                console.log ( 'SENDING PASSWORD RESET EMAIL' );
+            if ( user ) {
 
-                await this.sendVerifierEmailAsync (
-                    email,
-                    token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', env.SIGNING_KEY_FOR_PASSWORD_RESET ),
-                    false,
-                    this.templates.RESET_PASSWORD_EMAIL_SUBJECT,
-                    this.templates.RESET_PASSWORD_EMAIL_TEXT_BODY_TEMPLATE,
-                    this.templates.RESET_PASSWORD_EMAIL_HTML_BODY_TEMPLATE
-                );
-                result.json ({ status: 'OK' });
+                if ( roles.check ( user.role, roles.ENTITLEMENTS.CAN_RESET_PASSWORD )) {
+
+                    console.log ( 'SENDING PASSWORD RESET EMAIL' );
+
+                    await this.sendVerifierEmailAsync (
+                        email,
+                        token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', env.SIGNING_KEY_FOR_PASSWORD_RESET ),
+                        false,
+                        this.templates.RESET_PASSWORD_EMAIL_SUBJECT,
+                        this.templates.RESET_PASSWORD_EMAIL_TEXT_BODY_TEMPLATE,
+                        this.templates.RESET_PASSWORD_EMAIL_HTML_BODY_TEMPLATE
+                    );
+                    rest.handleSuccess ( response );
+                    return;
+                }
+            }
+            else {
+
+                // only send a new user email if REGISTER is explicitely requested.
+                // this avoids sending new user emails to unregistered users.
+                // note that this is only available if there is no invitation table (i.e. anyone can sign up).
+                if (( actionID === VERIFIER_ACTIONS.REGISTER ) && ( consts.USERSDB_MYSQL_INVITATIONS === false )) {
+
+                    console.log ( 'SENDING SIGNUP EMAIL' );
+
+                    // user doesn't exist, so send a create user email.
+                    await this.sendVerifierEmailAsync (
+                        email,
+                        token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
+                        request.body.redirect,
+                        this.templates.REGISTER_USER_EMAIL_SUBJECT,
+                        this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,
+                        this.templates.REGISTER_USER_EMAIL_HTML_BODY_TEMPLATE
+                    );
+                    rest.handleSuccess ( response );
+                    return;
+                }
+            }
+        }
+        catch ( error ) {
+            rest.handleError ( response, error );
+            return;
+        }
+        rest.handleError ( response );
+    }
+
+    //----------------------------------------------------------------//
+    async putInvitation ( request, response ) {
+
+        try {
+
+            console.log ( 'PUT INVITATION' );
+
+            const email         = request.body.email;
+            const emailMD5      = request.params.emailMD5;
+
+            console.log ( email, emailMD5 );
+
+            if ( crypto.createHash ( 'md5' ).update ( email ).digest ( 'hex' ) !== emailMD5 ) {
+                console.log ( 'emailMD5 did not match!' );
+                rest.handleError ( response, 403 );
                 return;
             }
             
-            // only send a new user email if REGISTER is explicitely requested.
-            // this avoids sending new user emails to unregistered users.
-            if ( actionID === VERIFIER_ACTIONS.REGISTER ) {
+            const conn = this.db.makeConnection ();
+    
+            if ( !( await this.db.users.hasUserByEmailMD5Async ( conn, emailMD5 ))) {
 
-                console.log ( 'SENDING SIGNUP EMAIL' );
+                console.log ( 'affirming invitation', emailMD5 );
 
-                // user doesn't exist, so send a create user email.
+                await this.db.users.affirmInvitationAsync ( conn, emailMD5 );
+
+                // send (or re-send) the invitation email
                 await this.sendVerifierEmailAsync (
                     email,
                     token.create ( JSON.stringify ({ email: email }), 'localhost', 'self', env.SIGNING_KEY_FOR_REGISTER_USER ),
                     request.body.redirect,
-                    this.templates.REGISTER_USER_EMAIL_SUBJECT,
+                    this.templates.INVITE_USER_EMAIL_SUBJECT,
                     this.templates.REGISTER_USER_EMAIL_TEXT_BODY_TEMPLATE,
                     this.templates.REGISTER_USER_EMAIL_HTML_BODY_TEMPLATE
                 );
-                result.json ({ status: 'OK' });
+
+                rest.handleSuccess ( response );
                 return;
             }
+            console.log ( 'user already exists...' );
         }
         catch ( error ) {
-
             console.log ( error );
+            rest.handleError ( response, error );
+            return;
         }
-        result.json ({});
-        result.status ( 400 );
+        rest.handleError ( response );
     }
 
     //----------------------------------------------------------------//
-    async putUserRoleAsync ( request, result ) {
+    async putUserRoleAsync ( request, response ) {
 
         try {
-            const userID = request.params.userID;
-            const role = request.body.role;
-            const conn = this.db.makeConnection ();
 
+            const userID    = request.params.userID;
+            const role      = request.body.role;
+
+            if ( resquest.user.userID === userID ) {
+                rest.handleError ( response, 403 );
+                return;
+            }
+
+            const conn      = this.db.makeConnection ();
             await this.db.users.updateRoleAsync ( conn, userID, role );
 
-            result.json ({ status: 'OK' });
+            rest.handleSuccess ( response );
             return;
         }
         catch ( error ) {
-            console.log ( error );
+            rest.handleError ( response, error );
+            return;
         }
-        result.json ({});
-        result.status ( 401 );
+        rest.handleError ( response, 401 );
     }
 
     //----------------------------------------------------------------//

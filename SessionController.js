@@ -22,8 +22,8 @@ export class SessionController {
 
     //----------------------------------------------------------------//
     @computed get
-    roles () {
-        return this.session.roles || [];
+    emailMd5 () {
+        return this.session.emailMd5 || '';
     }
 
     //----------------------------------------------------------------//
@@ -46,7 +46,7 @@ export class SessionController {
     //----------------------------------------------------------------//
     @computed get
     gravatar () {
-        return `https://www.gravatar.com/avatar/${ this.session.emailMD5 }?d=retro&s=128`;
+        return `https://www.gravatar.com/avatar/${ this.emailMD5 }?d=retro&s=128`;
     }
 
     //----------------------------------------------------------------//
@@ -77,8 +77,8 @@ export class SessionController {
 
     //----------------------------------------------------------------//
     @computed get
-    publicName () {
-        return this.session.username || '';
+    role () {
+        return this.session.role || '';
     }
 
     //----------------------------------------------------------------//
@@ -91,5 +91,11 @@ export class SessionController {
     @computed get
     userID () {
         return this.session.userID || '';
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    username () {
+        return this.session.username || '';
     }
 }
