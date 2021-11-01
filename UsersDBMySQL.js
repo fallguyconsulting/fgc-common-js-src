@@ -6,6 +6,7 @@ import * as roles                       from './roles';
 import bcrypt                           from 'bcryptjs';
 import * as consts                      from 'consts';
 import crypto                           from 'crypto';
+import _                                from 'lodash';
 
 //================================================================//
 // UsersDBMySQL
@@ -232,6 +233,7 @@ export class UsersDBMySQL {
     async updateRoleAsync ( conn, userID, role ) {
 
         assert ( role );
+        assert ( _.includes ( roles.STANDARD_ROLES, role ));
 
         return conn.runInConnectionAsync ( async () => {
 

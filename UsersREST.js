@@ -209,6 +209,8 @@ export class UsersREST {
 
             console.log ( user.username, emailMD5 );
 
+            console.log ( 'USER LOGGING IN:', user );
+
             if ( roles.check ( user.role, roles.ENTITLEMENTS.CAN_LOGIN ) && ( await bcrypt.compare ( body.password, password ))) {
                 rest.handleSuccess ( response, { session: this.makeSession ( user, env.SIGNING_KEY_FOR_SESSION )});
                 return;
@@ -433,18 +435,21 @@ export class UsersREST {
             const userID    = request.params.userID;
             const role      = request.body.role;
 
-            if ( resquest.user.userID === userID ) {
+            console.log ( 'PUT ROLE:', userID, role );
+
+            if ( request.user.userID === userID ) {
                 rest.handleError ( response, 403 );
                 return;
             }
 
-            const conn      = this.db.makeConnection ();
+            const conn = this.db.makeConnection ();
             await this.db.users.updateRoleAsync ( conn, userID, role );
 
             rest.handleSuccess ( response );
             return;
         }
         catch ( error ) {
+            console.log ( error );
             rest.handleError ( response, error );
             return;
         }
