@@ -2,7 +2,7 @@
 
 import { assert }               from './assert';
 import { StorageContext }       from './StorageContext';
-import * as util                from 'fgc';
+import * as roles               from './roles';
 import { action, computed, extendObservable, observable, runInAction } from "mobx";
 
 const STORE_SESSION = 'session';
@@ -22,8 +22,8 @@ export class SessionController {
 
     //----------------------------------------------------------------//
     @computed get
-    emailMd5 () {
-        return this.session.emailMd5 || '';
+    emailMD5 () {
+        return this.session.emailMD5 || '';
     }
 
     //----------------------------------------------------------------//
@@ -47,6 +47,12 @@ export class SessionController {
     @computed get
     gravatar () {
         return `https://www.gravatar.com/avatar/${ this.emailMD5 }?d=retro&s=128`;
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    isAdmin () {
+        return ( this.role === roles.STANDARD_ROLES.ADMIN );
     }
 
     //----------------------------------------------------------------//
