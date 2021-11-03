@@ -5,9 +5,9 @@ import { randomBytes }          from './randomBytes';
 import * as bip32               from 'bip32';
 import * as bip39               from 'bip39';
 import * as bitcoin             from 'bitcoinjs-lib';
+import * as crypto              from 'crypto';
 import CryptoJS                 from 'crypto-js';
-// import JSEncrypt                from 'jsencrypt';
-import JSEncrypt                from 'node-jsencrypt';
+import JSEncrypt                from 'jsencrypt';
 import keyutils                 from 'js-crypto-key-utils';
 import * as secp256k1           from 'secp256k1'
 
@@ -74,7 +74,16 @@ class Key {
 //================================================================//
 // ECKey
 //================================================================//
-class ECKey extends Key {
+export class ECKey extends Key {
+
+    //----------------------------------------------------------------//
+    computeECDHSecret ( publicHex ) {
+
+        const ecdh = crypto.createECDH ( 'secp256k1' );
+        ecdh.generateKeys ( 'hex', 'compressed' );
+        ecdh.setPrivateKey ( this.ecpair.privateKey.toString ( 'hex' ), 'hex' );
+        return ecdh.computeSecret ( new Buffer ( publicHex, 'hex' ), 'hex' ).toString ( 'hex' );
+    }
 
     //----------------------------------------------------------------//
     constructor ( ecpair ) {
@@ -82,6 +91,24 @@ class ECKey extends Key {
 
         this.ecpair     = ecpair;
         this.type       = 'EC';
+    }
+
+    //----------------------------------------------------------------//
+    decrypt ( ciphertext, fromPublicHex ) {
+
+        try {
+            return aesCipherToPlain ( ciphertext, this.computeECDHSecret ( fromPublicHex ));
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+        return false;
+    }
+
+    //----------------------------------------------------------------//
+    encrypt ( plaintext, toPublicHex ) {
+
+        return aesPlainToCipher ( plaintext, this.computeECDHSecret ( toPublicHex ));
     }
 
     //----------------------------------------------------------------//
@@ -231,7 +258,7 @@ class RSAKey extends Key {
 //----------------------------------------------------------------//
 export function aesCipherToPlain ( ciphertext, password ) {
 
-   return CryptoJS.AES.decrypt ( ciphertext, password ).toString ( CryptoJS.enc.Utf8 );
+    return CryptoJS.AES.decrypt ( ciphertext, password ).toString ( CryptoJS.enc.Utf8 );
 }
 
 //----------------------------------------------------------------//
