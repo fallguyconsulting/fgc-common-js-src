@@ -5,7 +5,7 @@ import { assert, hooks, RevocableContext }              from 'fgc';
 import libphone                                         from 'google-libphonenumber';
 import { action, computed, observable, runInAction }    from 'mobx';
 import { observer }                                     from 'mobx-react';
-import React, { useState }                              from 'react';
+import React, { useEffect, useState }                   from 'react';
 import * as UI                                          from 'semantic-ui-react';
 
 //================================================================//
@@ -13,9 +13,8 @@ import * as UI                                          from 'semantic-ui-react'
 //================================================================//
 export const PhoneField = observer (( props ) => {
 
-    const { onPhone, ...rest }      = props;
+    const { onPhone, onPhoneE164, ...rest }               = props;
 
-    const [ init, setInit ]         = useState ( props.value || false );
     const [ phone, setPhone ]       = useState ( '' );
     const [ error, setError ]       = useState ( '' );
 
@@ -28,9 +27,12 @@ export const PhoneField = observer (( props ) => {
             const phoneNumber = phoneUtil.parse ( input, 'US' );
 
             if ( phoneUtil.isValidNumber ( phoneNumber )) {
-                const formatted = phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.NATIONAL );
-                onPhone ( formatted );
-                setPhone ( formatted );
+
+                setPhone ( phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.NATIONAL ));
+
+                onPhone && onPhone ( phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.NATIONAL ));
+                onPhoneE164 && onPhoneE164 ( phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.E164 ));
+
                 return;
             }
         }
@@ -40,10 +42,11 @@ export const PhoneField = observer (( props ) => {
         setError ( 'Please enter a valid phone number.' );
     }
 
-    if ( init ) {
-        update ( init );
-        setInit ( false );
-    }
+    useEffect (() => {
+        if ( props.value ) {
+            update ( props.value );
+        }
+    });
 
     const onChange = ( event ) => {
         setError ( '' );

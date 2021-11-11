@@ -4,7 +4,7 @@ import * as consts                                      from 'consts';
 import { assert, hooks, RevocableContext }              from 'fgc';
 import { action, computed, observable, runInAction }    from 'mobx';
 import { observer }                                     from 'mobx-react';
-import React, { useState }                              from 'react';
+import React, { useEffect, useState }                   from 'react';
 import * as UI                                          from 'semantic-ui-react';
 import URL                                              from 'url';
 import validator                                        from 'validator';
@@ -16,7 +16,6 @@ export const URLField = observer (( props ) => {
 
     const { onURL, ...rest }        = props;
 
-    const [ init, setInit ]         = useState ( props.value || false );
     const [ url, setURL ]           = useState ( '' );
     const [ error, setError ]       = useState ( '' );
 
@@ -33,10 +32,11 @@ export const URLField = observer (( props ) => {
         setError ( `Please enter a valid URL (including protocol).` );
     };
 
-    if ( init ) {
-        update ( init );
-        setInit ( false );
-    }
+    useEffect (() => {
+        if ( props.value ) {
+            update ( props.value );
+        }
+    });
 
     const onChange = ( event ) => {
         setError ( '' );
