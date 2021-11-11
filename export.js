@@ -35,11 +35,14 @@ module.exports = {
 
     ButtonWithDelay:                require ( './ButtonWithDelay.js' ).ButtonWithDelay,
     ClipboardMenuItem:              require ( './ClipboardMenuItem.js' ).ClipboardMenuItem,
+    EmailField:                     require ( './EmailField.js' ).EmailField,
     FilePickerMenuItem:             require ( './FilePickerMenuItem.js' ).FilePickerMenuItem,
     InfiniteScrollView:             require ( './InfiniteScrollView.js' ).InfiniteScrollView,
+    PhoneField:                     require ( './PhoneField.js' ).PhoneField,
     ProgressController:             require ( './ProgressController.js' ).ProgressController,
     ProgressSpinner:                require ( './ProgressSpinner.js' ).ProgressSpinner,
     RevocableContext:               require ( './RevocableContext.js' ).RevocableContext,
     SingleColumnContainerView:      require ( './SingleColumnContainerView.js' ).SingleColumnContainerView,
     StorageContext:                 require ( './StorageContext.js' ).StorageContext,
+    URLField:                       require ( './URLField.js' ).URLField,
 };
