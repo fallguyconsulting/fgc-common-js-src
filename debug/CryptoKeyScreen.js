@@ -39,11 +39,6 @@ class CryptoKeyScreenController {
     }
 
     //----------------------------------------------------------------//
-    finalize () {
-        this.revocable.finalize ();
-    }
-
-    //----------------------------------------------------------------//
     @action
     async getKeyAsync () {
 

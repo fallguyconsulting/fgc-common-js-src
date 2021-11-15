@@ -8,13 +8,24 @@ import React                    from 'react';
 import { Redirect }             from 'react-router';
 
 //----------------------------------------------------------------//
+export function finalize ( object ) {
+
+    if ( object ) {
+        if ( object.finalize ) {
+            object.finalize ();
+        }
+        finalize ( object.revocable );
+        finalize ( object.storage );
+    }
+}
+
+//----------------------------------------------------------------//
 export function useFinalizable ( factory ) {
 
     const serviceRef = React.useRef ();
     serviceRef.current = serviceRef.current || factory ();
 
-    assert ( serviceRef.current, 'Did not create finalizable.' );
-    assert ( typeof ( serviceRef.current.finalize ) === 'function', 'Missing finalize () method.' );
+    assert ( serviceRef.current, 'Failed to create finalizable.' );
 
     React.useEffect (
         () => {
@@ -22,7 +33,7 @@ export function useFinalizable ( factory ) {
             const current = serviceRef.current;
 
             return () => {
-                current.finalize ();
+                finalize ( current );
             };
         },
         []

@@ -25,10 +25,6 @@ class AESScreenController {
     }
 
     //----------------------------------------------------------------//
-    finalize () {
-    }
-
-    //----------------------------------------------------------------//
     @action
     setMessage ( message ) {
         this.message = message;

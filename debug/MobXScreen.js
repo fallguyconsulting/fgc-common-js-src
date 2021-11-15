@@ -18,10 +18,6 @@ class MobXScreenStore {
     }
 
     //----------------------------------------------------------------//
-    finalize () {
-    }
-
-    //----------------------------------------------------------------//
     @action
     select ( index ) {
         if (( index < 0 ) || ( index >= this.values.length )) return;

@@ -29,12 +29,6 @@ export class ProgressController {
     }
 
     //----------------------------------------------------------------//
-    finalize () {
-
-        this.revocable.finalize ();
-    }
-
-    //----------------------------------------------------------------//
     @action
     onProgress ( message, millis ) {
         if ( message ) {
