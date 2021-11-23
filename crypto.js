@@ -9,7 +9,14 @@ import * as crypto              from 'crypto';
 import CryptoJS                 from 'crypto-js';
 import JSEncrypt                from 'jsencrypt';
 import keyutils                 from 'js-crypto-key-utils';
+import { action, computed, observable, runInAction } from 'mobx';
 import * as secp256k1           from 'secp256k1'
+
+// TODO: look at porting all this crap to https://www.npmjs.com/package/jsrsasign
+// TODO: need support for loading RSA keys with passwords
+// TODO: need more generalized encoding support
+// TODO: need to input/ouput PEM, HEX, BASE64, etc. from all key types
+// TODO: would like to go all *synchronous* if possible
 
 // https://8gwifi.org/ecsignverify.jsp
 
@@ -17,6 +24,11 @@ import * as secp256k1           from 'secp256k1'
 // Key
 //================================================================//
 class Key {
+
+    @computed get       privateHEX      () { return this.getPublic ( 'hex' ); }
+    @computed get       privatePEM      () { return this.getPublic ( 'pem' ); }
+    @computed get       publicHEX       () { return this.getPublic ( 'hex' ); }
+    @computed get       publicPEM       () { return this.getPublic ( 'pem' ); }
 
     //----------------------------------------------------------------//
     constructor () {
@@ -59,15 +71,15 @@ class Key {
     }
 
     //----------------------------------------------------------------//
-    sign ( message ) {
+    sign ( message, encoding ) {
 
-        return this._sign ( message );
+        return this._sign ( message, encoding || 'hex' );
     }
 
     //----------------------------------------------------------------//
-    verify ( message, sigHex ) {
+    verify ( message, sigString, encoding ) {
 
-        return this._verify ( message );
+        return this._verify ( message, sigString, encoding || 'hex' );
     }
 }
 
@@ -159,16 +171,17 @@ export class ECKey extends Key {
     }
 
     //----------------------------------------------------------------//
-    _sign ( message ) {
+    _sign ( message, encoding ) {
 
         const signature = this.ecpair.sign ( bitcoin.crypto.sha256 ( message ))
-        return secp256k1.signatureExport ( signature ).toString ( 'hex' ).toUpperCase ();
+        const sigString = secp256k1.signatureExport ( signature ).toString ( encoding );
+        return encoding === 'hex' ? sigString.toUpperCase () : sigString;
     }
 
     //----------------------------------------------------------------//
-    _verify ( message, sigHex ) {
+    _verify ( message, sigString, encoding ) {
 
-        const signature = Buffer.from ( sigHex, 'hex' );
+        const signature = Buffer.from ( sigString, encoding );
         return this.ecpair.verify ( bitcoin.crypto.sha256 ( message ), signature );
     }
 }
@@ -176,16 +189,16 @@ export class ECKey extends Key {
 //================================================================//
 // RSAKey
 //================================================================//
-class RSAKey extends Key {
+export class RSAKey extends Key {
 
     //----------------------------------------------------------------//
     constructor ( pem ) {
         super ();
 
         const rsapair = new JSEncrypt ();
-        rsapair.setPrivateKey ( pem );
+        rsapair.setKey ( pem );
 
-        if ( !rsapair.key.d ) throw 'Not an RSA PEM.'
+        if ( !rsapair.key.e ) throw 'Not an RSA PEM.'
 
         this.rsapair = rsapair;
         this.type = 'RSA';
@@ -210,8 +223,12 @@ class RSAKey extends Key {
             case 'json': {
                 return {
                     type:           'RSA_PEM',
-                    privateKey:     this.rsapair.getPrivateKey (),
+                    privateKey:     this.getPrivate ( 'pem' ),
                 };
+            }
+
+            case 'pem': {
+                return this.rsapair.getPrivateKey ();
             }
         }
         return this.rsapair;
@@ -229,25 +246,35 @@ class RSAKey extends Key {
             case 'json': {
                 return {
                     type:           'RSA_PEM',
-                    publicKey:      this.rsapair.getPublicKey (),
+                    publicKey:      this.getPublic ( 'pem' ),
                 };
+            }
+
+            case 'pem': {
+                return this.rsapair.getPublicKey ();
             }
         }
         return this.rsapair;
     }
 
     //----------------------------------------------------------------//
-    _sign ( message ) {
-
-        const sig = this.rsapair.sign ( message, CryptoJS.SHA256, 'sha256' );
-        return base64.toHex ( sig ).toLowerCase ();
+    get
+    hasPrivate () {
+        return Boolean ( this.rsapair.key.d );
     }
 
     //----------------------------------------------------------------//
-    _verify ( message, sigHex ) {
+    _sign ( message, encoding ) {
 
-        const signature = Buffer.from ( sigHex, 'hex' );
-        return this.rsapair.verify ( message, signature, CryptoJS.SHA256 );
+        const sig = this.rsapair.sign ( message, CryptoJS.SHA256, 'sha256' );
+        return encoding === 'hex' ? base64.toHex ( sig ).toLowerCase () : sig;
+    }
+
+    //----------------------------------------------------------------//
+    _verify ( message, sigString, encoding ) {
+        
+        const sig = encoding === 'hex' ? base64.fromHex ( sigString ) : sigString;
+        return this.rsapair.verify ( message, sig, CryptoJS.SHA256 );
     }
 }
 
@@ -336,14 +363,6 @@ export async function loadKeyAsync ( phraseOrPEM ) {
 
         const key = await pemToKeyAsync ( phraseOrPEM );
 
-        // console.log ( key );
-
-        // const publicKey = key.getPublicKeyBuffer ().toString ( 'hex' ).toUpperCase ();
-        // console.log ( 'PUBLIC_KEY', publicKey );
-
-        // const privateKey = key.d.toHex ().toUpperCase ();
-        // console.log ( 'PRIVATE_KEY', privateKey );
-
         return key;
     }
     catch ( error ) {
@@ -382,12 +401,12 @@ export function mnemonicToKey ( mnemonic, path ) {
         key = key.derivePath ( path );
     }
 
-    console.log ( 'BIP32 xpriv:', key.toBase58 ());
-    console.log ( 'BIP32 xpub:', key.neutered ().toBase58 ());
+    // console.log ( 'BIP32 xpriv:', key.toBase58 ());
+    // console.log ( 'BIP32 xpub:', key.neutered ().toBase58 ());
 
     // const address = key.getAddress ();
-    const address = bitcoin.payments.p2pkh ({ pubkey: key.publicKey }).address;
-    console.log ( 'address:', address );
+    // const address = bitcoin.payments.p2pkh ({ pubkey: key.publicKey }).address;
+    // console.log ( 'address:', address );
 
     return new ECKey ( key );
 }

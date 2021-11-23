@@ -2,6 +2,7 @@
 
 module.exports = {
     assert:                 require ( './assert.js' ).assert,
+    base64:                 require ( './base64.js' ),
     bitmapToPaths:          require ( './bitmapToPaths.js' ),
     color:                  require ( './color.js' ),
     crypto:                 require ( './crypto.js' ),

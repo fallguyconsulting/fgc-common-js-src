@@ -8,7 +8,8 @@ export const clear = () => {
         localStorage.clear ();
         console.log ( "Data deleted" );
     }
-    catch ( err ) {
+    catch ( error ) {
+        console.log ( error );
         return undefined
     }
 }
@@ -38,7 +39,6 @@ export const dump = () => {
 export const getItem = ( k, fallback ) => {
 
     const v = localStorage.getItem ( k );
-    //console.log ( "fromLocalStorage", k, v );
     return v !== null ? JSON.parse ( v ) : ( fallback === undefined ? null : fallback );
 }
 
@@ -54,9 +54,9 @@ export const setItem = ( k, v ) => {
     try {
         const serializedState = JSON.stringify ( v );
         localStorage.setItem ( k, serializedState );
-        //console.log ( "inLocalStorage", k, serializedState );
     }
-    catch ( err ) {
+    catch ( error ) {
+        console.log ( error );
         console.log ( "Write to local storage failed" );
     }
 }
