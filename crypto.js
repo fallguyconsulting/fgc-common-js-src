@@ -1,24 +1,38 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import * as base64              from './base64';
+import * as pem                 from './pem';
 import { randomBytes }          from './randomBytes';
 import * as bip32               from 'bip32';
 import * as bip39               from 'bip39';
 import * as bitcoin             from 'bitcoinjs-lib';
 import * as crypto              from 'crypto';
 import CryptoJS                 from 'crypto-js';
-import JSEncrypt                from 'jsencrypt';
 import keyutils                 from 'js-crypto-key-utils';
+import JSEncrypt                from 'jsencrypt';
 import { action, computed, observable, runInAction } from 'mobx';
 import * as secp256k1           from 'secp256k1'
 
-// TODO: look at porting all this crap to https://www.npmjs.com/package/jsrsasign
+import * as jsbn                from 'jsbn';
+
 // TODO: need support for loading RSA keys with passwords
 // TODO: need more generalized encoding support
 // TODO: need to input/ouput PEM, HEX, BASE64, etc. from all key types
 // TODO: would like to go all *synchronous* if possible
 
 // https://8gwifi.org/ecsignverify.jsp
+
+export const CRYPTO_FORMAT = {
+    BASE64:     'base64',
+    HEX:        'hex',
+    JSON:       'json',
+    PEM:        'pem',
+};
+
+export const CRYPTO_KEY_TYPE = {
+    EC:         'EC',
+    RSA:        'RSA',
+};
 
 //================================================================//
 // Key
@@ -49,7 +63,7 @@ class Key {
     //----------------------------------------------------------------//
     getPrivateHex () {
 
-        return this._getPrivate ( 'hex' );
+        return this._getPrivate ( CRYPTO_FORMAT.HEX );
     }
 
     //----------------------------------------------------------------//
@@ -61,25 +75,31 @@ class Key {
     //----------------------------------------------------------------//
     getPublicHex () {
 
-        return this._getPublic ( 'hex' );
+        return this._getPublic ( CRYPTO_FORMAT.HEX );
     }
 
     //----------------------------------------------------------------//
     hash ( message ) {
 
-        return bitcoin.crypto.sha256 ( message ).toString ( 'hex' ).toUpperCase ();
+        return bitcoin.crypto.sha256 ( message ).toString ( CRYPTO_FORMAT.HEX ).toUpperCase ();
+    }
+
+    //----------------------------------------------------------------//
+    publicIsMatch ( other ) {
+
+        return this._publicIsMatch ( other );
     }
 
     //----------------------------------------------------------------//
     sign ( message, encoding ) {
 
-        return this._sign ( message, encoding || 'hex' );
+        return this._sign ( message, encoding || CRYPTO_FORMAT.HEX );
     }
 
     //----------------------------------------------------------------//
     verify ( message, sigString, encoding ) {
 
-        return this._verify ( message, sigString, encoding || 'hex' );
+        return this._verify ( message, sigString, encoding || CRYPTO_FORMAT.HEX );
     }
 }
 
@@ -102,7 +122,7 @@ export class ECKey extends Key {
         super ();
 
         this.ecpair     = ecpair;
-        this.type       = 'EC';
+        this.type       = CRYPTO_KEY_TYPE.EC;
     }
 
     //----------------------------------------------------------------//
@@ -135,15 +155,15 @@ export class ECKey extends Key {
 
         switch ( format ) {
 
-            case 'hex': {
+            case CRYPTO_FORMAT.HEX: {
                 return this.getPrivate ().toString ( 'hex' ).toUpperCase ();
             }
 
-            case 'json': {
+            case CRYPTO_FORMAT.JSON: {
                 return {
                     type:           'EC_HEX',
                     groupName:      'secp256k1',
-                    privateKey:     this.getPrivate ( 'hex' ),
+                    privateKey:     this.getPrivate ( CRYPTO_FORMAT.HEX ),
                 };
             }
         }
@@ -155,15 +175,15 @@ export class ECKey extends Key {
 
         switch ( format ) {
 
-            case 'hex': {
+            case CRYPTO_FORMAT.HEX: {
                 return this.getPublic ().toString ( 'hex' ).toUpperCase ();
             }
 
-            case 'json': {
+            case CRYPTO_FORMAT.JSON: {
                 return {
                     type:           'EC_HEX',
                     groupName:      'secp256k1',
-                    publicKey:      this.getPublic ( 'hex' ),
+                    publicKey:      this.getPublic ( CRYPTO_FORMAT.HEX ),
                 };
             }
         }
@@ -171,17 +191,24 @@ export class ECKey extends Key {
     }
 
     //----------------------------------------------------------------//
+    _publicIsMatch ( other ) {
+
+        return ( this.ecpair.publicKey.compare ( other.ecpair.publicKey ) === 0 );
+    }
+
+    //----------------------------------------------------------------//
     _sign ( message, encoding ) {
 
         const signature = this.ecpair.sign ( bitcoin.crypto.sha256 ( message ))
+
         const sigString = secp256k1.signatureExport ( signature ).toString ( encoding );
-        return encoding === 'hex' ? sigString.toUpperCase () : sigString;
+        return encoding === CRYPTO_FORMAT.HEX ? sigString.toUpperCase () : sigString;
     }
 
     //----------------------------------------------------------------//
     _verify ( message, sigString, encoding ) {
 
-        const signature = Buffer.from ( sigString, encoding );
+        const signature = secp256k1.signatureImport ( Buffer.from ( sigString, encoding ));
         return this.ecpair.verify ( bitcoin.crypto.sha256 ( message ), signature );
     }
 }
@@ -197,11 +224,10 @@ export class RSAKey extends Key {
 
         const rsapair = new JSEncrypt ();
         rsapair.setKey ( pem );
-
         if ( !rsapair.key.e ) throw 'Not an RSA PEM.'
-
+        
         this.rsapair = rsapair;
-        this.type = 'RSA';
+        this.type = CRYPTO_KEY_TYPE.RSA;
     }
 
     //----------------------------------------------------------------//
@@ -216,18 +242,18 @@ export class RSAKey extends Key {
 
         switch ( format ) {
 
-            case 'hex': {
+            case CRYPTO_FORMAT.HEX: {
                 throw 'Unsupported format';
             }
 
-            case 'json': {
+            case CRYPTO_FORMAT.JSON: {
                 return {
                     type:           'RSA_PEM',
                     privateKey:     this.getPrivate ( 'pem' ),
                 };
             }
 
-            case 'pem': {
+            case CRYPTO_FORMAT.PEM: {
                 return this.rsapair.getPrivateKey ();
             }
         }
@@ -239,18 +265,18 @@ export class RSAKey extends Key {
 
         switch ( format ) {
 
-            case 'hex': {
+            case CRYPTO_FORMAT.HEX: {
                 throw 'Unsupported format';
             }
 
-            case 'json': {
+            case CRYPTO_FORMAT.JSON: {
                 return {
                     type:           'RSA_PEM',
                     publicKey:      this.getPublic ( 'pem' ),
                 };
             }
 
-            case 'pem': {
+            case CRYPTO_FORMAT.PEM: {
                 return this.rsapair.getPublicKey ();
             }
         }
@@ -264,16 +290,25 @@ export class RSAKey extends Key {
     }
 
     //----------------------------------------------------------------//
+    _publicIsMatch ( other ) {
+
+        const k0 = this.rsapair.key;
+        const k1 = other.rsapair.key;
+
+        return ( k0.n.equals ( k1.n ) && ( k0.e === k1.e ));
+    }
+
+    //----------------------------------------------------------------//
     _sign ( message, encoding ) {
 
-        const sig = this.rsapair.sign ( message, CryptoJS.SHA256, 'sha256' );
-        return encoding === 'hex' ? base64.toHex ( sig ).toLowerCase () : sig;
+        const sig = this.rsapair.sign ( message, CryptoJS.SHA256, 'sha256' ); // sig is base64 by default
+        return encoding === CRYPTO_FORMAT.HEX ? base64.toHex ( sig ).toLowerCase () : sig;
     }
 
     //----------------------------------------------------------------//
     _verify ( message, sigString, encoding ) {
         
-        const sig = encoding === 'hex' ? base64.fromHex ( sigString ) : sigString;
+        const sig = encoding === CRYPTO_FORMAT.HEX ? base64.fromHex ( sigString ) : sigString; // need to go back to base64
         return this.rsapair.verify ( message, sig, CryptoJS.SHA256 );
     }
 }
@@ -317,10 +352,11 @@ export function keyFromPrivateHex ( privateKeyHex ) {
 }
 
 //----------------------------------------------------------------//
-export async function loadKeyAsync ( phraseOrPEM ) {
+export async function loadKeyAsync ( phraseOrPEM, password ) {
 
     console.log ( 'LOAD KEY ASYNC' );
 
+    // try to load from mnemonic
     try {
         if ( bip39.validateMnemonic ( phraseOrPEM )) {
             return mnemonicToKey ( phraseOrPEM );
@@ -330,7 +366,8 @@ export async function loadKeyAsync ( phraseOrPEM ) {
     catch ( error ) {
         console.log ( error );
     }
-    
+
+    // try to load from JSON
     try {
         const json = JSON.parse ( phraseOrPEM );
         if ( json && json.type ) {
@@ -340,7 +377,6 @@ export async function loadKeyAsync ( phraseOrPEM ) {
                 case 'EC_PEM':
                 case 'RSA_PEM':
                     phraseOrPEM = json.privateKey;
-                    console.log ( 'PEM:', phraseOrPEM );
                     break;
 
                 case 'EC_HEX':
@@ -352,21 +388,22 @@ export async function loadKeyAsync ( phraseOrPEM ) {
         console.log ( 'NOT A JSON KEY' );
     }
 
+    // try to load from PEM
     try {
 
-        try {
-            return new RSAKey ( phraseOrPEM );
-        }
-        catch ( error ) {
-            console.log ( 'NOT AN RSA PEM' );
-        }
+        const jwk = await pem.pemToJWKAsync ( phraseOrPEM, password );
 
-        const key = await pemToKeyAsync ( phraseOrPEM );
-
-        return key;
+        switch ( jwk.kty ) {
+            case 'EC': {
+                return new ECKey ( bitcoin.ECPair.fromPrivateKey ( new Buffer ( jwk.d, 'base64' )));
+            }
+            case 'RSA': {
+                return new RSAKey ( await pem.jwkToPEMAsync ( jwk ));
+            }
+        }
     }
     catch ( error ) {
-        console.log ( error );
+        if ( error instanceof pem.PEMPasswordError ) throw error;
         console.log ( 'NOT A VALID PEM' );
     }
 
@@ -409,24 +446,6 @@ export function mnemonicToKey ( mnemonic, path ) {
     // console.log ( 'address:', address );
 
     return new ECKey ( key );
-}
-
-//----------------------------------------------------------------//
-export function privateHexToKey ( privateKeyHex ) {
-
-    const privKey = new Buffer ( privateKeyHex, 'hex' );
-
-    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( privKey ));
-}
-
-//----------------------------------------------------------------//
-export async function pemToKeyAsync ( pem ) {
-
-    const keyObj    = new keyutils.Key ( 'pem', pem );
-    const jwk       = await keyObj.export ( 'jwk', { outputPublic: false });
-    const privKey   = new Buffer ( jwk.d, 'base64' );
-
-    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( privKey ));
 }
 
 //----------------------------------------------------------------//

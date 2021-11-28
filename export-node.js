@@ -11,6 +11,7 @@ module.exports = {
     Mailer:                 require ( './Mailer.js' ).Mailer,
     pdf417:                 require ( './pdf417.js' ),
     pdf417Encoder:          require ( './pdf417Encoder.js' ),
+    pem:                    require ( './pem.js' ),
     qrcode:                 require ( './qrcode.js' ),
     // randomBytes:            require ( './randomBytes.js' ).randomBytes,
     rect:                   require ( './rect.js' ),
