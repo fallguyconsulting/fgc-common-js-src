@@ -2,37 +2,45 @@
 
 import * as consts                                      from 'consts';
 import { assert, hooks, RevocableContext }              from 'fgc';
+import libphone                                         from 'google-libphonenumber';
 import { action, computed, observable, runInAction }    from 'mobx';
 import { observer }                                     from 'mobx-react';
 import React, { useEffect, useState }                   from 'react';
 import * as UI                                          from 'semantic-ui-react';
-import URL                                              from 'url';
-import validator                                        from 'validator';
 
 //================================================================//
-// URLField
+// PhoneField
 //================================================================//
-export const URLField = observer (( props ) => {
+export const PhoneField = observer (( props ) => {
 
-    const { onURL, ...rest }        = props;
+    const { onPhone, onPhoneE164, ...rest }               = props;
 
-    const [ url, setURL ]           = useState ( '' );
+    const [ phone, setPhone ]       = useState ( '' );
     const [ error, setError ]       = useState ( '' );
 
     const update = ( input ) => {
 
-        console.log ( 'UPDATE URL:', input );
-
         if ( !input ) return;
 
-        if ( validator.isURL ( input, { require_protocol: true, require_valid_protocol: true, protocols: [ 'http', 'https' ]})) {
-            const formatted = URL.format ( URL.parse ( input ));
-            onURL ( formatted );
-            setURL ( formatted );
-            return;
+        try {
+            const phoneUtil = libphone.PhoneNumberUtil.getInstance ();
+            const phoneNumber = phoneUtil.parse ( input, 'US' );
+
+            if ( phoneUtil.isValidNumber ( phoneNumber )) {
+
+                setPhone ( phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.NATIONAL ));
+
+                onPhone && onPhone ( phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.NATIONAL ));
+                onPhoneE164 && onPhoneE164 ( phoneUtil.format ( phoneNumber, libphone.PhoneNumberFormat.E164 ));
+
+                return;
+            }
         }
-        setError ( `Please enter a valid URL (including protocol).` );
-    };
+        catch ( error ) {
+            console.log ( error );
+        }
+        setError ( 'Please enter a valid phone number.' );
+    }
 
     useEffect (() => {
         if ( props.value ) {
@@ -42,11 +50,11 @@ export const URLField = observer (( props ) => {
 
     const onChange = ( event ) => {
         setError ( '' );
-        setURL ( event.target.value );
+        setPhone ( event.target.value );
     }
 
     const onBlur = () => {
-        update ( url );
+        update ( phone );
     };
 
     const onKeyPress = ( event ) => {
@@ -58,14 +66,14 @@ export const URLField = observer (( props ) => {
     return (
         <UI.Form.Input
             
-            icon            = 'globe'
+            icon            = 'phone'
             iconPosition    = { props.icon ? 'left' : undefined }
-            placeholder     = 'URL'
+            placeholder     = 'Phone Number'
 
             { ...rest }
 
             type            = 'string'
-            value           = { url }
+            value           = { phone }
             onChange        = { onChange }
             onKeyPress      = { onKeyPress }
             onBlur          = { onBlur }

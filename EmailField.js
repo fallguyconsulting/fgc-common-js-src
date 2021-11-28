@@ -4,49 +4,36 @@ import * as consts                                      from 'consts';
 import { assert, hooks, RevocableContext }              from 'fgc';
 import { action, computed, observable, runInAction }    from 'mobx';
 import { observer }                                     from 'mobx-react';
-import React, { useEffect, useState }                   from 'react';
+import React, { useState }                              from 'react';
 import * as UI                                          from 'semantic-ui-react';
-import URL                                              from 'url';
 import validator                                        from 'validator';
 
 //================================================================//
-// URLField
+// EmailField
 //================================================================//
-export const URLField = observer (( props ) => {
+export const EmailField = observer (( props ) => {
 
-    const { onURL, ...rest }        = props;
+    const { onEmail, ...rest }      = props;
 
-    const [ url, setURL ]           = useState ( '' );
+    const [ email, setEmail ]       = useState ( '' );
     const [ error, setError ]       = useState ( '' );
-
-    const update = ( input ) => {
-
-        console.log ( 'UPDATE URL:', input );
-
-        if ( !input ) return;
-
-        if ( validator.isURL ( input, { require_protocol: true, require_valid_protocol: true, protocols: [ 'http', 'https' ]})) {
-            const formatted = URL.format ( URL.parse ( input ));
-            onURL ( formatted );
-            setURL ( formatted );
-            return;
-        }
-        setError ( `Please enter a valid URL (including protocol).` );
-    };
-
-    useEffect (() => {
-        if ( props.value ) {
-            update ( props.value );
-        }
-    });
 
     const onChange = ( event ) => {
         setError ( '' );
-        setURL ( event.target.value );
+        onEmail ( '' );
+        setEmail ( event.target.value );
     }
 
     const onBlur = () => {
-        update ( url );
+
+        if ( email ) {
+            if ( validator.isEmail ( email )) {
+                onEmail ( email );
+            }
+            else {
+                setError ( 'Please enter a valid email address.' );
+            }
+        }
     };
 
     const onKeyPress = ( event ) => {
@@ -58,14 +45,14 @@ export const URLField = observer (( props ) => {
     return (
         <UI.Form.Input
             
-            icon            = 'globe'
+            icon            = 'mail'
             iconPosition    = { props.icon ? 'left' : undefined }
-            placeholder     = 'URL'
+            placeholder     = 'Email'
 
             { ...rest }
 
             type            = 'string'
-            value           = { url }
+            value           = { email }
             onChange        = { onChange }
             onKeyPress      = { onKeyPress }
             onBlur          = { onBlur }
