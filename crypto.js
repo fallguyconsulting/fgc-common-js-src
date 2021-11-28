@@ -13,10 +13,6 @@ import JSEncrypt                from 'jsencrypt';
 import { action, computed, observable, runInAction } from 'mobx';
 import * as secp256k1           from 'secp256k1'
 
-import * as jsbn                from 'jsbn';
-
-// TODO: need support for loading RSA keys with passwords
-// TODO: need more generalized encoding support
 // TODO: need to input/ouput PEM, HEX, BASE64, etc. from all key types
 // TODO: would like to go all *synchronous* if possible
 
