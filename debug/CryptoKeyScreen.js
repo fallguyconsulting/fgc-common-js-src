@@ -80,24 +80,31 @@ jMwcG2o4+KPbvgMq3aIrKl3L+rXfRlBtQ/X4
 const DEFAULT_MNEMONIC = 'ticket basket addict level barrel hobby release ivory luxury sausage modify zero';
 
 /*
-openssl genrsa -out private.pkcs1.pem 1024
-
-openssl ecparam -genkey -name secp256k1 -conv_form compressed -noout -out private.tmp
-openssl pkcs8 -in private.tmp -topk8 -nocrypt -out private.pkcs8.ec.pem
+openssl genrsa                                                                              -out private.tmp 1024
+openssl rsa     -in private.tmp -pubout                                                     -out key0.rsa.public.pem
+openssl rsa     -in private.tmp                                                             -out key0.rsa.private.pem
 rm private.tmp
 
-openssl ecparam -genkey -name secp256k1 -conv_form compressed -noout -out private.tmp
-openssl ec -in private.tmp -out private.tmp -aes256 -passout pass:password
-openssl pkcs8 -in private.tmp -topk8 -passin pass:password -passout pass:password -out private.pkcs8.ec-pwd.pem
+openssl genrsa                                                                              -out private.tmp 1024
+openssl rsa     -in private.tmp -pubout                                                     -out key1.rsa.public.pem
+openssl pkcs8   -in private.tmp -topk8 -nocrypt                                             -out key1.rsa.private.pem
 rm private.tmp
 
-openssl genrsa -out private.tmp 1024
-openssl pkcs8 -in private.tmp -topk8 -nocrypt -out private.pkcs8.rsa.pem
+openssl genrsa                                                                              -out private.tmp 1024
+openssl rsa     -in private.tmp -pubout                                                     -out key2.rsa.public.pem
+openssl rsa     -in private.tmp -aes256 -passout pass:password                              -out private.tmp
+openssl pkcs8   -in private.tmp -topk8 -passin pass:password -passout pass:password         -out key2.rsa.private.pem
 rm private.tmp
 
-openssl genrsa -out private.tmp 1024
-openssl rsa -in private.tmp -out private.tmp -aes256 -passout pass:password
-openssl pkcs8 -in private.tmp -topk8 -passin pass:password -passout pass:password -out private.pkcs8.rsa-pwd.pem
+openssl ecparam -genkey -name secp256k1 -conv_form compressed -noout                        -out private.tmp
+openssl ec      -in private.tmp -outform PEM -pubout                                        -out key3.ec.public.pem
+openssl pkcs8   -in private.tmp -topk8 -nocrypt                                             -out key3.ec.private.pem
+rm private.tmp
+
+openssl ecparam -genkey -name secp256k1 -conv_form compressed -noout                        -out private.tmp
+openssl ec      -in private.tmp -outform PEM -pubout                                        -out key4.ec.public.pem
+openssl ec      -in private.tmp -aes256 -passout pass:password                              -out private.tmp
+openssl pkcs8   -in private.tmp -topk8 -passin pass:password -passout pass:password         -out key4.ec.private.pem
 rm private.tmp
 */
 
