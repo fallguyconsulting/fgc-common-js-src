@@ -1,5 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import fetch                        from 'cross-fetch';
+
 //================================================================//
 // RevocableContext
 //================================================================//
@@ -8,15 +10,12 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     constructor () {
 
-        this.revocables = new Map (); // need to use a proper set to hold objects as keys
-        this.finalized = false;
-    }
+        //this.revocables     = new Map (); // need to use a proper set to hold objects as keys
+        this.revocables         = {};
+        this.finalized          = false;
 
-    //----------------------------------------------------------------//
-    finalize () {
-
-        this.finalized = true;
-        this.revokeAll ();
+        this.revocableID        = 0;
+        this.availableIDs       = [];
     }
 
     //----------------------------------------------------------------//
@@ -36,10 +35,28 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
+    finalize () {
+
+        this.finalized = true;
+        this.revokeAll ();
+    }
+
+    //----------------------------------------------------------------//
+    getID () {
+
+        if ( this.availableIDs.length > 0 ) {
+            return this.availableIDs.pop ();
+        }
+        return this.revocableID++;
+    }
+
+    //----------------------------------------------------------------//
     promise ( promise, timeout ) {
 
         let isCancelled = false;
         let timer;
+
+        const revocableID = this.getID ();
 
         const wrappedPromise = new Promise (( resolve, reject ) => {
 
@@ -63,7 +80,8 @@ export class RevocableContext {
 
             let onFinally = () => {
                 clearTimeout ( timer );
-                this.revocables.delete ( wrappedPromise );
+                delete this.revocables [ revocableID ];
+                this.releaseID ( revocableID );
             }
 
             if ( timeout ) {
@@ -76,11 +94,13 @@ export class RevocableContext {
             .finally ( onFinally );
         });
 
-        this.revocables.set ( wrappedPromise, () => {
+        this.revocables [ revocableID ] = () => {
             isCancelled = true
             clearTimeout ( timer );
-        });
+            this.releaseID ( revocableID );
+        }
         
+        wrappedPromise.revocableID = revocableID;
         return wrappedPromise;
     };
 
@@ -118,33 +138,48 @@ export class RevocableContext {
         
         if ( this.finalized ) return;
 
+        const revocableID = this.getID ();
+
         let timeout = setTimeout (() => {
-            this.revocables.delete ( timeout );
+            delete this.revocables [ revocableID ];
+            this.releaseID ( revocableID );
             callback ();
         }, delay );
 
-        this.revocables.set ( timeout, () => {
+        this.revocables [ revocableID ] = () => {
             clearTimeout ( timeout );
-        });
+            this.releaseID ( revocableID );
+        }
+
+        timeout.revocableID = revocableID;
         return timeout;
+    }
+
+    //----------------------------------------------------------------//
+    releaseID ( revocableID ) {
+
+        return this.availableIDs.push ( revocableID );
     }
 
     //----------------------------------------------------------------//
     revoke ( revocable ) {
 
-        if ( this.revocables.has ( revocable )) {
-            this.revocables.get ( revocable )();
-            this.revocables.delete ( revocable );
+        const revocableID = revocable.revocableID;
+
+        if ( this.revocables [ revocableID ]) {
+            const revoke = this.revocables [ revocableID ];
+            delete this.revocables [ revocableID ];
+            revoke ();
         }
     }
 
     //----------------------------------------------------------------//
     revokeAll () {
 
-        this.revocables.forEach (( revoke ) => {
+        for ( let revoke of this.revocables ) {
             revoke ();
-        });
-        this.revocables.clear ();
+        }
+        this.revocables = {};
     }
 
     //----------------------------------------------------------------//

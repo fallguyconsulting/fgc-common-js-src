@@ -344,7 +344,7 @@ export function generateMnemonic ( bytes ) {
 //----------------------------------------------------------------//
 export function keyFromPrivateHex ( privateKeyHex ) {
 
-    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( new Buffer ( privateKeyHex, 'hex' )));
+    return new ECKey ( bitcoin.ECPair.fromPrivateKey ( Buffer.from ( privateKeyHex, 'hex' )));
 }
 
 //----------------------------------------------------------------//

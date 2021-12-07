@@ -18,9 +18,11 @@ module.exports = {
     redisClient:            require ( './redisClient.js' ),
     textLayout:             require ( './textLayout.js' ),
     textStyle:              require ( './textStyle.js' ),
+
     ModelError:             require ( './ModelError.js' ).ModelError,
     MySQL:                  require ( './MySQL.js' ).MySQL,
     MySQLConnection:        require ( './MySQL.js' ).MySQLConnection,
     rest:                   require ( './rest.js' ),
+    RevocableContext:       require ( './RevocableContext.js' ).RevocableContext,
     util:                   require ( './util.js' ),
 };
