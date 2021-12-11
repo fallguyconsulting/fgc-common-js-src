@@ -11,13 +11,12 @@ export const REST_STATUS = {
 export function handleError ( response, statusOrErrorObj, message ) {
 
     const errorObj = ( typeof ( statusOrErrorObj ) === 'object' ) ? statusOrErrorObj : false;
-
-    const status = ( errorObj ? errorObj.status : statusOrErrorObj ) || 400;
+    const status = ( typeof ( statusOrErrorObj ) === 'number' ) ? statusOrErrorObj : ( errorObj && errorObj.status ? errorObj.status : 400 );
     message = ( errorObj ? errorObj.message : message ) || '';
 
     response.status ( status ).json ({
-        status: REST_STATUS.ERROR,
-        message: message, 
+        status:     REST_STATUS.ERROR,
+        message:    message.toString (), 
     });
 }
 
