@@ -76,6 +76,21 @@ export function shuffle ( array ) {
 }
 
 //----------------------------------------------------------------//
+export function toggleArrayMember ( array, item ) {
+
+    array = array ? array.slice () : [];
+    const index = array.indexOf ( item );
+
+    if ( index < 0 ) {
+        array.push ( item );
+    }
+    else {
+        array.splice ( index, 1 );
+    }
+    return array;
+}
+
+//----------------------------------------------------------------//
 export function toNumberOrFalse ( val, types ) {
 
     types = types || [ 'string', 'number' ];
