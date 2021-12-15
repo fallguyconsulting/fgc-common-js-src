@@ -86,7 +86,7 @@ export class RevocableContext {
 
             if ( timeout ) {
                 timer = setTimeout (() => {
-                    onRejected ( 'TIMED OUT' );
+                    onRejected ( `TIMED OUT: ${ timeout }ms` );
                 }, timeout );
             }
 
