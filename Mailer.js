@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import * as env                     from 'env';
+import * as config                  from 'config';
 import Mailchimp                    from 'mailchimp-api-v3'; // https://mailchimp.com/developer/reference/
 import nodemailer                   from 'nodemailer';
 
@@ -12,10 +12,10 @@ export class Mailer {
     //----------------------------------------------------------------//
     constructor () {
 
-        console.log ( 'GMAIL USER:', env.GMAIL_USER );
+        console.log ( 'GMAIL USER:', config.GMAIL_USER );
 
-        if ( env.MAILCHIMP_API_KEY ) {
-            this.mailchimp = new Mailchimp ( env.MAILCHIMP_API_KEY );
+        if ( config.MAILCHIMP_API_KEY ) {
+            this.mailchimp = new Mailchimp ( config.MAILCHIMP_API_KEY );
         }
 
         // NOTE: if gmail transport myseriously stops working, log in to the
@@ -26,8 +26,8 @@ export class Mailer {
         this.mailTransport = nodemailer.createTransport ({
             service: 'gmail',
             auth: {
-                user: env.GMAIL_USER,
-                pass: env.GMAIL_PASSWORD,
+                user: config.GMAIL_USER,
+                pass: config.GMAIL_PASSWORD,
             },
         });
     }
@@ -35,7 +35,7 @@ export class Mailer {
     //----------------------------------------------------------------//
     async mailchimpSubscribeAsync () {
 
-        // const response = await mailchimp.post ( `/lists/${ env.MAILCHIMP_USER_LIST_ID }/members`, {
+        // const response = await mailchimp.post ( `/lists/${ config.MAILCHIMP_USER_LIST_ID }/members`, {
         //     email_address:      body.email,
         //     email_type:         'html',
         //     status:             'subscribed',
