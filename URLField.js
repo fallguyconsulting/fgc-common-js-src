@@ -14,10 +14,10 @@ import validator                                        from 'validator';
 //================================================================//
 export const URLField = observer (( props ) => {
 
-    const { onURL, ...rest }        = props;
+    const { url, onURL, ...rest }       = props;
 
-    const [ url, setURL ]           = useState ( '' );
-    const [ error, setError ]       = useState ( '' );
+    const [ inputURL, setInputURL ]     = useState ( url || '' );
+    const [ error, setError ]           = useState ( '' );
 
     const update = ( input ) => {
 
@@ -25,10 +25,10 @@ export const URLField = observer (( props ) => {
 
         if ( !input ) return;
 
-        if ( validator.isURL ( input, { require_protocol: true, require_valid_protocol: true, protocols: [ 'http', 'https' ]})) {
+        if ( validator.isURL ( input, { protocols: [ 'http', 'https' ], require_protocol: true, require_valid_protocol: true, require_tld: false })) {
             const formatted = URL.format ( URL.parse ( input ));
             onURL ( formatted );
-            setURL ( formatted );
+            setInputURL ( formatted );
             return;
         }
         setError ( `Please enter a valid URL (including protocol).` );
@@ -42,11 +42,12 @@ export const URLField = observer (( props ) => {
 
     const onChange = ( event ) => {
         setError ( '' );
-        setURL ( event.target.value );
+        props.onChange && props.onChange ( event.target.value );
+        setInputURL ( event.target.value );
     }
 
     const onBlur = () => {
-        update ( url );
+        update ( inputURL );
     };
 
     const onKeyPress = ( event ) => {
@@ -61,15 +62,15 @@ export const URLField = observer (( props ) => {
             icon            = 'globe'
             iconPosition    = { props.icon ? 'left' : undefined }
             placeholder     = 'URL'
+            error           = { error || false }
 
             { ...rest }
 
             type            = 'string'
-            value           = { url }
+            value           = { inputURL }
             onChange        = { onChange }
             onKeyPress      = { onKeyPress }
             onBlur          = { onBlur }
-            error           = { error || false }
         />
     );
 });

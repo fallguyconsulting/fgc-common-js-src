@@ -75,19 +75,21 @@ export const FilePickerMenuItem = observer (( props ) => {
                         <Icon name = 'circle notched' loading/>
                     </When>
                     <Otherwise>
-                        <Icon name = 'folder open outline'/>
+                        <Icon name = { props.icon || 'folder open outline' }/>
                     </Otherwise>
                 </Choose>
             </Menu.Item>
 
-            <Menu.Item>
-                <Button
-                    disabled = { !hasFile }
-                    onClick = {() => { reloadFile ( file )}}
-                >
-                    { hasFile ? file.name : 'No File Chosen' }
-                </Button>
-            </Menu.Item>
+            <If condition = { !props.hideReloadButton }>
+                <Menu.Item>
+                    <Button
+                        disabled = { !hasFile }
+                        onClick = {() => { reloadFile ( file )}}
+                    >
+                        { hasFile ? file.name : 'No File Chosen' }
+                    </Button>
+                </Menu.Item>
+            </If>
 
         </React.Fragment>
     );
