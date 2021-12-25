@@ -48,6 +48,12 @@ export function isNumber ( number ) {
 }
 
 //----------------------------------------------------------------//
+export function isString ( value ) {
+
+    return (( typeof ( value ) === 'string' ) || ( value instanceof String ));
+}
+
+//----------------------------------------------------------------//
 export function javascriptEscape ( str ) {
     return str
         .replace ( /(\n)/g, '\\n' )

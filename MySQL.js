@@ -9,9 +9,9 @@ function savepointName ( depth ) {
 }
 
 //================================================================//
-// MySQLConnection
+// MySQL
 //================================================================//
-export class MySQLConnection {
+export class MySQL {
 
     //----------------------------------------------------------------//
     async abortTransactionAsync () {
@@ -62,8 +62,10 @@ export class MySQLConnection {
     //----------------------------------------------------------------//
     constructor ( pool ) {
 
-        this.connection         = false;
         this.pool               = pool;
+        this.conn               = false;
+
+        this.connection         = false;
         this.transactionDepth   = 0;
         this.connectionDepth    = 0;
     }
@@ -101,9 +103,27 @@ export class MySQLConnection {
     }
 
     //----------------------------------------------------------------//
-    makeConnection () {
+    static async makeAsync ( host, user, password, database ) {
 
-        return this;
+        const pool = await mysql.createPool ({
+            connectionLimit:    16,
+            host:               host,
+            user:               user,
+            password:           password,
+            database:           database,
+        });
+        return new MySQL ( pool );
+    }
+
+    //----------------------------------------------------------------//
+    reset () {
+
+        assert ( this.connection === false );
+        assert ( this.transactionDepth === 0 );
+
+        this.connection         = false;
+        this.transactionDepth   = 0;
+        this.connectionDepth    = 0;
     }
 
     //----------------------------------------------------------------//
@@ -148,44 +168,5 @@ export class MySQLConnection {
             assert ( this.connection, 'MISSING MYSQL CONNECTION' );
             return await this.connection.query ( sql );
         });
-    }
-}
-
-//================================================================//
-// MySQL
-//================================================================//
-export class MySQL {
-
-    //----------------------------------------------------------------//
-    constructor ( pool ) {
-
-        this.pool       = pool;
-        this.conn       = false;
-    }
-
-    //----------------------------------------------------------------//
-    makeConnection () {
-
-        return this.conn ? this.conn : new MySQLConnection ( this.pool );
-    }
-
-    //----------------------------------------------------------------//
-    static async makeAsync ( host, user, password, database ) {
-
-        const pool = await mysql.createPool ({
-            connectionLimit:    16,
-            host:               host,
-            user:               user,
-            password:           password,
-            database:           database,
-        });
-        return new MySQL ( pool );
-    }
-
-    //----------------------------------------------------------------//
-    reuseConnection () {
-
-        this.conn = new MySQLConnection ( this.pool );
-        return this.conn;
     }
 }
