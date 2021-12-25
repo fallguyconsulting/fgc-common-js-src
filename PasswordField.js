@@ -7,55 +7,50 @@ import React, { useState }                              from 'react';
 import * as UI                                          from 'semantic-ui-react';
 import validator                                        from 'validator';
 
-//================================================================//
-// EmailField
-//================================================================//
-export const EmailField = observer (( props ) => {
+const PASSWORD_REGEX = /^[0-9a-zA-Z~`!?@#$%^&()_+*=/,.{}<>:;'"|[\]\\]+$/;
 
-    const { onEmail, ...rest }      = props;
+//================================================================//
+// PasswordField
+//================================================================//
+export const PasswordField = observer (( props ) => {
 
-    const [ email, setEmail ]       = useState ( '' );
-    const [ error, setError ]       = useState ( '' );
+    const { onPassword, regex, ...rest }          = props;
+
+    const [ password, setPassword ]     = useState ( '' );
+    const [ error, setError ]           = useState ( '' );
 
     const onChange = ( event ) => {
+
+        const value = event.target.value;
+
         setError ( '' );
-        onEmail ( '' );
-        setEmail ( event.target.value );
-    }
+        setPassword ( value );
 
-    const onBlur = () => {
-
-        if ( email ) {
-            if ( validator.isEmail ( email )) {
-                onEmail ( email );
+        if ( value ) {
+            if (( regex === false ) || ( regex || PASSWORD_REGEX ).test ( value )) {
+                onPassword ( value );
+                return;
             }
             else {
-                setError ( 'Please enter a valid email address.' );
+                setError ( 'Password contains illegal characters.' );
             }
         }
+        onPassword ( '' );
     };
-
-    const onKeyPress = ( event ) => {
-        if ( event.key === 'Enter' ) {
-            event.target.blur ();
-        }
-    }
 
     return (
         <UI.Form.Input
             
-            icon            = 'mail'
+            icon            = 'lock'
             iconPosition    = { !props.icon ? 'left' : undefined }
-            placeholder     = 'Email'
+            placeholder     = 'Password'
+            error           = { error || false }
 
             { ...rest }
 
-            type            = 'email'
-            value           = { email }
+            type            = 'password'
+            value           = { password }
             onChange        = { onChange }
-            onKeyPress      = { onKeyPress }
-            onBlur          = { onBlur }
-            error           = { error || false }
         />
     );
 });

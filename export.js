@@ -40,6 +40,7 @@ module.exports = {
     EmailField:                     require ( './EmailField.js' ).EmailField,
     FilePickerMenuItem:             require ( './FilePickerMenuItem.js' ).FilePickerMenuItem,
     InfiniteScrollView:             require ( './InfiniteScrollView.js' ).InfiniteScrollView,
+    PasswordField:                  require ( './PasswordField.js' ).PasswordField,
     PhoneField:                     require ( './PhoneField.js' ).PhoneField,
     ProgressController:             require ( './ProgressController.js' ).ProgressController,
     ProgressSpinner:                require ( './ProgressSpinner.js' ).ProgressSpinner,
