@@ -90,7 +90,7 @@ export class MySQL {
     }
 
     //----------------------------------------------------------------//
-    async escape ( str ) {
+    async escapeAsync ( str ) {
 
         assert ( this.connection, 'MISSING MYSQL CONNECTION' );
         return await this.connection.escape ( str );
@@ -113,6 +113,15 @@ export class MySQL {
             database:           database,
         });
         return new MySQL ( pool );
+    }
+
+    //----------------------------------------------------------------//
+    async query ( sql ) {
+
+        return this.runInConnectionAsync ( async () => {
+            assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+            return await this.connection.query ( sql );
+        });
     }
 
     //----------------------------------------------------------------//
@@ -162,11 +171,9 @@ export class MySQL {
     }
 
     //----------------------------------------------------------------//
-    async query ( sql ) {
+    async toJSONAsync ( body ) {
 
-        return this.runInConnectionAsync ( async () => {
-            assert ( this.connection, 'MISSING MYSQL CONNECTION' );
-            return await this.connection.query ( sql );
-        });
+        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+        return await this.escapeAsync ( JSON.stringify ( body ));
     }
 }
