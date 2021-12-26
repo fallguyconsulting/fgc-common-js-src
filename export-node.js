@@ -21,7 +21,6 @@ module.exports = {
 
     ModelError:             require ( './ModelError.js' ).ModelError,
     MySQL:                  require ( './MySQL.js' ).MySQL,
-    MySQLConnection:        require ( './MySQL.js' ).MySQLConnection,
     rest:                   require ( './rest.js' ),
     RevocableContext:       require ( './RevocableContext.js' ).RevocableContext,
     util:                   require ( './util.js' ),
