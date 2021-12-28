@@ -66,7 +66,7 @@ export const PhoneField = observer (( props ) => {
         <UI.Form.Input
             
             icon            = 'phone'
-            iconPosition    = { props.icon ? 'left' : undefined }
+            iconPosition    = { !props.icon ? 'left' : undefined }
             placeholder     = 'Phone Number'
 
             { ...rest }
