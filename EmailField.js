@@ -18,9 +18,18 @@ export const EmailField = observer (( props ) => {
     const [ error, setError ]       = useState ( '' );
 
     const onChange = ( event ) => {
+        
+        const value = event.target.value;
+
         setError ( '' );
         onEmail ( '' );
-        setEmail ( event.target.value );
+        setEmail ( value );
+
+        if ( value ) {
+            if ( validator.isEmail ( value )) {
+                onEmail ( value );
+            }
+        }
     }
 
     const onBlur = () => {

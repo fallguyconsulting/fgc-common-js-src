@@ -59,7 +59,7 @@ export const URLField = observer (( props ) => {
         <UI.Form.Input
             
             icon            = 'globe'
-            iconPosition    = { props.icon ? 'left' : undefined }
+            iconPosition    = { !props.icon ? 'left' : undefined }
             placeholder     = 'URL'
             error           = { error || false }
 

@@ -178,7 +178,7 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     revokeAll () {
 
-        for ( let revoke of this.revocables ) {
+        for ( let revoke of Object.values ( this.revocables )) {
             revoke ();
         }
         this.revocables = {};
