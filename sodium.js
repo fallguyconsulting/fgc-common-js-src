@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Fall Guy LLC All Rights Reserved.
 
-import * as fgc             from 'fgc';
+import { assert }           from './assert';
+import * as util            from './util';
 import sodium               from 'libsodium-wrappers';
 
 // https://sodium-friends.github.io/docs/docs/api
@@ -56,9 +57,9 @@ export function encryptPK ( plaintext, publicKey, encoding ) {
 }
 
 //----------------------------------------------------------------//
-export function encryptionKeyPair () {
+export function encryptionKeyPair ( seed ) {
 
-    const keyPair       = sodium.crypto_box_keypair ();
+    const keyPair       = seed ? sodium.crypto_box_seed_keypair ( toBuffer ( seed )) : sodium.crypto_box_keypair ();
 
     return {
         publicKey:      fromBuffer ( keyPair.publicKey ),
@@ -80,7 +81,7 @@ export function encryptSymmetric ( plaintext, key, encoding, nonce ) {
 //----------------------------------------------------------------//
 export function fromBuffer ( value, encoding ) {
 
-    fgc.assert ( Uint8Array.prototype.isPrototypeOf ( value ), 'Value must be of type Uint8Array.' );
+    assert ( Uint8Array.prototype.isPrototypeOf ( value ), 'Value must be of type Uint8Array.' );
 
     encoding = encoding || 'hex';
 
@@ -92,7 +93,7 @@ export function fromBuffer ( value, encoding ) {
         case 'hex':         return sodium.to_hex ( value );
     }
 
-    fgc.assert ( false, 'Unknown encoding.' );
+    assert ( false, 'Unknown encoding.' );
     return false;
 }
 
@@ -106,10 +107,17 @@ export function hash ( plaintext, key, size, encoding ) {
 }
 
 //----------------------------------------------------------------//
-export function hashPassword ( password, salt ) {
+export function hashPassword ( password, salt, size ) {
 
     if ( salt ) {
-        return sodium.crypto_pwhash ( password, salt, sodium.crypto_pwhash_OPSLIMIT_SENSITIVE, sodium.crypto_pwhash_MEMLIMIT_SENSITIVE, sodium.crypto_pwhash_ALG_DEFAULT );
+        return sodium.to_hex ( sodium.crypto_pwhash (
+            size || sodium.crypto_box_SEEDBYTES,
+            password,
+            toBuffer ( salt ),
+            sodium.crypto_pwhash_OPSLIMIT_MODERATE,
+            sodium.crypto_pwhash_MEMLIMIT_MODERATE,
+            sodium.crypto_pwhash_ALG_DEFAULT
+        ));
     }
     return sodium.crypto_pwhash_str ( password, sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE, sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE );
 }
@@ -183,14 +191,14 @@ export function toBuffer ( value, encoding ) {
         case 'hex': {
 
             if ( value ) {
-                fgc.assert (( fgc.util.isString ( value ) && HEX_REGEX.test ( value )), 'Value must be a hex-encoded string.' );
-                fgc.assert ((( value.length % 2 ) === 0 ), 'Hex-encoded string must have an even number of characters.' );
+                assert (( util.isString ( value ) && HEX_REGEX.test ( value )), 'Value must be a hex-encoded string.' );
+                assert ((( value.length % 2 ) === 0 ), 'Hex-encoded string must have an even number of characters.' );
             }
             return sodium.from_hex ( value );
         }
     }
 
-    fgc.assert ( false, 'Unknown encoding.' );
+    assert ( false, 'Unknown encoding.' );
     return false;
 }
 
