@@ -151,8 +151,10 @@ export class RevocableContext {
             this.releaseID ( revocableID );
         }
 
-        timeout.revocableID = revocableID;
-        return timeout;
+        return {
+            timeout:        timeout,
+            revocableID:    revocableID,
+        };
     }
 
     //----------------------------------------------------------------//

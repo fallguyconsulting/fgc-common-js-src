@@ -106,8 +106,11 @@ export function hash ( plaintext, key, size, encoding ) {
 }
 
 //----------------------------------------------------------------//
-export function hashPassword ( password ) {
+export function hashPassword ( password, salt ) {
 
+    if ( salt ) {
+        return sodium.crypto_pwhash ( password, salt, sodium.crypto_pwhash_OPSLIMIT_SENSITIVE, sodium.crypto_pwhash_MEMLIMIT_SENSITIVE, sodium.crypto_pwhash_ALG_DEFAULT );
+    }
     return sodium.crypto_pwhash_str ( password, sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE, sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE );
 }
 
