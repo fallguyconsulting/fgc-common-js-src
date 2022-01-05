@@ -24,6 +24,18 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
+    async deleteJSON ( url, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, {
+            method:     'DELETE',
+            headers:    headers,
+        });
+    }
+
+    //----------------------------------------------------------------//
     fetch ( input, init, timeout ) {
         return this.promise ( fetch ( input, init ), timeout );
     }
@@ -48,6 +60,28 @@ export class RevocableContext {
             return this.availableIDs.pop ();
         }
         return this.revocableID++;
+    }
+
+    //----------------------------------------------------------------//
+    async getJSON ( url, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, { headers: headers });
+    }
+
+    //----------------------------------------------------------------//
+    async postJSON ( url, json, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, {
+            method:     'POST',
+            headers:    headers,
+            body:       JSON.stringify ( json ),
+        });
     }
 
     //----------------------------------------------------------------//
@@ -131,6 +165,19 @@ export class RevocableContext {
         },
 
         wait );
+    }
+
+    //----------------------------------------------------------------//
+    async putJSON ( url, json, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, {
+            method:     'PUT',
+            headers:    headers,
+            body:       JSON.stringify ( json ),
+        });
     }
 
     //----------------------------------------------------------------//
