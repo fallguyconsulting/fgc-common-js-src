@@ -15,6 +15,6 @@ export class ModelError extends Error {
     constructor ( status, message ) {
         super ( message );
         this.name       = 'ModelError';
-        this.status     = status || ERROR_STATUS.ERROR;
+        this.status     = status || ModelError.ERROR_STATUS.ERROR;
     }
 }

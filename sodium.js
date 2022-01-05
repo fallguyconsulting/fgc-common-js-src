@@ -159,10 +159,16 @@ export function salt () {
 }
 
 //----------------------------------------------------------------//
-export function sign ( message, secretKey ) {
+export function sign ( plaintext, secretKey, encoding ) {
 
-    // note: message must be a utf8 string OR a byte buffer
+    plaintext = toBuffer ( plaintext, encoding || 'utf8' );
+    return sodium.to_hex ( sodium.crypto_sign ( plaintext, toBuffer ( secretKey )));
+}
 
+//----------------------------------------------------------------//
+export function signDetached ( message, secretKey, encoding ) {
+
+    message = toBuffer ( message, encoding || 'utf8' );
     return sodium.to_hex ( sodium.crypto_sign_detached ( message, toBuffer ( secretKey )));
 }
 
@@ -203,7 +209,18 @@ export function toBuffer ( value, encoding ) {
 }
 
 //----------------------------------------------------------------//
-export function verify ( signature, message, publicKey, encoding ) {
+export function verify ( ciphertext, publicKey, encoding ) {
+
+    const plaintext = sodium.crypto_sign_open (
+        toBuffer ( ciphertext ),
+        toBuffer ( publicKey)
+    );
+
+    return plaintext ? fromBuffer ( plaintext, encoding || 'utf8' ) : false;
+}
+
+//----------------------------------------------------------------//
+export function verifyDetached ( signature, message, publicKey, encoding ) {
 
     return sodium.crypto_sign_verify_detached (
         toBuffer ( signature ),
