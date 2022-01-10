@@ -159,6 +159,17 @@ export function salt () {
 }
 
 //----------------------------------------------------------------//
+export function saltDummy ( seed ) {
+
+    // sodium.randombytes_SEEDBYTES is not undefined for some reason
+    const paddedArray = new Uint8Array ( 32 );
+    paddedArray.fill ( 0 );
+    paddedArray.set ( toBuffer ( seed ).slice ( 0, 32 ));
+
+    return fromBuffer ( sodium.randombytes_buf_deterministic ( sodium.crypto_pwhash_SALTBYTES, paddedArray ), 'hex' );
+}
+
+//----------------------------------------------------------------//
 export function sign ( plaintext, secretKey, encoding ) {
 
     plaintext = toBuffer ( plaintext, encoding || 'utf8' );

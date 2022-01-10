@@ -82,6 +82,11 @@ export function shuffle ( array ) {
 }
 
 //----------------------------------------------------------------//
+export function sleep ( millis ) {
+    return new Promise ( resolve => setTimeout ( resolve, millis ));
+}
+
+//----------------------------------------------------------------//
 export function toggleArrayMember ( array, item ) {
 
     array = array ? array.slice () : [];

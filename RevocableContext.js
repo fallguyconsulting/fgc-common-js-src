@@ -233,6 +233,6 @@ export class RevocableContext {
 
     //----------------------------------------------------------------//
     sleep ( millis ) {
-        return this.promise ( new Promise ( r => setTimeout ( r, millis )));
+        return this.promise ( new Promise ( resolve => setTimeout ( resolve, millis )));
     }
 }
