@@ -161,7 +161,7 @@ export function salt () {
 //----------------------------------------------------------------//
 export function saltDummy ( seed ) {
 
-    // sodium.randombytes_SEEDBYTES is not undefined for some reason
+    // sodium.randombytes_SEEDBYTES is undefined for some reason
     const paddedArray = new Uint8Array ( 32 );
     paddedArray.fill ( 0 );
     paddedArray.set ( toBuffer ( seed ).slice ( 0, 32 ));
