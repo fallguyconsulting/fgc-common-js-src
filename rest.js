@@ -18,6 +18,7 @@ export function handleError ( response, statusOrErrorObj, message ) {
         status:     REST_STATUS.ERROR,
         message:    message.toString (), 
     });
+    return false;
 }
 
 //----------------------------------------------------------------//
@@ -27,4 +28,5 @@ export function handleSuccess ( response, body ) {
         body.status = REST_STATUS.OK;
     }
     response.json ( body );
+    return true;
 }

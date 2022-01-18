@@ -12,6 +12,7 @@ export class ModelError extends Error {
         NODE_FOUND:     StatusCodes.NOT_FOUND,
     };
 
+    //----------------------------------------------------------------//
     constructor ( status, message ) {
         super ( message );
         this.name       = 'ModelError';
