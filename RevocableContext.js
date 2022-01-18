@@ -41,9 +41,27 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
-    fetchJSON ( input, init, timeout ) {
-        return this.fetch ( input, init, timeout )
-            .then ( response => this.promise ( response.json ()));
+    async fetchJSON ( input, init, timeout ) {
+
+        const response  = await this.fetch ( input, init, timeout );
+        const text = await response.text ();
+        
+        let body;
+        try {
+            body = JSON.parse ( text ); 
+        }
+        catch ( error ) {
+        }
+
+        if ( response.status >= 400 ) {
+            throw {
+                status:         response.status,
+                statusText:     response.statusText,
+                message:        body && body.message || text,
+                body:           body,
+            };
+        }
+        return body;
     }
 
     //----------------------------------------------------------------//
