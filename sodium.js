@@ -195,6 +195,12 @@ export function signingKeyPair ( size ) {
 }
 
 //----------------------------------------------------------------//
+export function symmetricKey () {
+
+    return randomBytes ( KEY_SIZE, 'hex' );
+}
+
+//----------------------------------------------------------------//
 export function toBuffer ( value, encoding ) {
 
     if ( Uint8Array.prototype.isPrototypeOf ( value )) return value;
