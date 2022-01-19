@@ -8,6 +8,6 @@ export function assert ( condition, error ) {
         	console.log ( error );
         	console.trace ();
     	}
-        throw error || 'Assetion failed.'
+        throw new Error ( error || 'Assetion failed.' );
     }
 }
