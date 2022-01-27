@@ -98,7 +98,7 @@ export class RevocableContext {
         return this.fetchJSON ( url, {
             method:     'POST',
             headers:    headers,
-            body:       JSON.stringify ( json ),
+            body:       json ? JSON.stringify ( json ) : undefined,
         });
     }
 
@@ -194,7 +194,7 @@ export class RevocableContext {
         return this.fetchJSON ( url, {
             method:     'PUT',
             headers:    headers,
-            body:       JSON.stringify ( json ),
+            body:       json ? JSON.stringify ( json ) : undefined,
         });
     }
 
