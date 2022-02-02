@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import { bitmapToSVG }         from './bitmapToPaths';
-import * as qrcode              from 'qrcode-generator';
+import { bitmapToSVG }          from './bitmapToPaths';
+import qrcode                   from 'qrcode-generator';
 
 export const CONSTS = {
     ID: 'QR',
@@ -131,6 +131,7 @@ export function makeSVGTag ( data, xOff, yOff, width, height, qrErr, qrType ) {
         return bitmapToSVG ( sampler, moduleCount, moduleCount, xOff, yOff, width, height );
     }
     catch ( error ) {
+        console.log ( error );
     }
     return false;
 }
