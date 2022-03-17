@@ -37,7 +37,7 @@ export const URLField = observer (( props ) => {
         if ( props.value ) {
             update ( props.value );
         }
-    });
+    },[]);
 
     const onChange = ( event ) => {
         setError ( '' );
