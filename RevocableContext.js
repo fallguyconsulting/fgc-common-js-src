@@ -151,8 +151,7 @@ export class RevocableContext {
             this.releaseID ( revocableID );
         }
 
-        timeout.revocableID = revocableID;
-        return timeout;
+        return revocableID;
     }
 
     //----------------------------------------------------------------//
@@ -164,7 +163,7 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     revoke ( revocable ) {
 
-        const revocableID = revocable.revocableID;
+        const revocableID = typeof ( revocable ) === 'number' ? revocable : revocable.revocableID;
 
         if ( this.revocables [ revocableID ]) {
             const revoke = this.revocables [ revocableID ];
