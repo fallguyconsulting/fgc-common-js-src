@@ -8,6 +8,26 @@ import React                    from 'react';
 import { Redirect }             from 'react-router';
 
 //----------------------------------------------------------------//
+export function useAnimationFrame ( callback ) {
+
+    const timeRef           = React.useRef ();
+    const requestRef        = React.useRef ();
+
+    const animate = time => {
+
+        callback ( timeRef.current  ? ( time - timeRef.current ) : 0 );
+
+        timeRef.current     = time;
+        requestRef.current  = requestAnimationFrame ( animate );
+    }
+
+    React.useEffect (() => {
+        requestRef.current  = requestAnimationFrame ( animate );
+        return () => cancelAnimationFrame ( requestRef.current );
+    }, []);
+}
+
+//----------------------------------------------------------------//
 export function finalize ( object ) {
 
     if ( object ) {
