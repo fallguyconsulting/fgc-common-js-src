@@ -1,4 +1,5 @@
 /* eslint-disable no-whitespace-before-property */
+/* eslint-disable camelcase */
 
 import { assert, hooks, RevocableContext }              from 'fgc';
 import { action, computed, observable, runInAction }    from 'mobx';

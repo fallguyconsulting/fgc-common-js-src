@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * PDF417 - 2D Barcode generator (LGPLv3)
  *
