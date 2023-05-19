@@ -5,6 +5,7 @@ module.exports = {
     base64:                 require ( './base64.js' ),
     bitmapToPaths:          require ( './bitmapToPaths.js' ),
     color:                  require ( './color.js' ),
+    excel:                  require ( './excel.js' ),
     pdf417:                 require ( './pdf417.js' ),
     pdf417Encoder:          require ( './pdf417Encoder.js' ),
     qrcode:                 require ( './qrcode.js' ),
