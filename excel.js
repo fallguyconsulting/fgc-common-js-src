@@ -2,7 +2,7 @@
 
 import fs                       from 'fs';
 import _                        from 'lodash';
-import XLSX                     from 'xlsx';
+import * as XLSX                from 'xlsx';
 
 const aaaCache = [];
 
@@ -78,6 +78,15 @@ export class Worksheet {
     }
     
     //----------------------------------------------------------------//
+    getCellByCoord ( col, row, fallback ) {
+
+        if (( col < 0 ) || ( row < 0 )) return fallback;
+
+        const cell = this.sheet [ coordToAddr ( col, row )];
+        return ( cell && ( cell.v !== undefined )) ? cell : fallback;
+    }
+
+    //----------------------------------------------------------------//
     getExtents () {
 
         const ref = this.sheet [ '!ref' ];
@@ -89,8 +98,10 @@ export class Worksheet {
     //----------------------------------------------------------------//
     getValueByCoord ( col, row, fallback ) {
 
+        if (( col < 0 ) || ( row < 0 )) return fallback;
+
         const cell = this.sheet [ coordToAddr ( col, row )];
-        return cell ? cell.v : fallback;
+        return ( cell && ( cell.v !== undefined )) ? cell.v : fallback;
     }
 }
 
@@ -102,7 +113,14 @@ export class Workbook {
     //----------------------------------------------------------------//
     constructor ( blobOrPath, options ) {
 
-        this.book           = XLSX.read ( blobOrPath, options || { type: 'file' }); // defaut to file path
+        options = _.assign ({
+            type:           'file',
+            cellStyles :    true,
+            cellNF:         true,
+            sheetStubs:     true,
+        }, options );
+
+        this.book           = XLSX.read ( blobOrPath, options ); // defaut to file path
         this.sheets         = this.book.Sheets;
         this.sheetNames     = this.book.SheetNames;
     }
