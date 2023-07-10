@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import * as config                  from 'config';
-import Mailchimp                    from 'mailchimp-api-v3'; // https://mailchimp.com/developer/reference/
+// import Mailchimp                    from 'mailchimp-api-v3'; // https://mailchimp.com/developer/reference/
 import nodemailer                   from 'nodemailer';
 
 //================================================================//
@@ -14,9 +14,9 @@ export class Mailer {
 
         console.log ( 'GMAIL USER:', config.GMAIL_USER );
 
-        if ( config.MAILCHIMP_API_KEY ) {
-            this.mailchimp = new Mailchimp ( config.MAILCHIMP_API_KEY );
-        }
+        // if ( config.MAILCHIMP_API_KEY ) {
+        //     this.mailchimp = new Mailchimp ( config.MAILCHIMP_API_KEY );
+        // }
 
         // NOTE: if gmail transport myseriously stops working, log in to the
         // gmail account and make sure "allow less secure apps" is enabled
