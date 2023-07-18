@@ -1,6 +1,8 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 module.exports = {
+    hooks:                          require ( './hooks.js' ),
+    
     ButtonWithDelay:                require ( './ButtonWithDelay.js' ).ButtonWithDelay,
     ClipboardMenuItem:              require ( './ClipboardMenuItem.js' ).ClipboardMenuItem,
     EmailField:                     require ( './EmailField.js' ).EmailField,
