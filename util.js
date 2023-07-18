@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import { assert }           from './assert';
 import { v4 as uuidv4 }     from 'uuid';
 
 //----------------------------------------------------------------//
@@ -7,6 +8,70 @@ export function caselessCompare ( a, b ) {
     return (( typeof ( a ) === 'string' ) && ( typeof ( b ) === 'string' )) ?
         ( a.localeCompare ( b, undefined, { sensitivity: 'accent' }) === 0 ) :
         ( a === b );
+}
+
+//----------------------------------------------------------------//
+export function composeClass () {
+    
+    // instance methods
+    // const clazz = arguments [ 0 ];
+    const clazz = function () {};
+    assert ( clazz );
+
+    clazz.prototype.toString = function () {
+        console.log ( 'Cqlled toString' );
+        return `Composed Class`;
+    };
+
+    for ( let arg = 0; arg < arguments.length; ++arg ) {
+
+        const mixin = arguments [ arg ];
+        
+        // instance methods
+        Object.getOwnPropertyNames ( mixin.prototype ).forEach (( prop ) => {
+
+            if ( prop === 'constructor' ) return;
+            
+            if ( prop.startsWith ( 'mixin_' )) {
+
+                const append = mixin.prototype [ prop ];
+                if ( !append ) return;
+
+                if ( prop.endsWith ( 'Async' )) {
+                
+                    const original = clazz.prototype [ prop ] || ( async () => {});
+
+                    clazz.prototype [ prop ] = async ( self, ...args ) => {
+                        await original ( self, ...args );
+                        await ( append.bind ( self ))( ...args );
+                    };                    
+                }
+                else {
+
+                    const original = clazz.prototype [ prop ] || (() => {});
+
+                    clazz.prototype [ prop ] = ( self, ...args ) => {
+                        original ( self, ...args );
+                        ( append.bind ( self ))( ...args );
+                    };
+                }
+            }
+            else {
+                
+                clazz.prototype [ prop ] = mixin.prototype [ prop ];
+            }
+        })
+
+        clazz.prototype.isMixin = (() => { return true; });
+
+        // static members
+        Object.getOwnPropertyNames ( mixin ).forEach (( prop ) => {
+            if (( prop === 'length' ) || ( prop === 'name' ) || ( prop === 'prototype' )) return;
+            clazz [ prop ] = mixin [ prop ];
+        })
+    }
+
+    return clazz;
 }
 
 //----------------------------------------------------------------//
