@@ -156,6 +156,12 @@ export function toggleArrayMember ( array, item ) {
 }
 
 //----------------------------------------------------------------//
+export function toNumberStrict ( val ) {
+
+    return (( typeof ( val ) === 'number' ) || ( typeof ( val ) === 'string' )) ? Number ( val ) : NaN;
+}
+
+//----------------------------------------------------------------//
 export function toNumberOrFalse ( val, types ) {
 
     types = types || [ 'string', 'number' ];
