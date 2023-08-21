@@ -17,6 +17,21 @@ export function make ( x0, y0, x1, y1 ) {
         y0:     y0,
         x1:     x1,
         y1:     y1,
+        w:      x1 - x0,
+        h:      y1 - y0,
+    };
+}
+
+//----------------------------------------------------------------//
+export function makeWH ( x0, y0, w, h) {
+
+    return {
+        x0:     x0,
+        y0:     y0,
+        x1:     x0 + w,
+        y1:     y0 + h,
+        w:      w,
+        h:      h,
     };
 }
 
