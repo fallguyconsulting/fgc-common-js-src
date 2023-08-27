@@ -57,7 +57,7 @@ export function height ( r ) {
 }
 
 //----------------------------------------------------------------//
-export function offset ( r, x, y) {
+export function offset ( r, x, y ) {
     return make (
         r.x0 + x,
         r.y0 + y,
@@ -65,7 +65,7 @@ export function offset ( r, x, y) {
         r.y1 + y,
     );
 }
-;
+
 //----------------------------------------------------------------//
 export function width ( r ) {
     return r.x1 - r.x0;
