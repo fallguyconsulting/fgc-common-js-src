@@ -67,6 +67,16 @@ export function offset ( r, x, y ) {
 }
 
 //----------------------------------------------------------------//
+export function scale ( r, s ) {
+    return make (
+        r.x0 * s,
+        r.y0 * s,
+        r.x1 * s,
+        r.y1 * s,
+    );
+}
+
+//----------------------------------------------------------------//
 export function width ( r ) {
     return r.x1 - r.x0;
 }
