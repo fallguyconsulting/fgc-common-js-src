@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import { assert }           from './assert';
-import { v4 as uuidv4 }     from 'uuid';
+import { assert }       from './assert';
+import _                from 'lodash';
 
 //----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
@@ -81,9 +81,10 @@ export function dateToISOString ( date ) {
 }
 
 //----------------------------------------------------------------//
-export function generateUUIDV4 () {
-
-    return uuidv4 ();
+export function getEnv ( name, fallback ) {
+    const value = _.has ( process.env, name ) ? process.env [ name ] : fallback;
+    assert ( value !== undefined, `Missing ${ name } environment variable.` );
+    return value;
 }
 
 //----------------------------------------------------------------//
