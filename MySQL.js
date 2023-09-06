@@ -69,10 +69,10 @@ export class MySQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async countAsync ( fromWhere ) {
+    async countAsync ( fromWhere, ...args ) {
 
-        const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
-        return row && row.count || 0;
+        const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }`, ...args ))[ 0 ];
+        return row ? row.count : 0;
     }
 
     //----------------------------------------------------------------//
@@ -142,10 +142,10 @@ export class MySQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async query ( sql ) {
+    async query ( sql, ...args ) {
 
         return this.runInConnectionAsync ( async () => {
-            return await this.connection.query ( sql );
+            return await this.connection.query ( sql, [ ...args ]);
         });
     }
 
