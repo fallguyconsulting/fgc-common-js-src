@@ -1,10 +1,10 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { RevocableContext }             from '../RevocableContext'
-import { SingleColumnContainerView }    from '../SingleColumnContainerView'
-import * as crypto                      from '../crypto';
-import * as hooks                       from '../hooks';
+import { RevocableContext }             from '../site/RevocableContext'
+import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
+import * as crypto                      from '../crypto/crypto';
+import * as hooks                       from '../site/hooks';
 import * as util                        from '../util';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';

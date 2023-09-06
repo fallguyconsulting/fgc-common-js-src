@@ -1,9 +1,7 @@
-// Copyright (c) 2023 Fall Guy LLC All Rights Reserved.
+/* eslint-disable no-whitespace-before-property */
 
-import { assert }           from './assert';
-import * as pg              from 'pg'
-
-const { Pool } = pg;
+import { assert }                   from '../assert';
+import mysql                        from 'promise-mysql';
 
 //----------------------------------------------------------------//
 function savepointName ( depth ) {
@@ -11,9 +9,9 @@ function savepointName ( depth ) {
 }
 
 //================================================================//
-// PostgreSQLConnection
+// MySQLConnection
 //================================================================//
-export class PostgreSQLConnection {
+export class MySQLConnection {
 
     //----------------------------------------------------------------//
     async abortTransactionAsync () {
@@ -33,7 +31,7 @@ export class PostgreSQLConnection {
     async beginConnectionAsync () {
 
         if ( this.connectionDepth === 0 ) {
-            this.connection = await this.pool.connect ();
+            this.connection = await this.pool.getConnection ();
         }
         this.connectionDepth++;
     }
@@ -71,10 +69,10 @@ export class PostgreSQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async countAsync ( fromWhere ) {
+    async countAsync ( fromWhere, ...args ) {
 
-        const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
-        return row && row.count || 0;
+        const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }`, ...args ))[ 0 ];
+        return row ? row.count : 0;
     }
 
     //----------------------------------------------------------------//
@@ -87,6 +85,13 @@ export class PostgreSQLConnection {
                 this.connection = false;
             }
         }
+    }
+
+    //----------------------------------------------------------------//
+    async escapeAsync ( str ) {
+
+        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+        return await this.connection.escape ( str );
     }
 
     //----------------------------------------------------------------//
@@ -137,19 +142,25 @@ export class PostgreSQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async query ( sql ) {
+    async query ( sql, ...args ) {
 
         return this.runInConnectionAsync ( async () => {
-            assert ( this.connection, 'MISSING POSTGRESQL CONNECTION' );
-            return await this.connection.query ( sql );
+            return await this.connection.query ( sql, [ ...args ]);
         });
+    }
+
+    //----------------------------------------------------------------//
+    async toJSONAsync ( body ) {
+
+        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+        return await this.escapeAsync ( JSON.stringify ( body ));
     }
 }
 
 //================================================================//
-// PostgreSQL
+// MySQL
 //================================================================//
-export class PostgreSQL {
+export class MySQL {
 
     //----------------------------------------------------------------//
     constructor ( pool ) {
@@ -161,28 +172,26 @@ export class PostgreSQL {
     //----------------------------------------------------------------//
     makeConnection () {
 
-        return this.conn ? this.conn : new PostgreSQLConnection ( this.pool );
+        return this.conn ? this.conn : new MySQLConnection ( this.pool );
     }
 
     //----------------------------------------------------------------//
     static async makeAsync ( host, user, password, database ) {
 
-        const pool = await new Pool ({
-            max:                        16,
-            connectionTimeoutMillis:    1000,
-            idleTimeoutMillis:          1000,
-            host:                       host,
-            user:                       user,
-            password:                   password,
-            database:                   database,
+        const pool = await mysql.createPool ({
+            connectionLimit:    16,
+            host:               host,
+            user:               user,
+            password:           password,
+            database:           database,
         });
-        return new PostgreSQL ( pool );
+        return new MySQL ( pool );
     }
 
     //----------------------------------------------------------------//
     reuseConnection () {
 
-        this.conn = new PostgreSQLConnection ( this.pool );
+        this.conn = new MySQLConnection ( this.pool );
         return this.conn;
     }
 }

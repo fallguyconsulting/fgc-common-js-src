@@ -1,6 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
-import * as hooks                               from './hooks';
+import * as hooks                               from '../site/hooks';
 import { observer }                             from 'mobx-react';
 import React, { useRef, useState }              from 'react';
 import * as UI                                  from 'semantic-ui-react';

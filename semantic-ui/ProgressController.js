@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { RevocableContext }                             from './RevocableContext';
+import { RevocableContext }                             from '../site/RevocableContext';
 import { action, computed, observable, runInAction }    from 'mobx';
 
 //================================================================//

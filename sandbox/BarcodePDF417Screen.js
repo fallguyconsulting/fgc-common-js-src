@@ -1,8 +1,8 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { SingleColumnContainerView }    from '../SingleColumnContainerView';
-import * as pdf417                      from '../pdf417';
+import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
+import * as pdf417                      from '../barcode/pdf417';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';
 import React, { useState }              from 'react';

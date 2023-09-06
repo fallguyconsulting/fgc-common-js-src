@@ -1,8 +1,8 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { SingleColumnContainerView }    from '../SingleColumnContainerView'
-import * as qrcode                      from '../qrcode';
+import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
+import * as qrcode                      from '../barcode/qrcode';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';
 import React, { useState }              from 'react';

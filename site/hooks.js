@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import { assert }               from './assert';
+import { assert }               from '../assert';
 import * as storage             from './storage';
 import { extendObservable, isObservable, observe } from 'mobx';
 import { deepObserve }          from 'mobx-utils';

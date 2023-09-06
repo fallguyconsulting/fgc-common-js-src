@@ -1,8 +1,8 @@
 /* eslint-disable no-whitespace-before-property */
 
-import * as hooks                           from '../hooks';
-import { action, computed, observable }     from "mobx";
-import { observer }                         from "mobx-react";
+import * as hooks                           from '../site/hooks';
+import { action, computed, observable }     from 'mobx';
+import { observer }                         from 'mobx-react';
 import React                                from 'react';
 
 //================================================================//

@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Fall Guy LLC All Rights Reserved.
 
-import { assert }           from './assert';
-import * as util            from './util';
+import { assert }           from '../assert';
+import * as util            from '../util';
 import sodium               from 'libsodium-wrappers';
 
 // https://sodium-friends.github.io/docs/docs/api

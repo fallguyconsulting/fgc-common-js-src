@@ -1,7 +1,7 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { SingleColumnContainerView }        from '../SingleColumnContainerView'
-import * as textStyle                       from '../textStyle';
+import { SingleColumnContainerView }        from '../semantic-ui/SingleColumnContainerView'
+import * as textStyle                       from '../draw/textStyle';
 import { action, computed, extendObservable, runInAction, observable, observe } from 'mobx';
 import { observer }                         from 'mobx-react';
 import React, { useState }                  from 'react';

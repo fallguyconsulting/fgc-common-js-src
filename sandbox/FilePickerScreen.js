@@ -1,8 +1,8 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { SingleColumnContainerView }        from '../SingleColumnContainerView'
-import * as excel                           from '../excel'
-import { TextFitter, FONT_FACE, JUSTIFY }   from '../textLayout';
+import { SingleColumnContainerView }        from '../semantic-ui/SingleColumnContainerView'
+import * as excel                           from '../filetypes/excel'
+import { TextFitter, FONT_FACE, JUSTIFY }   from '../draw/textLayout';
 import handlebars                           from 'handlebars';
 import { action, computed, observable, }    from 'mobx';
 import { observer }                         from 'mobx-react';

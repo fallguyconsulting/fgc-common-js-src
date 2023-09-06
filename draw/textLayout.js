@@ -3,7 +3,7 @@
 import * as color               from './color';
 import * as rect                from './rect';
 import * as textStyle           from './textStyle';
-import * as util                from './util';
+import * as util                from '../util';
 import _                        from 'lodash';
 
 const WHITESPACE_CHAR_CODES = [
