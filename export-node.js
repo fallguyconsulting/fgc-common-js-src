@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 module.exports = {
+    aes:                    require ( './aes.js' ),
     assert:                 require ( './assert.js' ).assert,
     base64:                 require ( './base64.js' ),
     bitmapToPaths:          require ( './bitmapToPaths.js' ),
@@ -16,12 +17,12 @@ module.exports = {
     // randomBytes:            require ( './randomBytes.js' ).randomBytes,
     rect:                   require ( './rect.js' ),
     redisClient:            require ( './redisClient.js' ),
+    sodium:                 require ( './sodium.js' ),
     textLayout:             require ( './textLayout.js' ),
     textStyle:              require ( './textStyle.js' ),
 
     ModelError:             require ( './ModelError.js' ).ModelError,
     MySQL:                  require ( './MySQL.js' ).MySQL,
-    MySQLConnection:        require ( './MySQL.js' ).MySQLConnection,
     rest:                   require ( './rest.js' ),
     RevocableContext:       require ( './RevocableContext.js' ).RevocableContext,
     util:                   require ( './util.js' ),

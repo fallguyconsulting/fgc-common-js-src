@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 module.exports = {
+    aes:                            require ( './aes.js' ),
     assert:                         require ( './assert.js' ).assert,
     base64:                         require ( './base64.js' ),
     bitmapToPaths:                  require ( './bitmapToPaths.js' ),
@@ -30,6 +31,7 @@ module.exports = {
     qrcode:                         require ( './qrcode.js' ),
     randomBytes:                    require ( './randomBytes.js' ).randomBytes,
     rect:                           require ( './rect.js' ),
+    sodium:                         require ( './sodium.js' ),
     storage:                        require ( './storage.js' ),
     textLayout:                     require ( './textLayout.js' ),
     textStyle:                      require ( './textStyle.js' ),

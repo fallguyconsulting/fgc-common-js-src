@@ -113,6 +113,12 @@ export function isNumber ( number ) {
 }
 
 //----------------------------------------------------------------//
+export function isString ( value ) {
+
+    return (( typeof ( value ) === 'string' ) || ( value instanceof String ));
+}
+
+//----------------------------------------------------------------//
 export function javascriptEscape ( str ) {
     return str
         .replace ( /(\n)/g, '\\n' )
@@ -138,6 +144,11 @@ export function shuffle ( array ) {
         [ array [ i ], array [ j ]] = [ array [ j ], array [ i ]];
     }
     return array;
+}
+
+//----------------------------------------------------------------//
+export function sleep ( millis ) {
+    return new Promise ( resolve => setTimeout ( resolve, millis ));
 }
 
 //----------------------------------------------------------------//

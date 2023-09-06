@@ -24,14 +24,44 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
+    async deleteJSON ( url, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, {
+            method:     'DELETE',
+            headers:    headers,
+        });
+    }
+
+    //----------------------------------------------------------------//
     fetch ( input, init, timeout ) {
         return this.promise ( fetch ( input, init ), timeout );
     }
 
     //----------------------------------------------------------------//
-    fetchJSON ( input, init, timeout ) {
-        return this.fetch ( input, init, timeout )
-            .then ( response => this.promise ( response.json ()));
+    async fetchJSON ( input, init, timeout ) {
+
+        const response  = await this.fetch ( input, init, timeout );
+        const text = await response.text ();
+        
+        let body;
+        try {
+            body = JSON.parse ( text ); 
+        }
+        catch ( error ) {
+        }
+
+        if ( response.status >= 400 ) {
+            throw {
+                status:         response.status,
+                statusText:     response.statusText,
+                message:        body && body.message || text,
+                body:           body,
+            };
+        }
+        return body;
     }
 
     //----------------------------------------------------------------//
@@ -48,6 +78,28 @@ export class RevocableContext {
             return this.availableIDs.pop ();
         }
         return this.revocableID++;
+    }
+
+    //----------------------------------------------------------------//
+    async getJSON ( url, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, { headers: headers });
+    }
+
+    //----------------------------------------------------------------//
+    async postJSON ( url, json, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, {
+            method:     'POST',
+            headers:    headers,
+            body:       json ? JSON.stringify ( json ) : undefined,
+        });
     }
 
     //----------------------------------------------------------------//
@@ -134,6 +186,19 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
+    async putJSON ( url, json, headers ) {
+
+        headers = headers ? _.clone ( headers ) : {};
+        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
+
+        return this.fetchJSON ( url, {
+            method:     'PUT',
+            headers:    headers,
+            body:       json ? JSON.stringify ( json ) : undefined,
+        });
+    }
+
+    //----------------------------------------------------------------//
     timeout ( callback, delay ) {
         
         if ( this.finalized ) return;
@@ -151,7 +216,10 @@ export class RevocableContext {
             this.releaseID ( revocableID );
         }
 
-        return revocableID;
+        return {
+            timeout:        timeout,
+            revocableID:    revocableID,
+        };
     }
 
     //----------------------------------------------------------------//
@@ -183,6 +251,6 @@ export class RevocableContext {
 
     //----------------------------------------------------------------//
     sleep ( millis ) {
-        return this.promise ( new Promise ( r => setTimeout ( r, millis )));
+        return this.promise ( new Promise ( resolve => setTimeout ( resolve, millis )));
     }
 }

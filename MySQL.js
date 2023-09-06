@@ -88,7 +88,7 @@ export class MySQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async escape ( str ) {
+    async escapeAsync ( str ) {
 
         assert ( this.connection, 'MISSING MYSQL CONNECTION' );
         return await this.connection.escape ( str );
@@ -145,9 +145,15 @@ export class MySQLConnection {
     async query ( sql ) {
 
         return this.runInConnectionAsync ( async () => {
-            assert ( this.connection, 'MISSING MYSQL CONNECTION' );
             return await this.connection.query ( sql );
         });
+    }
+
+    //----------------------------------------------------------------//
+    async toJSONAsync ( body ) {
+
+        assert ( this.connection, 'MISSING MYSQL CONNECTION' );
+        return await this.escapeAsync ( JSON.stringify ( body ));
     }
 }
 
