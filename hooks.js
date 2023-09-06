@@ -8,6 +8,24 @@ import React                    from 'react';
 import { Redirect }             from 'react-router';
 
 //----------------------------------------------------------------//
+async function clearBrowserCacheAsync ( version ) {
+
+    const storedVersion = localStorage.getItem ( 'version' );
+    if ( storedVersion !== version ) {
+
+        console.log ( 'NEW VERSION DETECTED; EMPTYING CACHE' );
+
+        const keys = await caches.keys ();
+        for ( let name in keys ) {
+            await caches.delete ( name );
+        }
+        window.location.reload ( true );
+
+        localStorage.setItem ( 'version', version );
+    }
+}
+
+//----------------------------------------------------------------//
 export function useAnimationFrame ( callback ) {
 
     const timeRef           = React.useRef ();
@@ -82,3 +100,10 @@ export function useFinalizer ( finalizer, defaultTarget ) {
     };
 }
 
+//----------------------------------------------------------------//
+export function useVersionedBrowserCache ( version ) {
+
+    React.useEffect (() => {
+        clearBrowserCacheAsync ( version );
+    });
+}
