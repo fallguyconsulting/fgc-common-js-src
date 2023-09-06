@@ -1,6 +1,7 @@
-// Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
+// Copyright (c) 2022 Fall Guy LLC All Rights Reserved.
 
-import fetch                        from 'cross-fetch';
+import fetch            from 'cross-fetch';
+import _                from 'lodash';
 
 //================================================================//
 // RevocableContext
@@ -50,14 +51,14 @@ export class RevocableContext {
         try {
             body = JSON.parse ( text ); 
         }
-        catch ( error ) {
+        catch ( error ) { // eslint-disable-line no-empty
         }
 
         if ( response.status >= 400 ) {
             throw {
                 status:         response.status,
                 statusText:     response.statusText,
-                message:        body && body.message || text,
+                message:        body ? body.message : text,
                 body:           body,
             };
         }
