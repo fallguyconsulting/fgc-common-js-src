@@ -149,6 +149,21 @@ export class Workbook {
         const sheet = this.sheets [ sheetname ];
         return sheet ? new Worksheet ( this, sheet ) : false;
     }
+
+    //----------------------------------------------------------------//
+    getSheetsMatchingPattern ( sheetnameRegEx ) {
+
+        let matches = false;
+
+        for ( const name of this.sheetNames ) {
+            if ( name.match ( sheetnameRegEx )) {
+                matches = matches || [];
+                matches.push ( this.sheets [ name ]); 
+            }
+        }
+
+        return matches;
+    }
 }
 
 
