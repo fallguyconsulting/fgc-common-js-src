@@ -1,50 +1,115 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import * as config                  from 'config';
-// import Mailchimp                    from 'mailchimp-api-v3'; // https://mailchimp.com/developer/reference/
-import nodemailer                   from 'nodemailer';
+import * as aws             from 'aws-sdk';
+import * as env             from 'env';
+import nodemailer           from 'nodemailer';
+import SibApiV3Sdk          from 'sib-api-v3-sdk';
 
-//================================================================//
-// Mailer
-//================================================================//
-export class Mailer {
+let gmailTransport;
+let sendinblueAPI;
+let ses;
 
-    //----------------------------------------------------------------//
-    constructor () {
+//----------------------------------------------------------------//
+function formatSender ( email, name ) {
 
-        console.log ( 'GMAIL USER:', config.GMAIL_USER );
+    return name ? `${ name } <${ email }>` : email; 
+}
 
-        // if ( config.MAILCHIMP_API_KEY ) {
-        //     this.mailchimp = new Mailchimp ( config.MAILCHIMP_API_KEY );
-        // }
+//----------------------------------------------------------------//
+export async function send ( params ) {
 
-        // NOTE: if gmail transport myseriously stops working, log in to the
-        // gmail account and make sure "allow less secure apps" is enabled
-        // under the security tab. Gmail will "helpfully" disable this
-        // setting if it hasn't been used in a while.
+    const provider = env.EMAIL_PROVIDER || 'gmail';
 
-        this.mailTransport = nodemailer.createTransport ({
+    if ( provider === 'gmail' ) {
+        sendWithGmail ( params );
+    }
+
+    if ( provider === 'sendinblue' ) {
+        sendWithSendinblue ( params );
+    }
+
+    if ( provider === 'ses' ) {
+        sendWithSES ( params );
+    }
+}
+
+//----------------------------------------------------------------//
+export async function sendWithGmail ( params ) {
+
+    if ( !gmailTransport ) {
+        gmailTransport = nodemailer.createTransport ({
             service: 'gmail',
             auth: {
-                user: config.GMAIL_USER,
-                pass: config.GMAIL_PASSWORD,
+                user: env.GMAIL_EMAIL,
+                pass: env.GMAIL_PASSWORD,
             },
         });
     }
 
-    //----------------------------------------------------------------//
-    async mailchimpSubscribeAsync () {
+    const { to, subject, text, html } = params;
 
-        // const response = await mailchimp.post ( `/lists/${ config.MAILCHIMP_USER_LIST_ID }/members`, {
-        //     email_address:      body.email,
-        //     email_type:         'html',
-        //     status:             'subscribed',
-        //     merge_fields: {
-        //         VERIFIER:   verifier,
-        //     }
-        // });
-        // console.log ( 'SIGNUP:', JSON.stringify ( response, null, 4 ));
-        // result.json ({});
+    await gmailTransport.sendMail ({
+        from:               formatSender ( env.GMAIL_EMAIL, env.GMAIL_EMAIL_NAME ),
+        to:                 to,
+        subject:            subject,
+        text:               text || html || '',
+        html:               html || text || '',
+    });
+}
+
+//----------------------------------------------------------------//
+export async function sendWithSendinblue ( params ) {
+
+    if ( !sendinblueAPI ) {
+        SibApiV3Sdk.ApiClient.instance.authentications [ 'api-key' ].apiKey = env.SENDINBLUE_API_KEY;
+        sendinblueAPI = new SibApiV3Sdk.TransactionalEmailsApi ();
     }
 
+    const { to, subject, text, html } = params;
+
+    await sendinblueAPI.sendTransacEmail ({
+        subject:            subject,
+        sender:             { email: env.SENDINBLUE_EMAIL, name: 'Diablo Golf' },
+        to:                 [{ email: to }],
+        textContent:        text || html || '',
+        htmlContent:        html || text || '',
+    });
+}
+
+//----------------------------------------------------------------//
+export async function sendWithSES ( params ) {
+
+    if ( !ses ) {
+        ses = new aws.SES ({
+            accessKeyId:        env.SES_ACCESS_KEY_ID,
+            secretAccessKey:    env.SES_ACCESS_KEY_SECRET,
+            region:             env.SES_REGION,
+        });
+    }
+
+    const { to, subject, text, html } = params;
+
+    await ses.sendEmail ({
+        Source:                 formatSender ( env.SES_EMAIL, env.SES_EMAIL_NAME ),
+        ReplyToAddresses:       [],
+        Destination: {
+            ToAddresses:        [ to ],
+        },
+        Message: {
+            Subject: {
+                Charset:        'UTF-8',
+                Data:           subject || '',
+            },
+            Body: {
+                Text: {
+                    Charset:    'UTF-8',
+                    Data:       text || html || '',
+                },
+                Html: {
+                    Charset:    'UTF-8',
+                    Data:       html || text || '',
+                },
+            },
+        },
+    }).promise ();
 }

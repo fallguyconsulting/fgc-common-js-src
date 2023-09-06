@@ -1,1 +1,1 @@
-# fgc-commong-js-src
+# fgc-common-js-src
