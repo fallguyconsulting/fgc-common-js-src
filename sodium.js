@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Fall Guy LLC All Rights Reserved.
+// Copyright (c) 2022 Fall Guy LLC All Rights Reserved.
 
 import { assert }           from './assert';
 import * as util            from './util';
@@ -6,8 +6,17 @@ import sodium               from 'libsodium-wrappers';
 
 // https://sodium-friends.github.io/docs/docs/api
 
-export const HEX_REGEX  = /^[0-9A-F]+$/i;
+export const HEX_REGEX  = /^[0-9a-fA-F]+$/i;
 export const KEY_SIZE   = 32;
+
+//----------------------------------------------------------------//
+export function convert ( value, from, to ) {
+
+    from    = from || to;
+    to      = to || from;
+
+    return ( to === from ) ? value : fromBuffer ( toBuffer ( value, from ), to );
+}
 
 //----------------------------------------------------------------//
 export function decryptPK ( ciphertext, publicKey, secretKey, encoding ) {
@@ -68,6 +77,19 @@ export function encryptionKeyPair ( seed ) {
 }
 
 //----------------------------------------------------------------//
+export function encryptionKeyPairSeed () {
+
+    return this.randomBytes ( sodium.crypto_box_SEEDBYTES );
+}
+
+//----------------------------------------------------------------//
+export function encryptionKeyTuple ( seed ) {
+
+    const keyPair = encryptionKeyPair ( seed );
+    return [ keyPair.publicKey, keyPair.secretKey ];
+}
+
+//----------------------------------------------------------------//
 export function encryptSymmetric ( plaintext, key, encoding, nonce ) {
 
     plaintext           = toBuffer ( plaintext, encoding || 'utf8' );
@@ -81,13 +103,13 @@ export function encryptSymmetric ( plaintext, key, encoding, nonce ) {
 //----------------------------------------------------------------//
 export function fromBuffer ( value, encoding ) {
 
-    assert ( Uint8Array.prototype.isPrototypeOf ( value ), 'Value must be of type Uint8Array.' );
+    assert ( Uint8Array.prototype.isPrototypeOf.call ( value ), 'Value must be of type Uint8Array.' );
 
     encoding = encoding || 'hex';
 
     switch ( encoding ) {
         case 'bytes':       return value;
-        case 'base64':      return sodium.to_base64 ( value );
+        case 'base64':      return sodium.to_base64 ( value, sodium.base64_variants.ORIGINAL_NO_PADDING );
         case 'utf8':        return sodium.to_string ( value );
         case 'json':        return JSON.parse ( sodium.to_string ( value ));
         case 'hex':         return sodium.to_hex ( value );
@@ -170,6 +192,13 @@ export function saltDummy ( seed ) {
 }
 
 //----------------------------------------------------------------//
+export function sha256 ( plaintext, encoding ) {
+
+    plaintext = toBuffer ( plaintext, encoding || 'utf8' );
+    return sodium.to_hex ( sodium.crypto_hash_sha256 ( plaintext ));
+}
+
+//----------------------------------------------------------------//
 export function sign ( plaintext, secretKey, encoding ) {
 
     plaintext = toBuffer ( plaintext, encoding || 'utf8' );
@@ -184,7 +213,7 @@ export function signDetached ( message, secretKey, encoding ) {
 }
 
 //----------------------------------------------------------------//
-export function signingKeyPair ( size ) {
+export function signingKeyPair () {
 
     const keyPair = sodium.crypto_sign_keypair ();
 
@@ -203,12 +232,12 @@ export function symmetricKey () {
 //----------------------------------------------------------------//
 export function toBuffer ( value, encoding ) {
 
-    if ( Uint8Array.prototype.isPrototypeOf ( value )) return value;
+    if ( Uint8Array.prototype.isPrototypeOf.call ( value )) return value;
 
     encoding = encoding || 'hex';
 
     switch ( encoding ) {
-        case 'base64':      return sodium.from_base64 ( value );
+        case 'base64':      return sodium.from_base64 ( value, sodium.base64_variants.ORIGINAL_NO_PADDING );
         case 'utf8':        return sodium.from_string ( value );
         case 'json':        return sodium.from_string ( JSON.stringify ( value ));
         case 'hex': {
@@ -223,6 +252,18 @@ export function toBuffer ( value, encoding ) {
 
     assert ( false, 'Unknown encoding.' );
     return false;
+}
+
+//----------------------------------------------------------------//
+export function unpackMessage ( messageSG, encoding ) {
+
+    return convert ( messageSG.slice ( sodium.crypto_sign_BYTES * 2 ), 'hex', encoding );    
+}
+
+//----------------------------------------------------------------//
+export function unpackSignature ( messageSG ) {
+
+    return messageSG.slice ( 0, sodium.crypto_sign_BYTES * 2 );
 }
 
 //----------------------------------------------------------------//
