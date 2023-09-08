@@ -140,7 +140,7 @@ export function getEnvString ( name, fallback ) {
 
 //----------------------------------------------------------------//
 export function getMatch ( props, field, fallback ) {
-    const match = props.match.params && props.match.params [ field ] || '';
+    const match = props.match.params ? props.match.params [ field ] : '';
     return match.length > 0 ? match : ( fallback || '' );
 }
 

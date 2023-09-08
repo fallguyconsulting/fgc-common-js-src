@@ -74,7 +74,7 @@ export class PostgreSQLConnection {
     async countAsync ( fromWhere ) {
 
         const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
-        return row && row.count || 0;
+        return row ? row.count : 0;
     }
 
     //----------------------------------------------------------------//

@@ -1,10 +1,8 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { action, computed, observable, runInAction }    from 'mobx';
 import { observer }                                     from 'mobx-react';
 import React, { useState }                              from 'react';
 import * as UI                                          from 'semantic-ui-react';
-import validator                                        from 'validator';
 
 const PASSWORD_REGEX = /^[0-9a-zA-Z~`!?@#$%^&()_+*=/,.{}<>:;'"|[\]\\]+$/;
 

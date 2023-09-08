@@ -3,7 +3,7 @@
 import * as crypto          from 'crypto';
 
 //----------------------------------------------------------------//
-function encryptGCM ( text, masterkey ) {
+export function encryptGCM ( text, masterkey ) {
 
     console.log ( 'encrypt', text );
 
@@ -21,7 +21,7 @@ function encryptGCM ( text, masterkey ) {
 }
 
 //----------------------------------------------------------------//
-function decryptGCM ( encdata, masterkey ) {
+export function decryptGCM ( encdata, masterkey ) {
 
     const bData         = Buffer.from ( encdata, 'base64' );
     const salt          = bData.slice ( 0, 64 );

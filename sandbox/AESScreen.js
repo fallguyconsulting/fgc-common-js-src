@@ -4,11 +4,10 @@
 import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
 import * as crypto                      from '../crypto/crypto';
 import * as hooks                       from '../site/hooks';
-import * as util                        from '../util';
-import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
+import { action, observable } from 'mobx';
 import { observer }                     from 'mobx-react';
-import React, { useState }              from 'react';
-import { Button, Divider, Dropdown, Form, Grid, Header, Icon, Modal, Segment } from 'semantic-ui-react';
+import React              from 'react';
+import { Form, Segment } from 'semantic-ui-react';
 
 //================================================================//
 // AESScreenController
@@ -19,10 +18,6 @@ class AESScreenController {
     @observable password        = '';
     @observable ciphertext      = '';
     @observable plaintext       = '';
-
-    //----------------------------------------------------------------//
-    constructor ( appState ) {
-    }
 
     //----------------------------------------------------------------//
     @action

@@ -2,7 +2,9 @@
 
 import handlebars                                   from 'handlebars';
 import React, { useEffect, useState }               from 'react';
-import { Button, Form, Grid, Header, Segment }      from 'semantic-ui-react';
+import { Button }      from 'semantic-ui-react';
+
+/* eslint-disable react-hooks/exhaustive-deps */
 
 //================================================================//
 // PrintScreen
@@ -34,7 +36,7 @@ export const PrintScreen = ( props ) => {
 
     return (
         <div>
-            <If condition = { isPrinting == 0 }>
+            <If condition = { isPrinting === 0 }>
                 <Button onClick = {() => { setIsPrinting ( true )}}>Print</Button>
                 <div dangerouslySetInnerHTML = {{ __html: result }}/>
             </If>

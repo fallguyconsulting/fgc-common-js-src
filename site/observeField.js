@@ -1,7 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import * as storage             from './storage';
-import { extendObservable, isObservable, observe, runInAction } from 'mobx';
+import { isObservable, observe } from 'mobx';
 import { deepObserve }          from 'mobx-utils';
 
 //const debugLog = function () {}

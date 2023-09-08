@@ -1,14 +1,12 @@
 /* eslint-disable no-whitespace-before-property */
 /* eslint-disable no-loop-func */
 
-import { RevocableContext }             from '../site/RevocableContext'
 import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
 import * as crypto                      from '../crypto/crypto';
 import * as hooks                       from '../site/hooks';
-import * as util                        from '../util';
-import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';
-import React, { useState }              from 'react';
+import React              from 'react';
 import * as UI                          from 'semantic-ui-react';
 
 const DEFAULT_PASSWORD = 'password';
@@ -120,10 +118,6 @@ class CryptoKeyScreenController {
 
     @observable keyError        = false;
     @observable sigError        = false;
-
-    //----------------------------------------------------------------//
-    constructor ( appState ) {
-    }
 
     //----------------------------------------------------------------//
     @action

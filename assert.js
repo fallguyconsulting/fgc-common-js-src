@@ -4,10 +4,10 @@
 export function assert ( condition, error ) {
 
     if ( !condition ) {
-    	if ( error ) {
-        	console.log ( error );
-        	console.trace ();
-    	}
+        if ( error ) {
+            console.log ( error );
+            console.trace ();
+        }
         throw new Error ( error || 'Assetion failed.' );
     }
 }

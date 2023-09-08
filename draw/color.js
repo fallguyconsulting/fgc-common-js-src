@@ -14,7 +14,7 @@ export function fromHex ( hex ) {
 
     const color = make ();
 
-    hex = hex.charAt ( 0 ) == '#' ? hex.slice ( 1 ) : hex;
+    hex = hex.charAt ( 0 ) === '#' ? hex.slice ( 1 ) : hex;
 
     const component = ( i ) => {
         i = i * 2;
@@ -28,7 +28,7 @@ export function fromHex ( hex ) {
         color.b = component ( 2 );
     }
 
-    if ( hex.length == 8 ) {
+    if ( hex.length === 8 ) {
         color.a = component ( 3 );
     }
 

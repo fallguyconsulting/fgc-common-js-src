@@ -3,10 +3,9 @@
 
 import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
 import * as pdf417                      from '../barcode/pdf417';
-import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';
 import React, { useState }              from 'react';
-import { Button, Divider, Dropdown, Form, Grid, Header, Icon, Modal, Segment } from 'semantic-ui-react';
+import { Form, Segment } from 'semantic-ui-react';
 
 //================================================================//
 // BarcodePDF417Screen

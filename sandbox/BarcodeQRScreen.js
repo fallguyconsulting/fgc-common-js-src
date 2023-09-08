@@ -3,10 +3,9 @@
 
 import { SingleColumnContainerView }    from '../semantic-ui/SingleColumnContainerView'
 import * as qrcode                      from '../barcode/qrcode';
-import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { observer }                     from 'mobx-react';
 import React, { useState }              from 'react';
-import { Button, Divider, Dropdown, Form, Header, Message, Segment, Select } from 'semantic-ui-react';
+import { Form, Message, Segment, Select } from 'semantic-ui-react';
 
 
 const QR_ERR_OPTIONS = [

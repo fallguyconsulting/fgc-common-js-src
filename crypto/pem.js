@@ -101,11 +101,6 @@ const KeyStructure = asn.define ( 'KeyStructure', function () {
 // PEMPasswordError
 //================================================================//
 export class PEMPasswordError extends Error {
-
-    //----------------------------------------------------------------//
-    constructor ( message ) {
-        super ( message );
-    }
 }
 
 //----------------------------------------------------------------//
@@ -114,14 +109,14 @@ export function appendLeadingZeros ( array, len ) {
     const returnArray = new Uint8Array ( len ); // initialized with zeros
     returnArray.set ( array, len - array.length );
     return returnArray;
-};
+}
 
 //----------------------------------------------------------------//
 export function jwkEncodeRSAComponent ( array ) {
 
     // prune leading zeros JWW RSA private key: https://tools.ietf.org/html/rfc7517
     return jseu.encoder.encodeBase64Url ( pruneLeadingZeros ( array ));
-};
+}
 
 //----------------------------------------------------------------//
 export async function jwkToPEMAsync ( jwk ) {
@@ -197,7 +192,7 @@ export async function pemToJWKAsync ( pem, passphrase ) {
             }
             return await keyObj.export ( 'jwk' );
         }
-    };
+    }
 }
 
 //----------------------------------------------------------------//
@@ -212,4 +207,4 @@ export function pruneLeadingZeros ( array ) {
     const returnArray = new Uint8Array ( array.length - offset );
     returnArray.set ( array.slice ( offset, array.length ));
     return returnArray;
-};
+}

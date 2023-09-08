@@ -3,7 +3,7 @@
 import * as hooks                           from '../site/hooks';
 import { TextFitter, FONT_FACE, JUSTIFY }   from '../draw/textLayout';
 import handlebars                           from 'handlebars';
-import { action, computed, observable, }    from 'mobx';
+import { action, observable, }    from 'mobx';
 import { observer }                         from 'mobx-react';
 import * as opentype                        from 'opentype.js';
 import React                                from 'react';

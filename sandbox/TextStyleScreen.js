@@ -2,10 +2,9 @@
 
 import { SingleColumnContainerView }        from '../semantic-ui/SingleColumnContainerView'
 import * as textStyle                       from '../draw/textStyle';
-import { action, computed, extendObservable, runInAction, observable, observe } from 'mobx';
 import { observer }                         from 'mobx-react';
 import React, { useState }                  from 'react';
-import { Button, Card, Divider, Dropdown, Form, Grid, Header, Icon, Message, Modal, Segment, TextArea } from 'semantic-ui-react';
+import { Button, Form, Segment, TextArea } from 'semantic-ui-react';
 
 //================================================================//
 // TextStyleScreen

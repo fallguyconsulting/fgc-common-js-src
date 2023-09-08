@@ -1,7 +1,7 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
 import { observer }                                         from 'mobx-react';
-import React, { Fragment, useState, useRef }                from 'react';
+import React, { useState, useRef }                from 'react';
 import { Button, Icon, Menu }                               from 'semantic-ui-react';
 
 //================================================================//

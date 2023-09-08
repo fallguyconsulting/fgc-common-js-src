@@ -3,7 +3,6 @@
 import { assert }                           from '../assert';
 import * as storage                         from './storage';
 import { observeField }                     from './observeField';
-import * as util                            from '../util';
 import _                                    from 'lodash';
 import { extendObservable, runInAction }    from 'mobx';
 

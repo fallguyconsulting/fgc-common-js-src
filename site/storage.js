@@ -29,7 +29,7 @@ export const dump = () => {
                 store [ key ] = json;
             }
         }
-        catch ( error ) {
+        catch ( error ) { // eslint-disable-line no-empty
         }
     }
     return store;

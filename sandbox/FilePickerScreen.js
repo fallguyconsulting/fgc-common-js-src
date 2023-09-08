@@ -1,14 +1,9 @@
 /* eslint-disable no-whitespace-before-property */
 
 import { SingleColumnContainerView }        from '../semantic-ui/SingleColumnContainerView'
-import * as excel                           from '../filetypes/excel'
-import { TextFitter, FONT_FACE, JUSTIFY }   from '../draw/textLayout';
-import handlebars                           from 'handlebars';
-import { action, computed, observable, }    from 'mobx';
 import { observer }                         from 'mobx-react';
-import * as opentype                        from 'opentype.js';
 import React, { useRef, useState }          from 'react';
-import { Button, Divider, Dropdown, Form, Header, Message, Segment, Select } from 'semantic-ui-react';
+import { Button, Form, Message, Segment } from 'semantic-ui-react';
 
 //================================================================//
 // FilePickerScreen

@@ -155,7 +155,7 @@ export class RevocableContext {
         
         wrappedPromise.revocableID = revocableID;
         return wrappedPromise;
-    };
+    }
 
     //----------------------------------------------------------------//
     promiseWithBackoff ( makePromise, wait, asService, step, max, retries ) {

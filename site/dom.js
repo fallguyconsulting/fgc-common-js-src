@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
+import _                            from 'lodash';
 import { Parser }                   from 'saxen';
 
 export const VISIT = {
@@ -99,7 +100,7 @@ export function findElementsByPath ( root, ...qualifiers ) {
 export function matchHasAttribute ( attrName ) {
 
     return ( element ) => {
-        return _has ( element, attrName );
+        return _.has ( element, attrName );
     }
 }
 

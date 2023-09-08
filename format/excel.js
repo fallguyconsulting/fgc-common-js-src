@@ -1,6 +1,5 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import fs                       from 'fs';
 import _                        from 'lodash';
 import * as XLSX                from 'xlsx';
 

@@ -8,9 +8,8 @@ import * as bip39               from 'bip39';
 import * as bitcoin             from 'bitcoinjs-lib';
 import * as crypto              from 'crypto';
 import CryptoJS                 from 'crypto-js';
-import keyutils                 from 'js-crypto-key-utils';
 import JSEncrypt                from 'jsencrypt';
-import { action, computed, observable, runInAction } from 'mobx';
+import { computed } from 'mobx';
 import * as secp256k1           from 'secp256k1'
 
 // TODO: need to input/ouput PEM, HEX, BASE64, etc. from all key types
@@ -39,10 +38,6 @@ class Key {
     @computed get       privatePEM      () { return this.getPublic ( 'pem' ); }
     @computed get       publicHEX       () { return this.getPublic ( 'hex' ); }
     @computed get       publicPEM       () { return this.getPublic ( 'pem' ); }
-
-    //----------------------------------------------------------------//
-    constructor () {
-    }
 
     //----------------------------------------------------------------//
     getKeyID () {

@@ -150,7 +150,7 @@ class TextLine {
 
         for ( let styledChar of this.tokenChars ) {
 
-            if ( style != styledChar.style ) {
+            if ( style !== styledChar.style ) {
                 grow ();
                 style = styledChar.style;
             }
@@ -418,6 +418,7 @@ export class TextBox {
 
             const lineLeft = -line.bounds.x0;
             const lineWidth = rect.width ( line.bounds );
+            const lineHeight = rect.height ( line.bounds );
 
             // horizontal layout
             switch ( line.hJustify ) {
@@ -436,7 +437,7 @@ export class TextBox {
             }
 
             // vertical layout
-            yOff += ( i == 0 ) ? -line.bounds.y0 : line.ascender;
+            yOff += ( i === 0 ) ? -line.bounds.y0 : line.ascender;
 
             switch ( this.vJustify ) {
 
@@ -445,11 +446,11 @@ export class TextBox {
                     break;
 
                 case JUSTIFY.VERTICAL.CENTER: {
-                    line.yOff = ((( this.bounds.y0 + this.bounds.y1 ) - ( y1 - y0 )) / 2 ) + yOff;
+                    line.yOff = ((( this.bounds.y0 + this.bounds.y1 ) - lineHeight ) / 2 ) + yOff;
                     break;
                 }
                 case JUSTIFY.VERTICAL.BOTTOM:
-                    line.yOff = ( this.bounds.x1 - ( y1 - y0 )) + yOff;
+                    line.yOff = ( this.bounds.y1 - lineHeight ) + yOff;
                     break;
             }
             yOff += line.descender;
@@ -695,7 +696,7 @@ export class TextFitter {
 
             const section = this.sections [ i ];
 
-            yOff += ( i == 0 ) ? 0 : section.padTop;
+            yOff += ( i === 0 ) ? 0 : section.padTop;
             svg.push ( section.toSVG ( 0, yOff ));
             yOff += rect.height ( section.fitBounds ) + section.padBottom;
         }
