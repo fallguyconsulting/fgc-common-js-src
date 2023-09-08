@@ -5,7 +5,6 @@ import * as storage             from './storage';
 import { extendObservable, isObservable, observe } from 'mobx';
 import { deepObserve }          from 'mobx-utils';
 import React                    from 'react';
-import { Redirect }             from 'react-router';
 
 //----------------------------------------------------------------//
 async function clearBrowserCacheAsync ( version ) {
