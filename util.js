@@ -81,7 +81,58 @@ export function dateToISOString ( date ) {
 }
 
 //----------------------------------------------------------------//
-export function getEnv ( name, fallback ) {
+export function formatURL ( url, path, query ) {
+
+    url             = URL.parse ( url );
+    path            = ( path || '/' ).split ( '/' ).filter ( token => Boolean ( token ));
+
+    url.pathname    = `${ url.path }${ path.join ( '/' )}/`;
+    url.query       = query || {};
+
+    url = URL.format ( url );
+    return url;
+}
+
+//----------------------------------------------------------------//
+export function getEnvBool ( name, fallback ) {
+
+    let value = _.has ( process.env, name ) ? process.env [ name ] : undefined;
+
+    if ( typeof ( value ) === 'string' ) {
+        if ( value.toLowerCase () === 'true' ) return true;
+        if ( value.toLowerCase () === 'false' ) return false;
+
+        value = parseInt ( value );
+        assert ( !isNaN ( value ), `Environment variable ${ name } is NaN.` );
+        value = Boolean ( value );
+    }
+    else if ( value === undefined ) {
+        value = fallback;
+    }
+
+    assert ( value !== undefined, `Missing ${ name } environment variable.` );
+    return value;
+}
+
+//----------------------------------------------------------------//
+export function getEnvInt ( name, fallback ) {
+
+    let value = _.has ( process.env, name ) ? process.env [ name ] : undefined;
+
+    if ( typeof ( value ) === 'string' ) {
+        value = parseInt ( value );
+        assert ( !isNaN ( value ), `Environment variable ${ name } is NaN.` );
+    }
+    else if ( value === undefined ) {
+        value = fallback;
+    }
+
+    assert ( value !== undefined, `Missing ${ name } environment variable.` );
+    return value;
+}
+
+//----------------------------------------------------------------//
+export function getEnvString ( name, fallback ) {
     const value = _.has ( process.env, name ) ? process.env [ name ] : fallback;
     assert ( value !== undefined, `Missing ${ name } environment variable.` );
     return value;
