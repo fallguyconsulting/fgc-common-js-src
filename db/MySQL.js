@@ -108,7 +108,7 @@ export class MySQLConnection {
 
     //----------------------------------------------------------------//
     async runInConnectionAsync ( action ) {
-
+        
         await this.beginConnectionAsync ();
         try {
             const result = await action ();
@@ -117,7 +117,6 @@ export class MySQLConnection {
         }
         catch ( error ) {
             await this.endConnectionAsync ();
-            console.log ( error );
             throw error;
         }
     }
@@ -126,7 +125,7 @@ export class MySQLConnection {
     async runInTransactionAsync ( action ) {
 
         return this.runInConnectionAsync ( async () => {
-
+            
             await this.beginTransactionAsync ();
             try {
                 const result = await action ();
@@ -134,7 +133,6 @@ export class MySQLConnection {
                 return result;
             }
             catch ( error ) {
-                console.log ( error );
                 await this.abortTransactionAsync ();
                 throw error;
             }

@@ -1,5 +1,7 @@
 // Copyright (c) 2023 Fall Guy LLC All Rights Reserved.
 
+import * as rest        from './rest';
+
 //----------------------------------------------------------------//
 export function getBearerToken ( request ) {
     
@@ -17,9 +19,17 @@ export function getBearerToken ( request ) {
 export function withErrorHandler () {
     
     return async ( error, request, response, next ) => {
-        console.log ( error );
-        response.status ( error.status ).json ({ error: error.message });
-    }; 
+        rest.handleError ( response, error );
+    };
+}
+
+//----------------------------------------------------------------//
+export function withFactory ( name, func ) {
+    
+    return async ( request, response, next ) => {
+        request [ name ] = func ( request );
+        next ();
+    };
 }
 
 //----------------------------------------------------------------//

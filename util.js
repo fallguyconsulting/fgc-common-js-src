@@ -4,6 +4,11 @@ import { assert }       from './assert';
 import _                from 'lodash';
 
 //----------------------------------------------------------------//
+export function camelToSnake ( str ) {
+    return str.replace ( /[a-z][A-Z]/g, m => `${ m.slice ( 0, 1 )}_${ m.slice ( 1 )}` ).toLowerCase ();
+}
+
+//----------------------------------------------------------------//
 export function caselessCompare ( a, b ) {
     return (( typeof ( a ) === 'string' ) && ( typeof ( b ) === 'string' )) ?
         ( a.localeCompare ( b, undefined, { sensitivity: 'accent' }) === 0 ) :
@@ -19,7 +24,7 @@ export function composeClass () {
     assert ( clazz );
 
     clazz.prototype.toString = function () {
-        console.log ( 'Cqlled toString' );
+        console.log ( 'Called toString' );
         return `Composed Class`;
     };
 
@@ -181,6 +186,15 @@ export function javascriptEscape ( str ) {
 }
 
 //----------------------------------------------------------------//
+export function makeSingleton ( clazz ) {
+
+    const name = clazz.constructor.name;
+    const instance = new clazz ();
+
+    clazz.get = () => { return instance; }
+}
+
+//----------------------------------------------------------------//
 export function randomInt ( max ) {
 
     return Math.floor ( Math.random () * Math.floor ( max ));
@@ -201,6 +215,11 @@ export function shuffle ( array ) {
 //----------------------------------------------------------------//
 export function sleep ( millis ) {
     return new Promise ( resolve => setTimeout ( resolve, millis ));
+}
+
+//----------------------------------------------------------------//
+export function snakeToCamel ( str ) {
+    return str.replace ( /[-_][a-z]/g, m => m.slice ( 1 ).toUpperCase ());
 }
 
 //----------------------------------------------------------------//

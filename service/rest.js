@@ -1,11 +1,18 @@
 /* eslint-disable no-whitespace-before-property */
 
+import { ServiceError }             from './ServiceError';
 import _                            from 'lodash';
 
 export const REST_STATUS = {
     OK:     'OK',
     ERROR:  'ERROR',
 };
+
+//----------------------------------------------------------------//
+export function assert ( condition, status, message ) {
+
+    if ( !condition ) throw new ServiceError ( status, message );
+}
 
 //----------------------------------------------------------------//
 export function handleError ( response, statusOrErrorObj, message ) {
@@ -24,9 +31,16 @@ export function handleError ( response, statusOrErrorObj, message ) {
         return 'Unknown error.';
     }
 
-    const errorObj = ( typeof ( statusOrErrorObj ) === 'object' ) ? statusOrErrorObj : false;
-    const status = ( typeof ( statusOrErrorObj ) === 'number' ) ? statusOrErrorObj : ( errorObj && errorObj.status ? errorObj.status : 400 );
+    const errorObj = ( typeof ( statusOrErrorObj ) === 'object' ) ? statusOrErrorObj : null;
+    const status = ( errorObj ) ? ( errorObj.status || 400 ) : 400;
     message = ( errorObj ? errorObj.message : message ) || errorForStatusCode;
+
+    if ( errorObj ) {
+        console.log ( errorObj );
+    }
+    else {
+        console.log ( message );
+    }
 
     response.status ( status ).json ({
         status:     REST_STATUS.ERROR,
