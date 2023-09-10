@@ -188,9 +188,7 @@ export function javascriptEscape ( str ) {
 //----------------------------------------------------------------//
 export function makeSingleton ( clazz ) {
 
-    const name = clazz.constructor.name;
     const instance = new clazz ();
-
     clazz.get = () => { return instance; }
 }
 
