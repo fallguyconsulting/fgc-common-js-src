@@ -33,6 +33,21 @@ export function withFactory ( name, func ) {
 }
 
 //----------------------------------------------------------------//
+export function withIntParams ( ...paramNames ) {
+    
+    return async ( request, response, next ) => {
+
+        for ( let name of paramNames ) { 
+            if ( request.params [ name ] === undefined ) continue;
+            const value = parseInt ( request.params [ name ]);
+            rest.assert ( !isNaN ( value ), `Expected an integer for param ${ name }` );
+            request.params [ name ] = value;
+        }
+        next ();
+    };
+}
+
+//----------------------------------------------------------------//
 export function withLogStart () {
     return async ( request, response, next ) => {
         request.log = response.log = function ( ...args ){
@@ -42,7 +57,6 @@ export function withLogStart () {
         next ();
     };
 }
-
 
 //----------------------------------------------------------------//
 export function withPublic () {
