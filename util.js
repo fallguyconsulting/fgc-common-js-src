@@ -99,6 +99,20 @@ export function formatURL ( url, path, query ) {
 }
 
 //----------------------------------------------------------------//
+export function getConfig ( name, fallback ) {
+    
+    assert ( window, `Missing 'window' object. Config variables are only for browser JS; use environment variables for server.` );
+    
+    const config = window.config;
+    assert ( fallback || config, `Missing config object on window. Check index.html and/or enable SSI. 'config' must be set on 'window' object.` );
+    
+    const value = _.has ( config, name ) ? config [ name ] : fallback;
+    assert ( value !== undefined, `Missing ${ name } config variable.` );
+    
+    return value;
+}
+
+//----------------------------------------------------------------//
 export function getEnvBool ( name, fallback ) {
 
     let value = _.has ( process.env, name ) ? process.env [ name ] : undefined;
