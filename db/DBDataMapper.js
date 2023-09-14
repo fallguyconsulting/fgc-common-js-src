@@ -276,15 +276,6 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    async searchAsync ( conn, col , searchParam ) {
-
-        const sql = `SELECT * FROM ${ this.dbName } WHERE ${col} LIKE '%${searchParam}%'`;
-        const rows = await conn.query ( sql );
-
-        return rows.map (( row ) => this.rowToModel ( row ));
-    }
-
-    //----------------------------------------------------------------//
     async saveAsync ( conn, model ) {
 
         assert ( model, 'Missing model for save.' );
@@ -318,6 +309,15 @@ export class DBDataMapper {
             }
         }
         return model;
+    }
+
+    //----------------------------------------------------------------//
+    async searchAsync ( conn, col , searchParam ) {
+
+        const sql = `SELECT * FROM ${ this.dbName } WHERE ${col} LIKE '%${searchParam}%'`;
+        const rows = await conn.query ( sql );
+
+        return rows.map (( row ) => this.rowToModel ( row ));
     }
 
     //----------------------------------------------------------------//
