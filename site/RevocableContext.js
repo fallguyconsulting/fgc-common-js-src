@@ -21,14 +21,12 @@ export class RevocableContext {
 
     //----------------------------------------------------------------//
     all ( promises ) {
+
         return this.promise ( Promise.all ( promises ));
     }
 
     //----------------------------------------------------------------//
     async deleteJSON ( url, headers ) {
-
-        headers = headers ? _.clone ( headers ) : {};
-        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
 
         return this.fetchJSON ( url, {
             method:     'DELETE',
@@ -38,11 +36,16 @@ export class RevocableContext {
 
     //----------------------------------------------------------------//
     fetch ( input, init, timeout ) {
+
         return this.promise ( fetch ( input, init ), timeout );
     }
 
     //----------------------------------------------------------------//
-    async fetchJSON ( input, init, timeout ) {
+    async fetchJSON ( input, init = {}, timeout ) {
+
+        init.headers = init.headers ? _.clone ( init.headers ) : {};
+        init.headers [ 'content-type' ] = init.headers [ 'content-type' ] || 'application/json';
+        init.credentials = init.credentials || 'include';
 
         const response  = await this.fetch ( input, init, timeout );
         const text = await response.text ();
@@ -84,17 +87,11 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     async getJSON ( url, headers ) {
 
-        headers = headers ? _.clone ( headers ) : {};
-        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
-
-        return this.fetchJSON ( url, { headers: headers });
+        return this.fetchJSON ( url, { headers: headers, credentials: 'include' });
     }
 
     //----------------------------------------------------------------//
     async postJSON ( url, json, headers ) {
-
-        headers = headers ? _.clone ( headers ) : {};
-        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
 
         return this.fetchJSON ( url, {
             method:     'POST',
@@ -189,9 +186,6 @@ export class RevocableContext {
     //----------------------------------------------------------------//
     async putJSON ( url, json, headers ) {
 
-        headers = headers ? _.clone ( headers ) : {};
-        headers [ 'content-type' ] = headers [ 'content-type' ] || 'application/json';
-
         return this.fetchJSON ( url, {
             method:     'PUT',
             headers:    headers,
@@ -252,6 +246,7 @@ export class RevocableContext {
 
     //----------------------------------------------------------------//
     sleep ( millis ) {
+        
         return this.promise ( new Promise ( resolve => setTimeout ( resolve, millis )));
     }
 }
