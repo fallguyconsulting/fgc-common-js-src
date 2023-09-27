@@ -35,19 +35,24 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
-    fetch ( input, init, timeout ) {
+    fetch ( input, options, timeout ) {
 
-        return this.promise ( fetch ( input, init ), timeout );
+        return this.promise ( fetch ( input, options ), timeout );
     }
 
     //----------------------------------------------------------------//
-    async fetchJSON ( input, init = {}, timeout ) {
+    async fetchJSON ( input, options = {}, timeout ) {
 
-        init.headers = init.headers ? _.clone ( init.headers ) : {};
-        init.headers [ 'content-type' ] = init.headers [ 'content-type' ] || 'application/json';
-        init.credentials = init.credentials || 'include';
+        options = _.cloneDeep ( options );
+        options.credentials = options.credentials || 'include';
 
-        const response  = await this.fetch ( input, init, timeout );
+        options.headers = _.assign ({
+            'content-type':     'application/json',
+            'pragma':           'no-cache',
+            'cache-control':    'no-cache',
+        }, options.headers || {});
+
+        const response  = await this.fetch ( input, options, timeout );
         const text = await response.text ();
         
         let body;
