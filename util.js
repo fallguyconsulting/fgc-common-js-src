@@ -200,6 +200,32 @@ export function javascriptEscape ( str ) {
 }
 
 //----------------------------------------------------------------//
+export function makeQueryString ( query ) {
+
+    const pairs = [];
+
+    function pushVal ( k, v ) {
+        if (( v === undefined ) || ( v === null ) || ( v === '' )) return;
+        pairs.push ( `${ k }=${ v }` );
+    }
+
+    for ( let k in query ) {
+
+        const v = query [ k ];
+
+        if ( _.isArray ( v )) {
+            for ( let x of v ) {
+                pushVal ( k, x );
+            }
+        }
+        else {
+            pushVal ( k, v );
+        }
+    }
+    return pairs.length ? `?${ pairs.join ( '&' )}` : '';
+}
+
+//----------------------------------------------------------------//
 export function makeSingleton ( clazz ) {
 
     const instance = new clazz ();
