@@ -51,8 +51,8 @@ export class DBColumnBuilder {
     }
 
     //----------------------------------------------------------------//
-    integer () {
-        this.def.type = 'INT UNSIGNED';
+    integer ( size ) {
+        this.def.type = size ? `INT(${ size }) UNSIGNED` : 'INT UNSIGNED';
         return this;
     }
 
