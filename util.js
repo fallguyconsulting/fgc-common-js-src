@@ -19,8 +19,7 @@ export function caselessCompare ( a, b ) {
 export function composeClass () {
     
     // instance methods
-    // const clazz = arguments [ 0 ];
-    const clazz = function () {};
+    const clazz = arguments [ 0 ];
     assert ( clazz );
 
     clazz.prototype.toString = function () {

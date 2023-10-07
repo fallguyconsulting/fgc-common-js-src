@@ -103,7 +103,7 @@ export function encryptSymmetric ( plaintext, key, encoding, nonce ) {
 //----------------------------------------------------------------//
 export function fromBuffer ( value, encoding ) {
 
-    assert ( Uint8Array.prototype.isPrototypeOf.call ( value ), 'Value must be of type Uint8Array.' );
+    assert ( value.constructor === Uint8Array, 'Value must be of type Uint8Array.' );
 
     encoding = encoding || 'hex';
 
@@ -148,6 +148,11 @@ export function hashPassword ( password, salt, size ) {
 export async function initAsync () {
 
     await sodium.ready;
+
+    assert ( sodium.crypto_pwhash_SALTBYTES, `This libsodium version missing 'crypto_pwhash_SALTBYTES'; trouble ahead.` );
+
+    const buffer = sodium.randombytes_buf ( sodium.crypto_pwhash_SALTBYTES );
+    assert ( buffer.constructor === Uint8Array, 'This libsodium did not return a buffer of type Uint8Array; trouble ahead.' );
 }
 
 //----------------------------------------------------------------//
@@ -232,7 +237,7 @@ export function symmetricKey () {
 //----------------------------------------------------------------//
 export function toBuffer ( value, encoding ) {
 
-    if ( Uint8Array.prototype.isPrototypeOf.call ( value )) return value;
+    if ( value.constructor === Uint8Array ) return value;
 
     encoding = encoding || 'hex';
 
