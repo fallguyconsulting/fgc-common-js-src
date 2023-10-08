@@ -79,7 +79,7 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    constructor ( name, version, conn ) {
+    constructor ( conn, name, version ) {
 
         assert ( conn, 'Must have valid connection for data mapper.' );
 
