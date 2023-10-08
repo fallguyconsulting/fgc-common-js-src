@@ -16,6 +16,8 @@ export class DBColumnBuilder {
         increment:      '',
         value:          null,
         serialized:     false,
+        isLazy:         false,
+        toJSON:         true,
     };
 
     opt = {
@@ -57,6 +59,12 @@ export class DBColumnBuilder {
     }
 
     //----------------------------------------------------------------//
+    lazy ( isLazy ) {
+        this.def.isLazy = isLazy;
+        return this;
+    }
+
+    //----------------------------------------------------------------//
     primary () {
         this.opt.isPrimary = true;
         return this;
@@ -85,6 +93,12 @@ export class DBColumnBuilder {
         this.def.type           = `TEXT`
         this.def.value          = null;
         this.def.serialized     = true;
+        return this;
+    }
+
+    //----------------------------------------------------------------//
+    toJSON ( toJSON ) {
+        this.def.toJSON = toJSON;
         return this;
     }
 

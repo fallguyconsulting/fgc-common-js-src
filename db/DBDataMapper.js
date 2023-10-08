@@ -5,6 +5,24 @@ import * as util                            from '../util';
 import { DBColumnBuilder }                  from './DBColumnBuilder';
 import _                                    from 'lodash';
 
+const registry = {
+}
+
+//----------------------------------------------------------------//
+function getSchema ( name, version ) {
+
+    const schemas = registry [ name ];
+    return schemas ? schemas [ version ] : undefined;
+}
+
+//----------------------------------------------------------------//
+function setSchema ( name, version, schema ) {
+    
+    const schemas = registry [ name ] || {};
+    registry [ name ] = schemas;
+    schemas [ version ] = schema;
+}
+
 //----------------------------------------------------------------//
 function commas ( str ) {
     return str.join ( ', ' );
@@ -15,14 +33,16 @@ function commas ( str ) {
 //================================================================//
 export class DBDataMapper {
 
+    conn                = null;
     columnDefs          = [];
     uniques             = [];
     fields              = [];
     fieldsByDBName      = {};
     fieldsByJSName      = {};
+    modelType           = null;
 
     //----------------------------------------------------------------//
-    async affirmAsync ( conn ) {
+    async affirmAsync () {
 
         const decls = [];
         const values = [];
@@ -32,7 +52,7 @@ export class DBDataMapper {
             const def = field.def;
 
             let defaultSQL = '';
-            if ( def.value !== null ) {
+            if (( def.value !== null ) && !def.serialized ) {
                 defaultSQL = 'DEFAULT ?';
                 this.pushValue ( values, field );
             }
@@ -55,30 +75,49 @@ export class DBDataMapper {
         }
 
         const sql = `CREATE TABLE IF NOT EXISTS ${ this.dbName } ( ${ commas ( decls )} )`;
-        await conn.query ( sql, ...values );
+        await this.conn.query ( sql, ...values );
     }
 
     //----------------------------------------------------------------//
-    constructor ( name, version ) {
+    constructor ( name, version, conn ) {
 
+        assert ( conn, 'Must have valid connection for data mapper.' );
+
+        this.conn           = conn || null;
         this.jsName         = name;
-        this.dbName         = util.camelToSnake ( name );
         this.version        = version;
 
-        this.defineColumn ( 'id' ).integer ().primary ().increment ();
+        const schema = getSchema ( name, version );
+        if ( !schema ) {
+            
+            this.dbName = util.camelToSnake ( name );
+            this.virtual_initSchema ();
+
+            setSchema ( name, version, {
+                dbName:             this.dbName,
+                columnDefs:         this.columnDefs,
+                uniques:            this.uniques,
+                fields:             this.fields,
+                fieldsByDBName:     this.fieldsByDBName,
+                fieldsByJSName:     this.fieldsByJSName,
+            });
+        }
+        else {
+            _.assign ( this, schema );
+        }
     }
 
     //----------------------------------------------------------------//
-    async countAsync ( conn, key ) {
+    async countAsync ( key ) {
 
         const [ whereSQL, whereValues ] = this.keyToWhereSQL ( key );
 
-        const row = ( await conn.query ( `SELECT COUNT ( id ) AS count FROM ${ this.dbName } ${ whereSQL }`, ...whereValues ))[ 0 ];
+        const row = ( await this.conn.query ( `SELECT COUNT ( id ) AS count FROM ${ this.dbName } ${ whereSQL }`, ...whereValues ))[ 0 ];
         return row ? row.count : 0;
     }
 
     //----------------------------------------------------------------//
-    async createAsync ( conn, model ) {
+    async createAsync ( model ) {
 
         const names     = [];
         const marks     = [];
@@ -98,7 +137,7 @@ export class DBDataMapper {
         }
 
         const sql = `INSERT INTO ${ this.dbName } ( ${ commas ( names )} ) VALUES ( ${ commas ( marks )} )`;
-        model.id = ( await conn.query ( sql, ...values )).insertId;
+        model.id = ( await this.conn.query ( sql, ...values )).insertId;
         
         return model;
     }
@@ -141,14 +180,14 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    async deleteAsync ( conn, key ) {
+    async deleteAsync ( key ) {
         
         if ( !key ) return;
 
         const [ whereSQL, whereValues ] = this.keyToWhereSQL ( key );
 
         const sql = `DELETE FROM ${ this.dbName } ${ whereSQL }`;
-        await conn.query ( sql, ...whereValues );
+        await this.conn.query ( sql, ...whereValues );
     }
 
     //----------------------------------------------------------------//
@@ -159,18 +198,18 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    async findAsync ( conn, key ) {
+    async findAsync ( key ) {
 
         const [ whereSQL, whereValues ] = this.keyToWhereSQL ( key );
 
         const sql = `SELECT * FROM ${ this.dbName } ${ whereSQL }`;
-        const rows = await conn.query ( sql, ...whereValues );
+        const rows = await this.conn.query ( sql, ...whereValues );
 
         return rows.map (( row ) => this.rowToModel ( row ));
     }
 
     //----------------------------------------------------------------//
-    async findForeignAsync ( conn, key, foreignDM, foreign ) {
+    async findForeignAsync ( key, foreignDM, foreign ) {
 
         const field     = this.fieldsByJSName [ foreign ];
         foreign         = field.def.foreign;
@@ -187,8 +226,21 @@ export class DBDataMapper {
             ${ whereSQL }
         `;
 
-        const rows = await conn.query ( sql, ...whereValues );
+        const rows = await this.conn.query ( sql, ...whereValues );
         return rows.map (( row ) => foreignDM.rowToModel ( row ));
+    }
+
+    //----------------------------------------------------------------//
+    getModelType () {
+    }
+
+    //----------------------------------------------------------------//
+    initJSFields ( obj, from ) {
+        
+        for ( let field of this.fields ) {
+            obj [ field.jsName ] = ( from && ( from [ field.jsName ] !== undefined )) ? from [ field.jsName ] : field.def.value;
+        }
+        return obj;
     }
 
     //----------------------------------------------------------------//
@@ -230,22 +282,22 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    async loadAsync ( conn, key ) {
+    async loadAsync ( key ) {
 
         if ( !key ) return null;
 
         const [ whereSQL, whereValues ] = this.keyToWhereSQL ( key );
 
         const sql = `SELECT * FROM ${ this.dbName } ${ whereSQL } LIMIT 1`;
-        const row = ( await conn.query ( sql, ...whereValues ))[ 0 ];
+        const row = ( await this.conn.query ( sql, ...whereValues ))[ 0 ];
 
         return this.rowToModel ( row );
     }
 
     //----------------------------------------------------------------//
-    async migrateAsync ( conn ) {
+    async migrateAsync () {
 
-        await ( this.affirmAsync ( conn ));
+        await ( this.affirmAsync ());
     }
 
     //----------------------------------------------------------------//
@@ -259,42 +311,55 @@ export class DBDataMapper {
 
         if ( !row ) return null;
 
-        const model = {};
-        const snapshot = {};
+        let model = {};
         for ( let dbName in row ) {
 
             const field = this.fieldsByDBName [ dbName ];
             if ( !field ) continue;
-
-            const value = this.decodeValue ( field, row [ dbName ]);
-
-            model [ field.jsName ]      = value;
-            snapshot [ field.jsName ]   = value;
+            model [ field.jsName ] = this.decodeValue ( field, row [ dbName ]);
         }
-        // model.snapshot = snapshot; // TODO: reenable via flags
+
+        const modelType = this.getModelType ();
+        if ( modelType ) {
+
+            const instance = new modelType ();
+            this.initJSFields ( instance );
+            _.assign ( instance, model );
+            
+            const snapshot = _.cloneDeep ( model );
+            
+            instance.getSnapshot = () => snapshot;
+            instance.getConnection = () => this.conn;
+            instance.getDM = () => this;
+
+            model = instance;
+        }
+
+        this.virtual_didLoadModelFromRow ( model, row );
         return model;
     }
 
     //----------------------------------------------------------------//
-    async saveAsync ( conn, model ) {
+    async saveAsync ( model ) {
 
         assert ( model, 'Missing model for save.' );
 
         if ( !model.id || ( model.id === -1 )) {
             
-            model = await this.createAsync ( conn, model );
+            model = await this.createAsync ( model );
         }
         else {
 
             const names     = [];
             const values    = [];
+            const snapshot  = model.getSnapshot && model.getSnapshot ();
 
             for ( let field of this.fields ) {
 
                 if ( field.dbName === 'id' ) continue;
 
                 const value = model [ field.jsName ];
-                if ( model.snapshot &&  _.isEqual ( value, model.snapshot [ field.jsName ])) continue;
+                if ( snapshot &&  _.isEqual ( value, snapshot [ field.jsName ])) continue;
 
                 names.push ( `${ field.dbName } = ?` );
                 this.pushValue ( values, field, value );
@@ -305,23 +370,42 @@ export class DBDataMapper {
                 this.pushValue ( values, this.fieldsByDBName.id, model.id );
 
                 const sql = `UPDATE ${ this.dbName } SET ${ commas ( names )} WHERE id = ?`;
-                await conn.query ( sql, ...values );
+                await this.conn.query ( sql, ...values );
             }
         }
         return model;
     }
 
     //----------------------------------------------------------------//
-    async searchAsync ( conn, col , searchParam ) {
+    async searchAsync ( col, searchParam ) {
 
         const sql = `SELECT * FROM ${ this.dbName } WHERE ${col} LIKE '%${searchParam}%'`;
-        const rows = await conn.query ( sql );
+        const rows = await this.conn.query ( sql );
 
         return rows.map (( row ) => this.rowToModel ( row ));
     }
 
     //----------------------------------------------------------------//
-    async upsertAsync ( conn, model ) {
+    setModelType ( modelType ) {
+
+        assert ( this.modelType === null, 'Cannot change modelType once set.' );
+        this.modelType = modelType;
+    }
+
+    //----------------------------------------------------------------//
+    toJSON ( model ) {
+
+        const json = {};
+        _.forOwn ( model, ( v, k ) => {
+            const field = this.fieldsByJSName [ k ];
+            if ( field && !field.def.toJSON ) return;
+            json [ k ] = v;
+        });
+        return json;
+    }
+
+    //----------------------------------------------------------------//
+    async upsertAsync ( model ) {
 
         const namesForInsert    = [];
         const namesForUpdate    = [];
@@ -349,6 +433,16 @@ export class DBDataMapper {
                 ${ commas ( namesForUpdate )}
         `;
 
-        await conn.query ( sql, ...values.concat ( values ));
+        await this.conn.query ( sql, ...values.concat ( values ));
+    }
+
+    //----------------------------------------------------------------//
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    virtual_didLoadModelFromRow ( model ) {
+    }
+
+    //----------------------------------------------------------------//
+    virtual_initSchema () {
+        this.defineColumn ( 'id' ).integer ().primary ().increment ();
     }
 }
