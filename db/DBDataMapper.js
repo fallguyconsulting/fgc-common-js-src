@@ -295,6 +295,27 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
+    makeModel ( from ) {
+
+        const modelType = this.getModelType ();
+        if ( !modelType ) return from;
+
+        const model = new modelType ();
+        this.initJSFields ( model );
+        
+        if ( from ) {
+            _.assign ( model, from );
+            const snapshot = _.cloneDeep ( model );
+            model.getSnapshot = () => snapshot;
+        }
+
+        model.getConnection = () => this.conn;
+        model.getDM = () => this;
+
+        return model;
+    }
+
+    //----------------------------------------------------------------//
     async migrateAsync () {
 
         await ( this.affirmAsync ());
@@ -319,22 +340,7 @@ export class DBDataMapper {
             model [ field.jsName ] = this.decodeValue ( field, row [ dbName ]);
         }
 
-        const modelType = this.getModelType ();
-        if ( modelType ) {
-
-            const instance = new modelType ();
-            this.initJSFields ( instance );
-            _.assign ( instance, model );
-            
-            const snapshot = _.cloneDeep ( model );
-            
-            instance.getSnapshot = () => snapshot;
-            instance.getConnection = () => this.conn;
-            instance.getDM = () => this;
-
-            model = instance;
-        }
-
+        model = this.makeModel ( model );
         this.virtual_didLoadModelFromRow ( model, row );
         return model;
     }
