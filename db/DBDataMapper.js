@@ -5,8 +5,7 @@ import * as util                            from '../util';
 import { DBColumnBuilder }                  from './DBColumnBuilder';
 import _                                    from 'lodash';
 
-const registry = {
-}
+const registry = {};
 
 //----------------------------------------------------------------//
 function getSchema ( name, version ) {
@@ -34,12 +33,12 @@ function commas ( str ) {
 export class DBDataMapper {
 
     conn                = null;
+    dmName              = '';
     columnDefs          = [];
     uniques             = [];
     fields              = [];
     fieldsByDBName      = {};
     fieldsByJSName      = {};
-    modelType           = null;
 
     //----------------------------------------------------------------//
     async affirmAsync () {
@@ -389,13 +388,6 @@ export class DBDataMapper {
         const rows = await this.conn.query ( sql );
 
         return rows.map (( row ) => this.rowToModel ( row ));
-    }
-
-    //----------------------------------------------------------------//
-    setModelType ( modelType ) {
-
-        assert ( this.modelType === null, 'Cannot change modelType once set.' );
-        this.modelType = modelType;
     }
 
     //----------------------------------------------------------------//
