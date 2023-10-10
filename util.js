@@ -205,14 +205,19 @@ export function makeQueryString ( query ) {
 
     function pushVal ( k, v ) {
         if (( v === undefined ) || ( v === null ) || ( v === '' )) return;
-        pairs.push ( `${ k }=${ v }` );
+        pairs.push ( `${ k }=${ encodeURIComponent ( v )}` );
     }
 
     for ( let k in query ) {
 
         const v = query [ k ];
 
-        if ( _.isArray ( v )) {
+        if ( typeof ( v ) === 'boolean' ) {
+            if ( v ) {
+                pairs.push ( k );
+            }
+        }
+        else if ( _.isArray ( v )) {
             for ( let x of v ) {
                 pushVal ( k, x );
             }
