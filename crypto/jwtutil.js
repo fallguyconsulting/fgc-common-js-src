@@ -1,7 +1,6 @@
 // Copyright (c) 2022 Fall Guy LLC All Rights Reserved.
 
 import * as sodium              from './sodium';
-import _                        from 'lodash';
 import njwt                     from 'njwt';
 import { v4 as uuidv4 }         from 'uuid';
 

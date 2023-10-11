@@ -9,7 +9,7 @@ import * as bitcoin             from 'bitcoinjs-lib';
 import * as crypto              from 'crypto';
 import CryptoJS                 from 'crypto-js';
 import JSEncrypt                from 'jsencrypt';
-import { computed } from 'mobx';
+import { computed }             from 'mobx';
 import * as secp256k1           from 'secp256k1'
 
 // TODO: need to input/ouput PEM, HEX, BASE64, etc. from all key types
