@@ -97,6 +97,16 @@ export function useFinalizer ( finalizer, defaultTarget ) {
 }
 
 //----------------------------------------------------------------//
+export function useOnceAsync ( func ) {
+
+    React.useEffect (() => {
+        ( async () => {
+            await func ();
+        })();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+//----------------------------------------------------------------//
 export function useVersionedBrowserCache ( version ) {
 
     React.useEffect (() => {
