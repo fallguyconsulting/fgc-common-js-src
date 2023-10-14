@@ -3,6 +3,7 @@
 import { assert }                           from '../assert';
 import * as util                            from '../util';
 import { DBColumnBuilder }                  from './DBColumnBuilder';
+import { MySQL }                            from './MySQL';
 import _                                    from 'lodash';
 
 const registry = {};
@@ -32,13 +33,14 @@ function commas ( str ) {
 //================================================================//
 export class DBDataMapper {
 
-    conn                = null;
+    _conn               = null;
     dmName              = '';
     columnDefs          = [];
     uniques             = [];
     fields              = [];
     fieldsByDBName      = {};
     fieldsByJSName      = {};
+    modelType           = null;
 
     //----------------------------------------------------------------//
     async affirmAsync () {
@@ -50,8 +52,9 @@ export class DBDataMapper {
 
             const def = field.def;
 
-            let defaultSQL = '';
-            if (( def.value !== null ) && !def.serialized ) {
+            let defaultSQL = def.defaultSQL;
+
+            if ( ! ( defaultSQL || ( def.value === null ) || def.serialized )) {
                 defaultSQL = 'DEFAULT ?';
                 this.pushValue ( values, field );
             }
@@ -78,11 +81,14 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
+    get conn () {
+        return this._conn ? this._conn : MySQL.getLocalConnection ();
+    }
+
+    //----------------------------------------------------------------//
     constructor ( conn, name, version ) {
 
-        assert ( conn, 'Must have valid connection for data mapper.' );
-
-        this.conn           = conn || null;
+        this._conn          = conn || null;
         this.jsName         = name;
         this.version        = version;
 
@@ -90,7 +96,7 @@ export class DBDataMapper {
         if ( !schema ) {
             
             this.dbName = util.camelToSnake ( name );
-            this.virtual_initSchema ();
+            this.virtual_initSchema ( this.makeBuilder ());
 
             setSchema ( name, version, {
                 dbName:             this.dbName,
@@ -148,37 +154,6 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    defineColumn ( jsName ) {
-
-        const dbName = util.camelToSnake ( jsName );
-
-        assert ( this.fieldsByJSName [ jsName ] === undefined, `Field name ${ jsName } already exists.` );
-        assert ( this.fieldsByDBName [ dbName ] === undefined, `Field name ${ dbName } already exists.` );
-
-        const columnDef = new DBColumnBuilder ( dbName, jsName );
-        this.columnDefs.push ( columnDef );
-
-        const field = {
-            dbName:         columnDef.dbName,
-            jsName:         columnDef.jsName,
-            def:            columnDef.def,
-            opt:            columnDef.opt,
-        }
-
-        this.fields.push ( field );
-        this.fieldsByDBName [ field.dbName ] = field;
-        this.fieldsByJSName [ field.jsName ] = field;
-        
-        return columnDef;
-    }
-
-    //----------------------------------------------------------------//
-    defineUnique ( ...jsNames ) {
-
-        this.uniques.push ( jsNames.map (( n ) => util.camelToSnake ( n )));
-    }
-
-    //----------------------------------------------------------------//
     async deleteAsync ( key ) {
         
         if ( !key ) return;
@@ -227,10 +202,6 @@ export class DBDataMapper {
 
         const rows = await this.conn.query ( sql, ...whereValues );
         return rows.map (( row ) => foreignDM.rowToModel ( row ));
-    }
-
-    //----------------------------------------------------------------//
-    getModelType () {
     }
 
     //----------------------------------------------------------------//
@@ -294,9 +265,47 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
+    makeBuilder () {
+
+        const defineColumn = ( jsName, dbName ) => {
+
+            dbName = dbName || util.camelToSnake ( jsName );
+
+            assert ( this.fieldsByJSName [ jsName ] === undefined, `Field name ${ jsName } already exists.` );
+            assert ( this.fieldsByDBName [ dbName ] === undefined, `Field name ${ dbName } already exists.` );
+
+            const columnDef = new DBColumnBuilder ( dbName, jsName );
+            this.columnDefs.push ( columnDef );
+
+            const field = {
+                dbName:         columnDef.dbName,
+                jsName:         columnDef.jsName,
+                def:            columnDef.def,
+                opt:            columnDef.opt,
+            }
+
+            this.fields.push ( field );
+            this.fieldsByDBName [ field.dbName ] = field;
+            this.fieldsByJSName [ field.jsName ] = field;
+            
+            return columnDef;
+        }
+    
+        const defineUnique = ( ...jsNames ) => {
+
+            this.uniques.push ( jsNames.map (( n ) => this.fieldsByJSName [ n ].dbName ));
+        }
+
+        return {
+            defineColumn:   defineColumn,
+            defineUnique:   defineUnique,
+        };
+    }
+
+    //----------------------------------------------------------------//
     makeModel ( from ) {
 
-        const modelType = this.getModelType ();
+        const modelType = this.modelType;
         if ( !modelType ) return from;
 
         const model = new modelType ();
@@ -391,6 +400,13 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
+    setModelType ( modelType ) {
+        assert ( !this.modelType, 'Cannot change model type once set.' );
+        this.modelType = modelType || null;
+        return this;
+    }
+
+    //----------------------------------------------------------------//
     toJSON ( model ) {
 
         const json = {};
@@ -440,7 +456,7 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    virtual_initSchema () {
-        this.defineColumn ( 'id' ).integer ().primary ().increment ();
+    virtual_initSchema ( schema ) {
+        schema.defineColumn ( 'id' ).integer ().primary ().increment ();
     }
 }

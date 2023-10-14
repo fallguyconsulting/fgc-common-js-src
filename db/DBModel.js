@@ -7,11 +7,6 @@
 export class DBModel {
 
     //----------------------------------------------------------------//
-    static bindDM ( modelClazz, dmClazz ) {
-        dmClazz.prototype.getModelType = () => modelClazz;
-    }
-
-    //----------------------------------------------------------------//
     async saveAsync () {
         await this.getDM ().saveAsync ( this );
     }

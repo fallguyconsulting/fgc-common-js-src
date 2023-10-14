@@ -2,6 +2,9 @@
 
 import { assert }                   from '../assert';
 import mysql                        from 'promise-mysql';
+import { AsyncLocalStorage }        from 'node:async_hooks';
+
+const localStorage = new AsyncLocalStorage ();
 
 //----------------------------------------------------------------//
 function savepointName ( depth ) {
@@ -168,6 +171,11 @@ export class MySQL {
     }
 
     //----------------------------------------------------------------//
+    static getLocalConnection () {
+        return localStorage.getStore ();
+    }
+
+    //----------------------------------------------------------------//
     makeConnection () {
 
         return this.conn ? this.conn : new MySQLConnection ( this.pool );
@@ -191,5 +199,10 @@ export class MySQL {
 
         this.conn = new MySQLConnection ( this.pool );
         return this.conn;
+    }
+
+    //----------------------------------------------------------------//
+    runWithLocalConnection ( fnAsync, conn ) {
+        localStorage.run ( conn || this.makeConnection (), fnAsync );
     }
 }

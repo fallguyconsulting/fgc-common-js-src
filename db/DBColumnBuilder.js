@@ -13,6 +13,7 @@ export class DBColumnBuilder {
     def = {
         type:           'TEXT',
         nullable:       'NOT NULL',
+        defaultSQL:     '',
         increment:      '',
         value:          null,
         serialized:     false,
@@ -35,6 +36,12 @@ export class DBColumnBuilder {
 
         this.dbName = dbName;
         this.jsName = jsName;
+    }
+
+    //----------------------------------------------------------------//
+    defaultSQL ( defaultSQL ) {
+        this.def.defaultSQL = defaultSQL;
+        return this;
     }
 
     //----------------------------------------------------------------//
@@ -85,6 +92,12 @@ export class DBColumnBuilder {
     //----------------------------------------------------------------//
     text ( maxLength ) {
         this.def.type = `TEXT`
+        return this;
+    }
+
+    //----------------------------------------------------------------//
+    timestamp ( auto ) {
+        this.def.type = `TIMESTAMP`
         return this;
     }
 

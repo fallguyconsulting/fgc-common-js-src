@@ -164,7 +164,7 @@ export class RevocableContext {
 
         step = step || 2;
         retries = retries || 0;
-        max = typeof ( max ) == 'number' ? ( max > 0 ? max : false ) : wait * 10;
+        max = typeof ( max ) === 'number' ? ( max > 0 ? max : false ) : wait * 10;
 
         return this.promise ( makePromise ())
 
