@@ -120,12 +120,12 @@ export function fromBuffer ( value, encoding ) {
 }
 
 //----------------------------------------------------------------//
-export function hash ( plaintext, key, size, encoding ) {
+export function hash ( plaintext, key, size, encoding = 'utf8', out = 'hex' ) {
 
-    plaintext           = toBuffer ( plaintext, encoding || 'utf8' );
+    plaintext           = toBuffer ( plaintext, encoding );
     key                 = key ? toBuffer ( key ) : undefined;
 
-    return sodium.to_hex ( sodium.crypto_generichash ( size || sodium.crypto_generichash_BYTES_MAX, plaintext, key ));
+    return fromBuffer ( sodium.crypto_generichash ( size || sodium.crypto_generichash_BYTES_MAX, plaintext, key ), out );
 }
 
 //----------------------------------------------------------------//
@@ -194,13 +194,6 @@ export function saltDummy ( seed ) {
     paddedArray.set ( toBuffer ( seed ).slice ( 0, 32 ));
 
     return fromBuffer ( sodium.randombytes_buf_deterministic ( sodium.crypto_pwhash_SALTBYTES, paddedArray ), 'hex' );
-}
-
-//----------------------------------------------------------------//
-export function sha256 ( plaintext, encoding ) {
-
-    plaintext = toBuffer ( plaintext, encoding || 'utf8' );
-    return sodium.to_hex ( sodium.crypto_hash_sha256 ( plaintext ));
 }
 
 //----------------------------------------------------------------//

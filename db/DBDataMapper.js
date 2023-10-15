@@ -5,6 +5,9 @@ import * as util                            from '../util';
 import { DBColumnBuilder }                  from './DBColumnBuilder';
 import { MySQL }                            from './MySQL';
 import _                                    from 'lodash';
+import * as luxon                           from 'luxon';
+
+const MYSQL_DATETIME_FORMAT = 'yyyy-MM-dd hh:mm:ss';
 
 const registry = {};
 
@@ -150,7 +153,11 @@ export class DBDataMapper {
     //----------------------------------------------------------------//
     decodeValue ( field, value ) {
 
-        return ( field.def.serialized ) ? ( value ? JSON.parse ( value ) : null ) : value;
+        if ( value !== null ) {
+            if ( field.def.serialized ) return JSON.parse ( value );
+            if ( field.def.type === 'DATETIME' ) return luxon.DateTime.fromJSDate ( value );
+        }
+        return value;
     }
 
     //----------------------------------------------------------------//
@@ -168,7 +175,11 @@ export class DBDataMapper {
     encodeValue ( field, value ) {
         
         value = ( value === undefined ) ? field.def.value : value;
-        return ( field.def.serialized ) ? JSON.stringify ( value ) : value;
+        if ( value ) {
+            if ( field.def.serialized ) return JSON.stringify ( value );
+            if ( field.def.type === 'DATETIME' ) return value.toFormat ( MYSQL_DATETIME_FORMAT );
+        }
+        return value;
     }
 
     //----------------------------------------------------------------//
@@ -327,6 +338,20 @@ export class DBDataMapper {
     async migrateAsync () {
 
         await ( this.affirmAsync ());
+    }
+
+    //----------------------------------------------------------------//
+    newModel ( ...args ) {
+
+        const modelType = this.modelType;
+        if ( !modelType ) return {};
+
+        const model = new modelType ( ...args );
+        
+        model.getConnection = () => this.conn;
+        model.getDM = () => this;
+
+        return model;
     }
 
     //----------------------------------------------------------------//

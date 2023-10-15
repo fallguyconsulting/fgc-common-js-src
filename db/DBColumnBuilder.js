@@ -39,6 +39,12 @@ export class DBColumnBuilder {
     }
 
     //----------------------------------------------------------------//
+    datetime ( auto ) {
+        this.def.type = `DATETIME`
+        return this;
+    }
+
+    //----------------------------------------------------------------//
     defaultSQL ( defaultSQL ) {
         this.def.defaultSQL = defaultSQL;
         return this;
@@ -92,12 +98,6 @@ export class DBColumnBuilder {
     //----------------------------------------------------------------//
     text ( maxLength ) {
         this.def.type = `TEXT`
-        return this;
-    }
-
-    //----------------------------------------------------------------//
-    timestamp ( auto ) {
-        this.def.type = `TIMESTAMP`
         return this;
     }
 
