@@ -5,22 +5,23 @@ import React        from 'react';
 //================================================================//
 // Flex
 //================================================================//
-export const Flex = ( props ) => {
+export const Flex = ({ className, direction, justify, align, columnGap, rowGap, gap, style, children, ...props }) => {
 
     return (
         <div
-            className = { props.className }
+            className = { className }
             style = {{
                 display:            'flex',
-                flexDirection:      props.direction || 'row',
-                justifyContent:     props.justify || 'flex-start',
-                alignItems:         props.align || 'normal',
-                columnGap:          props.columnGap || props.gap,
-                rowGap:             props.rowGap || props.gap,
-                ...props.style
+                flexDirection:      direction || 'row',
+                justifyContent:     justify || 'flex-start',
+                alignItems:         align || 'normal',
+                columnGap:          columnGap || gap,
+                rowGap:             rowGap || gap,
+                ...style
             }}
+            { ...props }
         >
-            { props.children }
+            { children }
         </div>
     );
 };
