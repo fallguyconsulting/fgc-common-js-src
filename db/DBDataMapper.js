@@ -375,6 +375,7 @@ export class DBDataMapper {
 
         model = this.makeModel ( model );
         this.virtual_didLoadModelFromRow ( model, row );
+        model.didLoad && model.didLoad ();
         return model;
     }
 

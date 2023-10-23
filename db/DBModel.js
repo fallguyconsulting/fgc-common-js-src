@@ -7,6 +7,11 @@
 export class DBModel {
 
     //----------------------------------------------------------------//
+    didLoad () {
+        this.virtual_didLoad ();
+    }
+
+    //----------------------------------------------------------------//
     async saveAsync () {
         await this.getDM ().saveAsync ( this );
     }
@@ -14,5 +19,10 @@ export class DBModel {
     //----------------------------------------------------------------//
     toJSON () {
         return this.getDM ().toJSON ( this );
+    }
+
+    //----------------------------------------------------------------//
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    virtual_didLoad () {
     }
 }
