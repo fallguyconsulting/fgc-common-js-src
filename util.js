@@ -4,6 +4,14 @@ import { assert }       from './assert';
 import _                from 'lodash';
 
 //----------------------------------------------------------------//
+export function affirmObjectField ( obj, key, init ) {
+
+    const field = obj [ key ] || init;
+    obj [ key ] = field;
+    return obj [ key ];
+}
+
+//----------------------------------------------------------------//
 export function camelToSnake ( str ) {
     return str.replace ( /[a-z][A-Z]/g, m => `${ m.slice ( 0, 1 )}_${ m.slice ( 1 )}` ).toLowerCase ();
 }
