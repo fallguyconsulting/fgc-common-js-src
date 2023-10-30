@@ -5,17 +5,19 @@ import React        from 'react';
 //================================================================//
 // Flex
 //================================================================//
-export const Flex = ({ className, direction, justify, align, columnGap, rowGap, gap, style, children, ...props }) => {
+export const Flex = ({ className, direction, justify, align, wrap, columnGap, rowGap, gap, style, children, ...props }) => {
 
     return (
         <div
             className = { className }
             style = {{
-                display:            'flex',
-                flexDirection:      direction || 'row',
-                justifyContent:     justify || 'flex-start',
                 alignItems:         align || 'normal',
                 columnGap:          columnGap || gap,
+                display:            'flex',
+                flexDirection:      direction || 'row',
+                flexWrap:           wrap || 'nowrap',
+                justifyContent:     justify || 'flex-start',
+                overflow:           'visible',
                 rowGap:             rowGap || gap,
                 ...style
             }}
