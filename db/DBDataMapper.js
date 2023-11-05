@@ -43,6 +43,8 @@ export class DBDataMapper {
     fields              = [];
     fieldsByDBName      = {};
     fieldsByJSName      = {};
+    jsonBodies          = {};
+    jsonBodiesByMember  = {};
     modelType           = null;
 
     //----------------------------------------------------------------//
@@ -59,7 +61,7 @@ export class DBDataMapper {
 
             if ( ! ( defaultSQL || ( def.value === null ) || def.serialized )) {
                 defaultSQL = 'DEFAULT ?';
-                this.pushValue ( values, field );
+                values.push ( this.encodeValue ( field ));
             }
             decls.push ([ field.dbName, def.type, def.nullable, def.increment, defaultSQL ].filter (( e ) => e ).join ( ' ' ));
         }
@@ -132,17 +134,17 @@ export class DBDataMapper {
         const values    = [];
 
         for ( let field of this.fields ) {
-
             if ( field.dbName === 'id' ) continue;
-
             if ( model [ field.jsName ] === undefined ) {
                 model [ field.jsName ] = field.def.value;
             }
+        }
 
+        this.modelToRow ( model, ( field, value ) => {
             names.push ( field.dbName );
             marks.push ( '?' );
-            this.pushValue ( values, field, model [ field.jsName ]);
-        }
+            values.push ( this.encodeValue ( field, value ));
+        });
 
         const sql = `INSERT INTO ${ this.dbName } ( ${ commas ( names )} ) VALUES ( ${ commas ( marks )} )`;
         model.id = ( await this.conn.query ( sql, ...values )).insertId;
@@ -307,9 +309,22 @@ export class DBDataMapper {
             this.uniques.push ( jsNames.map (( n ) => this.fieldsByJSName [ n ].dbName ));
         }
 
+        const defineJSONBody = ( name, members ) => {
+
+            const jsonBody = this.jsonBodies [ name ] || [];
+            this.jsonBodies [ name ] = jsonBody;
+
+            for ( let member of members ) {
+                if ( this.jsonBodiesByMember [ member ]) continue;
+                this.jsonBodiesByMember [ member ] = name;
+                jsonBody.push ( member );
+            }
+        }
+
         return {
-            defineColumn:   defineColumn,
-            defineUnique:   defineUnique,
+            defineColumn:       defineColumn,
+            defineUnique:       defineUnique,
+            defineJSONBody:     defineJSONBody,
         };
     }
 
@@ -341,6 +356,41 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
+    modelToRow ( model, onField ) {
+
+        const snapshot = model.getSnapshot && model.getSnapshot ();
+
+        for ( let field of this.fields ) {
+
+            if ( field.dbName === 'id' ) continue;
+            if ( this.jsonBodies [ field.jsName ] || this.jsonBodiesByMember [ field.jsName ]) continue;
+
+            const value = model [ field.jsName ];
+            if ( snapshot &&  _.isEqual ( value, snapshot [ field.jsName ])) continue;
+
+            onField ( field, value );
+        }
+
+        for ( let jsonBodyName in this.jsonBodies ) {
+            
+            const jsonBody = this.jsonBodies [ jsonBodyName ];
+
+            const value     = {};
+            let changed     = false;
+
+            for ( let member of jsonBody ) {
+                changed = changed || !( snapshot && _.isEqual ( value, snapshot [ member ]));
+                value [ member ] = model [ member ];
+            }
+
+            if ( changed ) {
+                const field = this.fieldsByJSName [ jsonBodyName ];
+                onField ( field, value );
+            }
+        }
+    }
+
+    //----------------------------------------------------------------//
     newModel ( ...args ) {
 
         const modelType = this.modelType;
@@ -355,22 +405,26 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    pushValue ( values, field, value ) {
-
-        values.push ( this.encodeValue ( field, value ));
-    }
-
-    //----------------------------------------------------------------//
     rowToModel ( row ) {
 
         if ( !row ) return null;
 
         let model = {};
         for ( let dbName in row ) {
-
             const field = this.fieldsByDBName [ dbName ];
             if ( !field ) continue;
-            model [ field.jsName ] = this.decodeValue ( field, row [ dbName ]);
+
+            const value     = this.decodeValue ( field, row [ dbName ]);
+            const jsonBody  = this.jsonBodies [ field.jsName ];
+
+            if ( field.def.serialized && jsonBody ) {
+                for ( let member of jsonBody ) {
+                    model [ member ] = value [ member ];
+                }
+            }
+            else {
+                model [ field.jsName ] = this.decodeValue ( field, row [ dbName ]);
+            }
         }
 
         model = this.makeModel ( model );
@@ -390,25 +444,18 @@ export class DBDataMapper {
         }
         else {
 
-            const names     = [];
-            const values    = [];
-            const snapshot  = model.getSnapshot && model.getSnapshot ();
+            const names         = [];
+            const values        = [];
+            const snapshot      = model.getSnapshot && model.getSnapshot ();
+            const jsonBodies    = {};
 
-            for ( let field of this.fields ) {
-
-                if ( field.dbName === 'id' ) continue;
-
-                const value = model [ field.jsName ];
-                if ( snapshot &&  _.isEqual ( value, snapshot [ field.jsName ])) continue;
-
+            this.modelToRow ( model, ( field, value ) => {
                 names.push ( `${ field.dbName } = ?` );
-                this.pushValue ( values, field, value );
-            }
+                values.push ( this.encodeValue ( field, value ));
+            });
 
             if ( values.length > 0 ) {
-
-                this.pushValue ( values, this.fieldsByDBName.id, model.id );
-
+                values.push ( this.encodeValue ( this.fieldsByDBName.id, model.id ));
                 const sql = `UPDATE ${ this.dbName } SET ${ commas ( names )} WHERE id = ?`;
                 await this.conn.query ( sql, ...values );
             }
@@ -452,18 +499,12 @@ export class DBDataMapper {
         const values            = [];
         const marks             = [];
 
-        for ( let field of this.fields ) {
-
-            if ( field.dbName === 'id' ) continue;
-
-            const value = model [ field.jsName ];
-            if ( model.snapshot &&  _.isEqual ( value, model.snapshot [ field.jsName ])) continue;
-
+        this.modelToRow ( model, ( field, value ) => {
             namesForInsert.push ( field.dbName );
             namesForUpdate.push ( `${ field.dbName } = ?` );
-            this.pushValue ( values, field, value );
+            values.push ( this.encodeValue ( field, value ));
             marks.push ( '?' );
-        }
+        });
 
         const sql = `
             INSERT
