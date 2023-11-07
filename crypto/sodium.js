@@ -79,7 +79,7 @@ export function encryptionKeyPair ( seed ) {
 //----------------------------------------------------------------//
 export function encryptionKeyPairSeed () {
 
-    return this.randomBytes ( sodium.crypto_box_SEEDBYTES );
+    return randomBytes ( sodium.crypto_box_SEEDBYTES );
 }
 
 //----------------------------------------------------------------//
