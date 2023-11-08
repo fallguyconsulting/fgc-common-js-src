@@ -21,6 +21,10 @@ export function convert ( value, from, to ) {
 //----------------------------------------------------------------//
 export function decryptPK ( ciphertext, publicKey, secretKey, encoding ) {
 
+    assert ( ciphertext, 'Missing ciphertext.' );
+    assert ( publicKey, 'Missing publicKey.' );
+    assert ( secretKey, 'Missing secretKey.' );
+
     publicKey           = toBuffer ( publicKey );
     secretKey           = toBuffer ( secretKey );
     ciphertext          = toBuffer ( ciphertext );
@@ -230,6 +234,7 @@ export function symmetricKey () {
 //----------------------------------------------------------------//
 export function toBuffer ( value, encoding ) {
 
+    assert ( value, 'Missing value.' );
     if ( value.constructor === Uint8Array ) return value;
 
     encoding = encoding || 'hex';
