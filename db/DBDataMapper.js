@@ -9,23 +9,6 @@ import * as luxon                           from 'luxon';
 
 const MYSQL_DATETIME_FORMAT = 'yyyy-MM-dd hh:mm:ss';
 
-const registry = {};
-
-//----------------------------------------------------------------//
-function getSchema ( name, version ) {
-
-    const schemas = registry [ name ];
-    return schemas ? schemas [ version ] : undefined;
-}
-
-//----------------------------------------------------------------//
-function setSchema ( name, version, schema ) {
-    
-    const schemas = registry [ name ] || {};
-    registry [ name ] = schemas;
-    schemas [ version ] = schema;
-}
-
 //----------------------------------------------------------------//
 function commas ( str ) {
     return str.join ( ', ' );
@@ -96,25 +79,9 @@ export class DBDataMapper {
         this._conn          = conn || null;
         this.jsName         = name;
         this.version        = version;
-
-        const schema = getSchema ( name, version );
-        if ( !schema ) {
             
-            this.dbName = util.camelToSnake ( name );
-            this.virtual_initSchema ( this.makeBuilder ());
-
-            setSchema ( name, version, {
-                dbName:             this.dbName,
-                columnDefs:         this.columnDefs,
-                uniques:            this.uniques,
-                fields:             this.fields,
-                fieldsByDBName:     this.fieldsByDBName,
-                fieldsByJSName:     this.fieldsByJSName,
-            });
-        }
-        else {
-            _.assign ( this, schema );
-        }
+        this.dbName = util.camelToSnake ( name );
+        this.virtual_initSchema ( this.makeBuilder ());
     }
 
     //----------------------------------------------------------------//

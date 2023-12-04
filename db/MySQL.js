@@ -171,6 +171,12 @@ export class MySQL {
     }
 
     //----------------------------------------------------------------//
+    static async countAsync ( ...args ) {
+
+        return MySQL.getLocalConnection ().countAsync ( ...args );
+    }
+
+    //----------------------------------------------------------------//
     static getLocalConnection () {
         return localStorage.getStore ();
     }
@@ -202,7 +208,25 @@ export class MySQL {
     }
 
     //----------------------------------------------------------------//
+    static async runInConnectionAsync ( action ) {
+
+        return MySQL.getLocalConnection ().runInConnectionAsync ( action );
+    }
+
+    //----------------------------------------------------------------//
+    static async runInTransactionAsync ( action ) {
+
+        return MySQL.getLocalConnection ().runInTransactionAsync ( action );
+    }
+
+    //----------------------------------------------------------------//
     runWithLocalConnection ( fnAsync, conn ) {
         localStorage.run ( conn || this.makeConnection (), fnAsync );
+    }
+
+    //----------------------------------------------------------------//
+    static async query ( ...args ) {
+
+        return MySQL.getLocalConnection ().query ( ...args );
     }
 }
