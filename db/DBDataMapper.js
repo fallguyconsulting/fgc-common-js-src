@@ -296,7 +296,7 @@ export class DBDataMapper {
     }
 
     //----------------------------------------------------------------//
-    makeModel ( from ) {
+    makeModel ( from, fromRow ) {
 
         const modelType = this.modelType;
         if ( !modelType ) return from;
@@ -306,8 +306,10 @@ export class DBDataMapper {
         
         if ( from ) {
             _.assign ( model, from );
-            const snapshot = _.cloneDeep ( model );
-            model.getSnapshot = () => snapshot;
+            if ( fromRow ) {
+                const snapshot = _.cloneDeep ( model );
+                model.getSnapshot = () => snapshot;
+            }
         }
 
         model.getConnection = () => this.conn;
@@ -394,7 +396,7 @@ export class DBDataMapper {
             }
         }
 
-        model = this.makeModel ( model );
+        model = this.makeModel ( model, true );
         this.virtual_didLoadModelFromRow ( model, row );
         model.didLoad && model.didLoad ();
         return model;
@@ -413,7 +415,6 @@ export class DBDataMapper {
 
             const names         = [];
             const values        = [];
-            const snapshot      = model.getSnapshot && model.getSnapshot ();
             const jsonBodies    = {};
 
             this.modelToRow ( model, ( field, value ) => {
