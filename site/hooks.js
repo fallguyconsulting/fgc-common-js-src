@@ -6,19 +6,11 @@ import React                    from 'react';
 //----------------------------------------------------------------//
 async function clearBrowserCacheAsync ( version ) {
 
-    const storedVersion = localStorage.getItem ( 'version' );
-    if ( storedVersion !== version ) {
-
-        console.log ( 'NEW VERSION DETECTED; EMPTYING CACHE' );
-
-        const keys = await caches.keys ();
-        for ( let name in keys ) {
-            await caches.delete ( name );
-        }
-        window.location.reload ( true );
-
-        localStorage.setItem ( 'version', version );
+    const keys = await caches.keys ();
+    for ( let name in keys ) {
+        await caches.delete ( name );
     }
+    window.location.reload ( true );
 }
 
 //----------------------------------------------------------------//
@@ -107,9 +99,20 @@ export function useOnceAsync ( func ) {
 }
 
 //----------------------------------------------------------------//
-export function useVersionedBrowserCache ( version ) {
+export function useVersionedBrowserCache ( endpoint ) {
 
     React.useEffect (() => {
-        clearBrowserCacheAsync ( version );
+        ( async function () {
+
+            const meta = await ( await fetch ( endpoint || '/', { cache: 'no-cache' })).json ();
+            const localBuildID = localStorage.getItem ( 'build' );
+
+            if ( !( meta && meta.buildID )) return;
+            
+            if ( localBuildID !== meta.buildID ) {
+                await clearBrowserCacheAsync ();
+                localStorage.setItem ( 'build', meta.buildID );
+            }
+        })();
     });
 }
