@@ -1,20 +1,20 @@
-/* eslint-disable no-whitespace-before-property */
+// Copyright (c) 2022 Fall Guy LLC All Rights Reserved.
 
-import { observer }                                     from 'mobx-react';
-import React, { useState }                              from 'react';
-import * as UI                                          from 'semantic-ui-react';
+import owasp                    from '../contrib/owasp-password-strength-test';
+import { observer }             from 'mobx-react';
+import React, { useState }      from 'react';
+import * as UI                  from 'semantic-ui-react';
 
-const PASSWORD_REGEX = /^[0-9a-zA-Z~`!?@#$%^&()_+*=/,.{}<>:;'"|[\]\\]+$/;
+const PASSWORD_REGEX = /^[0-9a-zA-Z~`!?@#$%^&()_+*\-=/,.{}<>:;'"|[\]\\]+$/;
 
 //================================================================//
 // PasswordField
 //================================================================//
 export const PasswordField = observer (( props ) => {
 
-    const { onPassword, regex, ...rest }          = props;
-
-    const [ password, setPassword ]     = useState ( '' );
-    const [ error, setError ]           = useState ( '' );
+    const { onPassword, newPassword, regex, strict, ...rest } = props;
+    const [ password, setPassword ]         = useState ( '' );
+    const [ error, setError ]               = useState ( '' );
 
     const onChange = ( event ) => {
 
@@ -35,6 +35,14 @@ export const PasswordField = observer (( props ) => {
         onPassword ( '' );
     };
 
+    const onBlur = () => {
+        if ( error || !( password && strict )) return;
+        const strength = owasp.test ( password );
+        if ( strength.errors.length > 0 ) {
+            setError ( strength.errors.join ( ' ' ));
+        }
+    };
+
     return (
         <UI.Form.Input
             
@@ -42,12 +50,14 @@ export const PasswordField = observer (( props ) => {
             iconPosition    = { !props.icon ? 'left' : undefined }
             placeholder     = 'Password'
             error           = { error || false }
+            autoComplete    = { newPassword ? 'new-password' : 'current-password' }
 
             { ...rest }
 
             type            = 'password'
             value           = { password }
             onChange        = { onChange }
+            onBlur          = { onBlur }
         />
     );
 });

@@ -59,7 +59,9 @@ export class StorageContext {
     }
 
     //----------------------------------------------------------------//
-    persist ( owner, memberKey, storageKey, init, load, store ) {
+    persist ( owner, memberKey, storageKey, init, load, store, reload ) {
+
+        reload = reload || load;
 
         storageKey = this.prefix + storageKey;
 
@@ -98,7 +100,7 @@ export class StorageContext {
                 }
                 else {
                     newVal = JSON.parse ( newVal );
-                    owner [ memberKey ] = ( load && ( newVal !== null )) ? load ( newVal ) : newVal;
+                    owner [ memberKey ] = reload ? reload ( newVal ) : newVal;
                 }
             });
         }

@@ -415,7 +415,6 @@ export class DBDataMapper {
 
             const names         = [];
             const values        = [];
-            const jsonBodies    = {};
 
             this.modelToRow ( model, ( field, value ) => {
                 names.push ( `${ field.dbName } = ?` );
