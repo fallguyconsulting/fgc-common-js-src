@@ -1,13 +1,13 @@
 // Copyright (c) 2019 Fall Guy LLC All Rights Reserved.
 
-import * as aws             from 'aws-sdk';
+import * as sesv2           from '@aws-sdk/client-sesv2';
 import * as env             from 'env';
 import nodemailer           from 'nodemailer';
 import SibApiV3Sdk          from 'sib-api-v3-sdk';
 
 let gmailTransport;
 let sendinblueAPI;
-let ses;
+let sesClient;
 
 //----------------------------------------------------------------//
 function formatSender ( email, name ) {
@@ -69,7 +69,7 @@ export async function sendWithSendinblue ( params ) {
 
     await sendinblueAPI.sendTransacEmail ({
         subject:            subject,
-        sender:             { email: env.SENDINBLUE_EMAIL, name: 'Diablo Golf' },
+        sender:             { email: env.SENDINBLUE_EMAIL, name: env.SENDINBLUE_EMAIL_NAME },
         to:                 [{ email: to }],
         textContent:        text || html || '',
         htmlContent:        html || text || '',
@@ -79,37 +79,41 @@ export async function sendWithSendinblue ( params ) {
 //----------------------------------------------------------------//
 export async function sendWithSES ( params ) {
 
-    if ( !ses ) {
-        ses = new aws.SES ({
-            accessKeyId:        env.SES_ACCESS_KEY_ID,
-            secretAccessKey:    env.SES_ACCESS_KEY_SECRET,
-            region:             env.SES_REGION,
-        });
+    if ( !sesClient ) {
+        sesClient = env.SURE_AWS_REGION ? new sesv2.SESv2Client ({
+            region:             env.SURE_AWS_REGION,
+            credentials: {
+                accessKeyId:        env.SURE_AWS_ACCESS_KEY_ID,
+                secretAccessKey:    env.SURE_AWS_ACCESS_KEY_SECRET,
+            },
+        }) : null;
     }
 
     const { to, subject, text, html } = params;
 
-    await ses.sendEmail ({
-        Source:                 formatSender ( env.SES_EMAIL, env.SES_EMAIL_NAME ),
+    return sesClient.send ( new sesv2.SendEmailCommand ({
+        FromEmailAddress:       formatSender ( env.SES_EMAIL, env.SES_EMAIL_NAME ),
         ReplyToAddresses:       [],
         Destination: {
             ToAddresses:        [ to ],
         },
-        Message: {
-            Subject: {
-                Charset:        'UTF-8',
-                Data:           subject || '',
-            },
-            Body: {
-                Text: {
-                    Charset:    'UTF-8',
-                    Data:       text || html || '',
+        Content: {
+            Simple: {
+                Subject: {
+                    Charset:        'UTF-8',
+                    Data:           subject || '',
                 },
-                Html: {
-                    Charset:    'UTF-8',
-                    Data:       html || text || '',
+                Body: {
+                    Text: {
+                        Charset:    'UTF-8',
+                        Data:       text || html || '',
+                    },
+                    Html: {
+                        Charset:    'UTF-8',
+                        Data:       html || text || '',
+                    },
                 },
             },
         },
-    }).promise ();
+    }));
 }
