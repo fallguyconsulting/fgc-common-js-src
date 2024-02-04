@@ -12,8 +12,8 @@ const PASSWORD_REGEX = /^[0-9a-zA-Z~`!?@#$%^&()_+*\-=/,.{}<>:;'"|[\]\\]+$/;
 //================================================================//
 export const PasswordField = observer (( props ) => {
 
-    const { onPassword, newPassword, regex, strict, ...rest } = props;
-    const [ password, setPassword ]         = useState ( '' );
+    const { initialValue, onPassword, newPassword, regex, strict, ...rest } = props;
+    const [ password, setPassword ]         = useState ( initialValue || '' );
     const [ error, setError ]               = useState ( '' );
 
     const onChange = ( event ) => {

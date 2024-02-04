@@ -14,6 +14,18 @@ async function clearBrowserCacheAsync ( version ) {
 }
 
 //----------------------------------------------------------------//
+export function finalize ( object ) {
+
+    if ( object ) {
+        if ( object.finalize ) {
+            object.finalize ();
+        }
+        finalize ( object.revocable );
+        finalize ( object.storage );
+    }
+}
+
+//----------------------------------------------------------------//
 export function useAnimationFrame ( callback ) {
 
     const timeRef           = React.useRef ();
@@ -31,18 +43,6 @@ export function useAnimationFrame ( callback ) {
         requestRef.current  = requestAnimationFrame ( animate );
         return () => cancelAnimationFrame ( requestRef.current );
     }, []);
-}
-
-//----------------------------------------------------------------//
-export function finalize ( object ) {
-
-    if ( object ) {
-        if ( object.finalize ) {
-            object.finalize ();
-        }
-        finalize ( object.revocable );
-        finalize ( object.storage );
-    }
 }
 
 //----------------------------------------------------------------//
