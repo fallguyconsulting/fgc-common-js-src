@@ -1,9 +1,16 @@
 // Copyright (c) 2023 Fall Guy LLC All Rights Reserved.
 
-import { assert }           from '../assert';
-import * as pg              from 'pg'
+import { assert }                   from '../assert';
+import * as pg                      from 'pg'
 
 const { Pool } = pg;
+
+//----------------------------------------------------------------//
+function getCleanerStack () {
+   const error = new Error ();
+   Error.captureStackTrace ( error, getCleanerStack );
+   return error.stack;
+}
 
 //----------------------------------------------------------------//
 function savepointName ( depth ) {
@@ -74,7 +81,7 @@ export class PostgreSQLConnection {
     async countAsync ( fromWhere ) {
 
         const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
-        return row ? row.count : 0;
+        return row && row.count || 0;
     }
 
     //----------------------------------------------------------------//
@@ -112,7 +119,6 @@ export class PostgreSQLConnection {
         }
         catch ( error ) {
             await this.endConnectionAsync ();
-            console.log ( error );
             throw error;
         }
     }
@@ -129,9 +135,8 @@ export class PostgreSQLConnection {
                 return result;
             }
             catch ( error ) {
-                console.log ( error );
                 await this.abortTransactionAsync ();
-                throw error;
+                throw new error;
             }
         });
     }
@@ -139,9 +144,18 @@ export class PostgreSQLConnection {
     //----------------------------------------------------------------//
     async query ( sql ) {
 
+        const trace = getCleanerStack ();
+
         return this.runInConnectionAsync ( async () => {
             assert ( this.connection, 'MISSING POSTGRESQL CONNECTION' );
-            return await this.connection.query ( sql );
+            try {
+                return await this.connection.query ( sql );
+            }
+            catch ( error ) {
+                error.sql = sql;
+                error.calling = trace;
+                throw ( error );
+            }
         });
     }
 }

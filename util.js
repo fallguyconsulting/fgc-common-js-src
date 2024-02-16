@@ -120,6 +120,11 @@ export function getConfig ( name, fallback ) {
 }
 
 //----------------------------------------------------------------//
+export function getEnv ( name, fallback ) {
+    return getEnvString ( name, fallback );
+}
+
+//----------------------------------------------------------------//
 export function getEnvBool ( name, fallback ) {
 
     let value = _.has ( process.env, name ) ? process.env [ name ] : undefined;
