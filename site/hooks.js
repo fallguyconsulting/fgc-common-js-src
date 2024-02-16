@@ -99,6 +99,12 @@ export function useOnceAsync ( func ) {
 }
 
 //----------------------------------------------------------------//
+export function useRandomID ( version ) {
+
+    return React.useState ( parseInt ( Date.now () * Math.random ()).toString ())[ 0 ];
+}
+
+//----------------------------------------------------------------//
 export function useVersionedBrowserCache ( endpoint ) {
 
     React.useEffect (() => {
