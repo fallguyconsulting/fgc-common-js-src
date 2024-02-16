@@ -81,6 +81,14 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
+    formatJsonBody ( body ) {
+
+        if ( !body ) return undefined;
+        if ( typeof ( body ) === 'string' ) return body;
+        return JSON.stringify ( body );
+    }
+
+    //----------------------------------------------------------------//
     getID () {
 
         if ( this.availableIDs.length > 0 ) {
@@ -96,12 +104,12 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
-    async postJSON ( url, json, headers ) {
+    async postJSON ( url, body, headers ) {
 
         return this.fetchJSON ( url, {
             method:     'POST',
             headers:    headers,
-            body:       json ? JSON.stringify ( json ) : undefined,
+            body:       this.formatJsonBody ( body ),
         });
     }
 
@@ -189,12 +197,12 @@ export class RevocableContext {
     }
 
     //----------------------------------------------------------------//
-    async putJSON ( url, json, headers ) {
+    async putJSON ( url, body, headers ) {
 
         return this.fetchJSON ( url, {
             method:     'PUT',
             headers:    headers,
-            body:       json ? JSON.stringify ( json ) : undefined,
+            body:       this.formatJsonBody ( body ),
         });
     }
 
