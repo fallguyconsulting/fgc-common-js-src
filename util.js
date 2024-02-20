@@ -256,6 +256,12 @@ export function randomInt ( max ) {
 }
 
 //----------------------------------------------------------------//
+export function removeAt ( arr, i ) {
+
+    return arr.slice ( 0, i ).concat ( arr.slice ( i + 1 ));
+}
+
+//----------------------------------------------------------------//
 export function shuffle ( array ) {
 
     array = array.slice ();
