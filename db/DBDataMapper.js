@@ -124,7 +124,9 @@ export class DBDataMapper {
 
         if ( value !== null ) {
             if ( field.def.serialized ) return JSON.parse ( value );
-            if ( field.def.type === 'DATETIME' ) return luxon.DateTime.fromJSDate ( value );
+            if ( field.def.type === 'DATETIME' ) {
+                return luxon.DateTime.fromFormat ( value, MYSQL_DATETIME_FORMAT, { zone: 'UTC' }).setZone ( 'local' );
+            }
         }
         return value;
     }
@@ -146,7 +148,9 @@ export class DBDataMapper {
         value = ( value === undefined ) ? field.def.value : value;
         if ( value ) {
             if ( field.def.serialized ) return JSON.stringify ( value );
-            if ( field.def.type === 'DATETIME' ) return value.toFormat ( MYSQL_DATETIME_FORMAT );
+            if ( field.def.type === 'DATETIME' ) {
+                return value.setZone ( 'UTC' ).toFormat ( MYSQL_DATETIME_FORMAT );
+            }
         }
         return value;
     }
@@ -392,7 +396,7 @@ export class DBDataMapper {
                 }
             }
             else {
-                model [ field.jsName ] = this.decodeValue ( field, row [ dbName ]);
+                model [ field.jsName ] = value;
             }
         }
 
@@ -481,7 +485,8 @@ export class DBDataMapper {
                 ${ commas ( namesForUpdate )}
         `;
 
-        await this.conn.query ( sql, ...values.concat ( values ));
+        model.id = ( await this.conn.query ( sql, ...values.concat ( values ))).insertId;
+        return model;
     }
 
     //----------------------------------------------------------------//

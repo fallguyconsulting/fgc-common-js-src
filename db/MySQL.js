@@ -196,6 +196,10 @@ export class MySQL {
             user:               user,
             password:           password,
             database:           database,
+            dateStrings: [
+                'DATETIME',
+                'DATE',
+            ],
         });
         return new MySQL ( pool );
     }
