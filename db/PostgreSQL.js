@@ -81,7 +81,7 @@ export class PostgreSQLConnection {
     async countAsync ( fromWhere ) {
 
         const row = ( await this.query ( `SELECT COUNT ( id ) AS count ${ fromWhere }` ))[ 0 ];
-        return row && row.count || 0;
+        return row ? row.count : 0;
     }
 
     //----------------------------------------------------------------//
@@ -136,7 +136,7 @@ export class PostgreSQLConnection {
             }
             catch ( error ) {
                 await this.abortTransactionAsync ();
-                throw new error;
+                throw new error();
             }
         });
     }
