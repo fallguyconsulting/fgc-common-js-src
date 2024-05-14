@@ -201,6 +201,12 @@ export function saltDummy ( seed ) {
 }
 
 //----------------------------------------------------------------//
+export function saltDummyFromUsername ( username, seed ) {
+
+    return hash ( `${ seed || '' }${ username || '' }`, null, sodium.crypto_pwhash_SALTBYTES ); 
+}
+
+//----------------------------------------------------------------//
 export function sign ( plaintext, secretKey, encoding ) {
 
     plaintext = toBuffer ( plaintext, encoding || 'utf8' );

@@ -15,7 +15,7 @@ export function assert ( condition, status, message ) {
 }
 
 //----------------------------------------------------------------//
-export function handleError ( response, statusOrErrorObj, message ) {
+export function handleError ( response, statusOrErrorObj, message, body ) {
 
     const errorForStatusCode = ( status ) => {
         switch ( status ) {
@@ -31,9 +31,11 @@ export function handleError ( response, statusOrErrorObj, message ) {
         return 'Unknown error.';
     }
 
-    const errorObj = ( typeof ( statusOrErrorObj ) === 'object' ) ? statusOrErrorObj : null;
-    const status = ( errorObj ) ? ( errorObj.status || 400 ) : 400;
-    message = ( errorObj ? errorObj.message : message ) || errorForStatusCode;
+    const errorObj      = ( typeof ( statusOrErrorObj ) === 'object' ) ? statusOrErrorObj : null;
+    const statusInt     = ( typeof ( statusOrErrorObj ) === 'number' ) ? statusOrErrorObj : 400;
+
+    const status = ( errorObj ) ? ( errorObj.status || statusInt ) : statusInt;
+    message = ( errorObj ? errorObj.message : message ) || errorForStatusCode ( status );
 
     if ( errorObj ) {
         console.log ( errorObj );
@@ -42,10 +44,10 @@ export function handleError ( response, statusOrErrorObj, message ) {
         console.log ( message );
     }
 
-    response.status ( status ).json ({
+    response.status ( status ).json ( _.assign ({
         status:     REST_STATUS.ERROR,
         message:    message.toString (), 
-    });
+    }, body || {}));
     return false;
 }
 

@@ -102,12 +102,15 @@ export class DBDataMapper {
 
         for ( let field of this.fields ) {
             if ( field.dbName === 'id' ) continue;
-            if ( model [ field.jsName ] === undefined ) {
+            if (( model [ field.jsName ] === undefined ) && ( field.def.value !== null )) {
                 model [ field.jsName ] = field.def.value;
             }
         }
 
         this.modelToRow ( model, ( field, value ) => {
+
+            if ( value === undefined ) return;
+
             names.push ( field.dbName );
             marks.push ( '?' );
             values.push ( this.encodeValue ( field, value ));
