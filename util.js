@@ -2,6 +2,7 @@
 
 import { assert }       from './assert';
 import _                from 'lodash';
+import owasp            from 'fgc-package/contrib/owasp-password-strength-test';
 
 //----------------------------------------------------------------//
 export function affirmObjectField ( obj, key, init ) {
@@ -21,6 +22,12 @@ export function caselessCompare ( a, b ) {
     return (( typeof ( a ) === 'string' ) && ( typeof ( b ) === 'string' )) ?
         ( a.localeCompare ( b, undefined, { sensitivity: 'accent' }) === 0 ) :
         ( a === b );
+}
+
+//----------------------------------------------------------------//
+export function checkPasswordStrength ( password ) {
+
+    return owasp.test ( password );
 }
 
 //----------------------------------------------------------------//

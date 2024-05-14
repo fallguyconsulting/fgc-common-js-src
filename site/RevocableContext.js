@@ -50,7 +50,7 @@ export class RevocableContext {
             'content-type':     'application/json',
             'pragma':           'no-cache',
             'cache-control':    'no-cache',
-        }, options.headers || {});
+        }, this.virtual_getHeaders () || {}, options.headers || {});
 
         const response  = await this.fetch ( input, options, timeout );
         const text = await response.text ();
@@ -261,5 +261,9 @@ export class RevocableContext {
     sleep ( millis ) {
         
         return this.promise ( new Promise ( resolve => setTimeout ( resolve, millis )));
+    }
+
+    //----------------------------------------------------------------//
+    virtual_getHeaders () {
     }
 }
