@@ -1,5 +1,7 @@
 // SOURCE: https://stackoverflow.com/questions/1655769/fastest-md5-implementation-in-javascript
 
+/* eslint-disable */
+
 export function hash(e) {
     function h(a, b) {
         var c, d, e, f, g;
