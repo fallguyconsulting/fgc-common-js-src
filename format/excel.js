@@ -59,6 +59,55 @@ export function indexToAAA ( index ) {
     return aaaCache [ index ];
 }
 
+//----------------------------------------------------------------//
+export function invokeCells ( table ) {
+
+    for ( let r = 0; r < table.length; ++r ) {
+        const row = table [ r ];
+        for ( let c = 0; c < row.length; ++c ) {
+            const cell = row [ c ];
+            if ( typeof ( cell ) !== 'function' ) continue;
+            row [ c ] = cell ( r, c ) || '';
+        }
+    }
+}
+
+//----------------------------------------------------------------//
+export function joinRows ( ...args ) {
+
+    const length = Math.max ( ...args.map ( table => table.length ));
+
+    const t = [];
+    for ( let r = 0; r < length ; ++r ) {
+        const rows = args.map ( table => ( table [ r ] || []));
+        t [ r ] = rows.flat ();
+    }   
+    return t;
+}
+
+//----------------------------------------------------------------//
+export function padRows ( table, minLen, padVal ) {
+
+    padVal = padVal || '';
+
+    let rowLen = minLen;
+    for ( let row of table ) {
+        rowLen = Math.max ( rowLen, row.length );
+    }
+
+    const t = [];
+    for ( let r in table ) {
+
+        const row = table [ r ].slice ()
+        t [ r ] = row;
+
+        while ( row.length < rowLen ) {
+            row.push ( padVal );
+        }
+    }
+    return t;
+}
+
 //================================================================//
 // Worksheet
 //================================================================//

@@ -89,6 +89,23 @@ export function useFinalizer ( finalizer, defaultTarget ) {
 }
 
 //----------------------------------------------------------------//
+export function useManagedObject ( init, external, setExternal ) {
+
+    const [ val, setVal ] = useObject ( init );
+    return ( external !== undefined ) ? [ _.cloneDeep ( external ), setExternal || (() => {})] : [ val, setVal ];
+}
+
+//----------------------------------------------------------------//
+export function useObject ( init ) {
+
+    const [ val, setVal ] = React.useState ( init || {});
+    return [
+        _.cloneDeep ( val ),
+        setVal,
+    ];
+}
+
+//----------------------------------------------------------------//
 export function useOnceAsync ( func ) {
 
     React.useEffect (() => {
