@@ -27,14 +27,16 @@ export function buildCollationTree ( scheme, rows, root, context ) {
 
     if ( !rows ) return;
 
+    root = root || {};
     for ( let row of rows ) {
         affirmCollationBranchRecurse ( scheme, row, root, context || {});
     }
+    return root;
 }
 
 //----------------------------------------------------------------//
 export function formatCollationTree ( format, node, context ) {
-    return formatCollationTreeRecurse ( format, node, context );
+    return formatCollationTreeRecurse ( format, node || {}, context );
 }
 
 //----------------------------------------------------------------//
