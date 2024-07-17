@@ -39,6 +39,12 @@ export function coordToAddr ( col, row ) {
 }
 
 //----------------------------------------------------------------//
+export function coordsToRange ( c0, r0, c1, r1 ) {
+
+    return `${ coordToAddr ( c0, r0 )}:${ coordToAddr ( c1, r1 )}`;
+}
+
+//----------------------------------------------------------------//
 export function indexToAAA ( index ) {
 
     if ( !aaaCache [ index ]) {
@@ -63,7 +69,10 @@ export function indexToAAA ( index ) {
 export function invokeCells ( table ) {
 
     for ( let r = 0; r < table.length; ++r ) {
+        
         const row = table [ r ];
+        if ( !row ) continue;
+
         for ( let c = 0; c < row.length; ++c ) {
             const cell = row [ c ];
             if ( typeof ( cell ) !== 'function' ) continue;
