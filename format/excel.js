@@ -97,6 +97,7 @@ export function joinRows ( ...args ) {
 //----------------------------------------------------------------//
 export function padRows ( table, minLen, padVal ) {
 
+    minLen = minLen || 0;
     padVal = padVal || '';
 
     let rowLen = minLen;
