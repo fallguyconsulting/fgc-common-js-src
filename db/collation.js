@@ -16,7 +16,7 @@ function affirmCollationBranchRecurse ( scheme, row, node, context, depth ) {
 
     context = context || {};
     const key = scheme [ depth ] && scheme [ depth ]( row, context );
-    if ( !key ) return;
+    if (( key === undefined ) || ( key === null )) return;
 
     node = util.affirmObjectField ( node.children, key, {});
     affirmCollationBranchRecurse ( scheme, row, node, context, depth + 1 );
@@ -54,5 +54,5 @@ function formatCollationTreeRecurse ( format, node, context, nodeKey ) {
         key
     ));
 
-    return format [ depth ]( node.row, nodeKey, children, context ); 
+    return format [ depth ]( node.row, nodeKey, children, context, depth ); 
 }

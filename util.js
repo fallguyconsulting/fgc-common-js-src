@@ -7,9 +7,9 @@ import owasp            from 'fgc-package/contrib/owasp-password-strength-test';
 //----------------------------------------------------------------//
 export function affirmObjectField ( obj, key, init ) {
 
-    const field = obj [ key ] || init;
+    const field = ( obj [ key ] !== undefined ) ? obj [ key ] : init;
     obj [ key ] = field;
-    return obj [ key ];
+    return field;
 }
 
 //----------------------------------------------------------------//
