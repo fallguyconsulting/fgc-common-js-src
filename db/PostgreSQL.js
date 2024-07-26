@@ -2,6 +2,7 @@
 
 import { assert }                   from '../assert';
 import * as pg                      from 'pg'
+import { ParameterizedQuery }       from 'pg-promise';
 
 const { Pool } = pg;
 
@@ -142,21 +143,23 @@ export class PostgreSQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async query ( sql ) {
+    async query ( sql, ...args ) {
 
+        sql = ( typeof ( sql ) === 'string' ) ? new ParameterizedQuery ({ text: sql, values: args }) : sql;
         const trace = getCleanerStack ();
-
-        return this.runInConnectionAsync ( async () => {
-            assert ( this.connection, 'MISSING POSTGRESQL CONNECTION' );
-            try {
+        
+        try {
+            const result = await this.runInConnectionAsync ( async () => {
+                assert ( this.connection, 'MISSING POSTGRESQL CONNECTION' );
                 return await this.connection.query ( sql );
-            }
-            catch ( error ) {
-                error.sql = sql;
-                error.calling = trace;
-                throw ( error );
-            }
-        });
+            });
+            return result;
+        }
+        catch ( error ) {
+            error.sql = ( typeof ( sql ) === 'string' ) ? sql : sql.text;
+            error.calling = trace;
+            throw ( error );
+        }
     }
 }
 
