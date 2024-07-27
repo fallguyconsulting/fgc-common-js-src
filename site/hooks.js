@@ -106,6 +106,14 @@ export function useObject ( init ) {
 }
 
 //----------------------------------------------------------------//
+export function useOnce ( func ) {
+
+    React.useEffect (() => {
+        func ();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+//----------------------------------------------------------------//
 export function useOnceAsync ( func ) {
 
     React.useEffect (() => {
