@@ -66,7 +66,9 @@ export function indexToAAA ( index ) {
 }
 
 //----------------------------------------------------------------//
-export function invokeCells ( table ) {
+export function invokeCells ( table, context ) {
+
+    context = context || {};
 
     for ( let r = 0; r < table.length; ++r ) {
         
@@ -76,7 +78,7 @@ export function invokeCells ( table ) {
         for ( let c = 0; c < row.length; ++c ) {
             const cell = row [ c ];
             if ( typeof ( cell ) !== 'function' ) continue;
-            row [ c ] = cell ( r, c ) || '';
+            row [ c ] = cell ( r, c, context ) || '';
         }
     }
 }
