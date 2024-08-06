@@ -100,6 +100,16 @@ export function dateToISOString ( date ) {
 }
 
 //----------------------------------------------------------------//
+export function enumerate ( n, f ) {
+
+    const arr = [];
+    for ( let i = 0; i < n; ++i ) {
+        arr.push ( f ( i ));
+    }
+    return arr;
+}
+
+//----------------------------------------------------------------//
 export function formatURL ( url, path, query ) {
 
     url             = URL.parse ( url );
