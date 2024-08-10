@@ -31,6 +31,11 @@ export function checkPasswordStrength ( password ) {
 }
 
 //----------------------------------------------------------------//
+export function cleanObj ( obj ) {
+    return JSON.parse ( JSON.stringify ( obj ));
+}
+
+//----------------------------------------------------------------//
 export function composeClass () {
     
     // instance methods
