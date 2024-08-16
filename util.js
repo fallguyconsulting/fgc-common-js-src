@@ -9,7 +9,7 @@ export function affirmObjectField ( obj, key, init ) {
 
     const field = ( obj [ key ] !== undefined ) ? obj [ key ] : init;
     obj [ key ] = field;
-    return field;
+    return obj [ key ];
 }
 
 //----------------------------------------------------------------//
