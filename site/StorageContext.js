@@ -6,9 +6,6 @@ import { observeField }                     from './observeField';
 import _                                    from 'lodash';
 import { extendObservable, runInAction }    from 'mobx';
 
-//const debugLog = function () {}
-const debugLog = function ( ...args ) { console.log ( '@STORAGE CONTEXT:', ...args ); }
-
 //================================================================//
 // StorageContext
 //================================================================//
@@ -52,7 +49,6 @@ export class StorageContext {
     finalize () {
 
         for ( let memberKey in this.observerDisposers ) {
-            debugLog ( 'disposing observer', memberKey );
             this.observerDisposers [ memberKey ]();
         }
         window.removeEventListener ( 'storage', this.onStorageEvent );
