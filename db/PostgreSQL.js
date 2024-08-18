@@ -202,4 +202,11 @@ export class PostgreSQL {
         this.conn = new PostgreSQLConnection ( this.pool );
         return this.conn;
     }
+
+    //----------------------------------------------------------------//
+    static setTypeParser ( oid, parser ) {
+        pg.types.setTypeParser ( oid, parser );
+    }
 }
+
+PostgreSQL.TYPES = pg.types.builtins;
