@@ -42,7 +42,7 @@ export function useAnimationFrame ( callback ) {
     React.useEffect (() => {
         requestRef.current  = requestAnimationFrame ( animate );
         return () => cancelAnimationFrame ( requestRef.current );
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 //----------------------------------------------------------------//
@@ -53,17 +53,15 @@ export function useFinalizable ( factory ) {
 
     assert ( serviceRef.current, 'Failed to create finalizable.' );
 
-    React.useEffect (
-        () => {
+    React.useEffect (() => {
 
-            const current = serviceRef.current;
+        const current = serviceRef.current;
 
-            return () => {
-                finalize ( current );
-            };
-        },
-        []
-    );
+        return () => {
+            finalize ( current );
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     return serviceRef.current;
 }
 
@@ -72,17 +70,15 @@ export function useFinalizer ( finalizer, defaultTarget ) {
 
     const targetRef = React.useRef ({ target: defaultTarget });
 
-    React.useEffect (
-        () => {
+    React.useEffect (() => {
 
-            const current = targetRef.current;
+        const current = targetRef.current;
 
-            return () => {
-                finalizer ( current.target )
-            };
-        },
-        []
-    );
+        return () => {
+            finalizer ( current.target )
+        };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
     return ( target ) => {
         targetRef.current.target = target
     };
@@ -127,6 +123,28 @@ export function useOnceAsync ( func ) {
 export function useRandomID ( version ) {
 
     return React.useState ( parseInt ( Date.now () * Math.random ()).toString ())[ 0 ];
+}
+
+//----------------------------------------------------------------//
+export function useTimer ( callback, delay ) {
+
+    React.useEffect (() => {
+
+        const timerIDRef = { id: null };
+
+        const onTimeout = () => {
+
+            const next = callback ();
+
+            if ( next !== undefined ) {
+                timerIDRef.id = setTimeout ( onTimeout, next );
+            }
+        }
+
+        timerIDRef.id = setTimeout ( onTimeout, delay );
+        return () => ( timerIDRef.id !== null ) && clearTimeout ( timerIDRef.id );
+
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 //----------------------------------------------------------------//
