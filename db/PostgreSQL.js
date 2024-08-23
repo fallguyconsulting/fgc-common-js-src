@@ -59,6 +59,20 @@ export class PostgreSQLConnection {
     }
 
     //----------------------------------------------------------------//
+    async checkColumnExistsAsync ( tableName, columnName ) {
+
+        const rows = ( await this.query ( `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`, tableName, columnName )).rows;
+        return rows.length > 0;
+    }
+
+    //----------------------------------------------------------------//
+    async checkTableExistsAsync ( tableName ) {
+
+        const rows = ( await this.query ( `SELECT 1 FROM information_schema.tables WHERE table_name = $1`, tableName )).rows;
+        return rows.length > 0;
+    }
+
+    //----------------------------------------------------------------//
     async commitTransactionAsync () {
 
         if ( this.transactionDepth === 0 ) return;
@@ -137,7 +151,7 @@ export class PostgreSQLConnection {
             }
             catch ( error ) {
                 await this.abortTransactionAsync ();
-                throw new error();
+                throw error;
             }
         });
     }
