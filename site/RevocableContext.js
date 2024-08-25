@@ -52,7 +52,7 @@ export class RevocableContext {
             'cache-control':    'no-cache',
         }, this.virtual_getHeaders () || {}, options.headers || {});
 
-        const response  = await this.fetch ( input, options, timeout );
+        const response  = await this.fetch ( this.virtual_formatURL ( input ), options, timeout );
         const text = await response.text ();
         
         let body;
@@ -261,6 +261,11 @@ export class RevocableContext {
     sleep ( millis ) {
         
         return this.promise ( new Promise ( resolve => setTimeout ( resolve, millis )));
+    }
+
+    //----------------------------------------------------------------//
+    virtual_formatURL ( url ) {
+        return url;
     }
 
     //----------------------------------------------------------------//
