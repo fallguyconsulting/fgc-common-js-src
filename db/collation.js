@@ -35,6 +35,13 @@ export function buildCollationTree ( scheme, rows, root, context ) {
 }
 
 //----------------------------------------------------------------//
+export function buildAndFormatCollationTree ( scheme, format, rows, context ) {
+
+    const node = buildCollationTree ( scheme, rows, {}, context );
+    return formatCollationTree ( format, node, context );
+}
+
+//----------------------------------------------------------------//
 export function formatCollationTree ( format, node, context ) {
     return formatCollationTreeRecurse ( format, node || {}, context );
 }
