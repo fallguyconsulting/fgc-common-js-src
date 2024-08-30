@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Fall Guy LLC All Rights Reserved.
 
 import { assert }                   from '../assert';
+import * as util                    from '../util';
 import * as pg                      from 'pg'
 import { ParameterizedQuery }       from 'pg-promise';
 
@@ -50,9 +51,11 @@ export class PostgreSQLConnection {
     async beginTransactionAsync () {
 
         if ( this.transactionDepth === 0 ) {
+            console.log ( `START TRANSACTION`, this.transactionDepth );
             await this.query ( `START TRANSACTION` );
         }
         else {
+            console.log ( `SAVEPOINT ${ savepointName ( this.transactionDepth )}` );
             await this.query ( `SAVEPOINT ${ savepointName ( this.transactionDepth )}` );
         }
         this.transactionDepth++;
@@ -78,7 +81,12 @@ export class PostgreSQLConnection {
         if ( this.transactionDepth === 0 ) return;
         
         if ( this.transactionDepth === 1 ) {
+            console.log ( `COMMIT`, this.transactionDepth );
             await this.query ( `COMMIT` );
+        }
+        else {
+            console.log ( `RELEASE SAVEPOINT ${ savepointName ( this.transactionDepth - 1 )}` );
+            await this.query ( `RELEASE SAVEPOINT ${ savepointName ( this.transactionDepth - 1 )}` );
         }
         this.transactionDepth--;
     }
@@ -90,6 +98,7 @@ export class PostgreSQLConnection {
         this.pool               = pool;
         this.transactionDepth   = 0;
         this.connectionDepth    = 0;
+        this.debugID            = util.randomInt ();
     }
 
     //----------------------------------------------------------------//

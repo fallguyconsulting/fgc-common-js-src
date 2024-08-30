@@ -274,7 +274,7 @@ export function makeSingleton ( clazz ) {
 //----------------------------------------------------------------//
 export function randomInt ( max ) {
 
-    return Math.floor ( Math.random () * Math.floor ( max ));
+    return Math.floor ( Math.random () * Math.floor ( max || Number.MAX_SAFE_INTEGER ));
 }
 
 //----------------------------------------------------------------//
