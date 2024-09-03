@@ -25,17 +25,20 @@ function savepointName ( depth ) {
 export class PostgreSQLConnection {
 
     //----------------------------------------------------------------//
-    async abortTransactionAsync () {
+    async abortTransactionAsync ( depth ) {
 
-        if ( this.transactionDepth === 0 ) return;
+        assert ( this.transactionDepth > 0, 'No transactions.' )
+        assert ( depth === ( this.transactionDepth - 1 ), 'Invalid transaction depth.' );
         
-        if ( this.transactionDepth === 1 ) {
+        if ( depth === 0 ) {
+            console.log ( `${ this.debugID }: ROLLBACK` );
             await this.query ( `ROLLBACK` );
         }
         else {
-            await this.query ( `ROLLBACK TO SAVEPOINT ${ savepointName ( this.transactionDepth - 1 )}` );
+            console.log ( `${ this.debugID }: ROLLBACK TO SAVEPOINT ${ savepointName ( depth )}` );
+            await this.query ( `ROLLBACK TO SAVEPOINT ${ savepointName ( depth )}` );
         }
-        this.transactionDepth--;
+        this.transactionDepth = depth;
     }
 
     //----------------------------------------------------------------//
@@ -50,15 +53,26 @@ export class PostgreSQLConnection {
     //----------------------------------------------------------------//
     async beginTransactionAsync () {
 
-        if ( this.transactionDepth === 0 ) {
-            console.log ( `START TRANSACTION`, this.transactionDepth );
-            await this.query ( `START TRANSACTION` );
+        const depth = this.transactionDepth;
+
+        try {
+
+            if ( this.transactionDepth === 0 ) {
+                console.log ( `${ this.debugID }: START TRANSACTION` );
+                await this.query ( `START TRANSACTION` );
+            }
+            else {
+                console.log ( `${ this.debugID }: SAVEPOINT ${ savepointName ( depth )}` );
+                await this.query ( `SAVEPOINT ${ savepointName ( depth )}` );
+            }
         }
-        else {
-            console.log ( `SAVEPOINT ${ savepointName ( this.transactionDepth )}` );
-            await this.query ( `SAVEPOINT ${ savepointName ( this.transactionDepth )}` );
+        catch ( error ) {
+            console.log ( 'ERROR IN beginTransactionAsync' );
+            throw error;
         }
+
         this.transactionDepth++;
+        return depth;
     }
 
     //----------------------------------------------------------------//
@@ -76,19 +90,20 @@ export class PostgreSQLConnection {
     }
 
     //----------------------------------------------------------------//
-    async commitTransactionAsync () {
+    async commitTransactionAsync ( depth ) {
 
-        if ( this.transactionDepth === 0 ) return;
+        assert ( this.transactionDepth > 0, 'No transactions.' )
+        assert ( depth === ( this.transactionDepth - 1 ), 'Invalid transaction depth.' );
         
-        if ( this.transactionDepth === 1 ) {
-            console.log ( `COMMIT`, this.transactionDepth );
+        if ( depth === 0 ) {
+            console.log ( `${ this.debugID }: COMMIT` );
             await this.query ( `COMMIT` );
         }
         else {
-            console.log ( `RELEASE SAVEPOINT ${ savepointName ( this.transactionDepth - 1 )}` );
-            await this.query ( `RELEASE SAVEPOINT ${ savepointName ( this.transactionDepth - 1 )}` );
+            console.log ( `${ this.debugID }: RELEASE SAVEPOINT ${ savepointName ( depth )}` );
+            await this.query ( `RELEASE SAVEPOINT ${ savepointName ( depth )}` );
         }
-        this.transactionDepth--;
+        this.transactionDepth = depth;
     }
 
     //----------------------------------------------------------------//
@@ -136,6 +151,7 @@ export class PostgreSQLConnection {
     async runInConnectionAsync ( action ) {
 
         await this.beginConnectionAsync ();
+
         try {
             const result = await action ();
             await this.endConnectionAsync ();
@@ -152,14 +168,15 @@ export class PostgreSQLConnection {
 
         return this.runInConnectionAsync ( async () => {
 
-            await this.beginTransactionAsync ();
+            const depth = await this.beginTransactionAsync ();
+
             try {
                 const result = await action ();
-                await this.commitTransactionAsync ();
+                await this.commitTransactionAsync ( depth );
                 return result;
             }
             catch ( error ) {
-                await this.abortTransactionAsync ();
+                await this.abortTransactionAsync ( depth );
                 throw error;
             }
         });
