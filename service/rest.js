@@ -8,10 +8,18 @@ export const REST_STATUS = {
     ERROR:  'ERROR',
 };
 
+let onError = null;
+
 //----------------------------------------------------------------//
 export function assert ( condition, status, message ) {
 
     if ( !condition ) throw new ServiceError ( status, message );
+}
+
+//----------------------------------------------------------------//
+export function init ( onErrorCallback ) {
+
+    onError = onErrorCallback;
 }
 
 //----------------------------------------------------------------//
@@ -44,10 +52,28 @@ export function handleError ( response, statusOrErrorObj, message, body ) {
         console.log ( message );
     }
 
+    if ( onError ) {
+        try {
+            if ( errorObj ) {
+                const stack = errorObj.stack;
+                const calling = errorObj.calling || '';
+                onError ( `${ stack }\n${ calling }` );
+            }
+            else {
+                onError ( message );
+            }
+        }
+        catch ( error ) {
+            console.log ( 'ERROR HANDLING ERROR!' );
+            console.log ( error );
+        }
+    }
+
     response.status ( status ).json ( _.assign ({
         status:     REST_STATUS.ERROR,
         message:    message.toString (), 
     }, body || {}));
+
     return false;
 }
 
