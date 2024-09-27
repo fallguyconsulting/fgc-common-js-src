@@ -321,6 +321,11 @@ export function toggleArrayMember ( array, item ) {
 }
 
 //----------------------------------------------------------------//
+export function toPOJO ( obj ) {
+    return JSON.parse ( JSON.stringify ( obj ));
+}
+
+//----------------------------------------------------------------//
 export function toNumberStrict ( val ) {
 
     return (( typeof ( val ) === 'number' ) || ( typeof ( val ) === 'string' )) ? Number ( val ) : NaN;
