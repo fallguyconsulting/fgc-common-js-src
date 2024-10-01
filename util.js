@@ -109,7 +109,7 @@ export function enumerate ( n, f ) {
 
     const arr = [];
     for ( let i = 0; i < n; ++i ) {
-        arr.push ( f ( i ));
+        arr.push ( f ? f ( i ) : i );
     }
     return arr;
 }
