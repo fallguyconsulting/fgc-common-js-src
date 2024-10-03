@@ -26,7 +26,7 @@ export function localDateFromClampedISO ( dateString ) {
     if ( !dateString ) return null;
 
     if ( dateString instanceof Date ) {
-        return dateString;
+        return new Date ( dateString );
     } 
 
     return new Date ( `${ dateString.split ( 'T' )[ 0 ]}T00:00:00` );
