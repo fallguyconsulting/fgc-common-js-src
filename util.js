@@ -306,6 +306,30 @@ export function snakeToCamel ( str ) {
 }
 
 //----------------------------------------------------------------//
+export function stringFromBase64 ( value ) {
+
+    try {
+        return value ? atob ( value ) : '';
+    }
+    catch ( error ) {
+        console.log ( error );
+    }
+    return '';
+}
+
+//----------------------------------------------------------------//
+export function stringToBase64 ( value ) {
+    
+    try {
+        return value ? btoa ( value ) : '';
+    }
+    catch ( error ) {
+        console.log ( error );
+    }
+    return '';
+}
+
+//----------------------------------------------------------------//
 export function toggleArrayMember ( array, item ) {
 
     array = array ? array.slice () : [];
