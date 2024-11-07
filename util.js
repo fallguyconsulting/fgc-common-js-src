@@ -234,6 +234,19 @@ export function javascriptEscape ( str ) {
 }
 
 //----------------------------------------------------------------//
+export function makeHistogram ( array, getkey ) {
+
+    const histogram = {};
+    for ( let item of array ) {
+        const key = getkey ? getKey ( item ) : String ( item );
+        affirmObjectField ( histogram, key, 0 );
+        histogram [ key ]++;
+    }
+    return histogram;
+
+}
+
+//----------------------------------------------------------------//
 export function makeQueryString ( query ) {
 
     const pairs = [];
