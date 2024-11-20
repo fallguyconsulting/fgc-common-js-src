@@ -255,6 +255,7 @@ export class RevocableContext {
             revoke ();
         }
         this.revocables = {};
+        this.virtual_revokeAll ();
     }
 
     //----------------------------------------------------------------//
@@ -270,5 +271,9 @@ export class RevocableContext {
 
     //----------------------------------------------------------------//
     virtual_getHeaders () {
+    }
+
+    //----------------------------------------------------------------//
+    virtual_revokeAll () {
     }
 }
