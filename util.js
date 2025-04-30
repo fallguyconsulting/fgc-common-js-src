@@ -13,6 +13,15 @@ export function affirmObjectField ( obj, key, init ) {
 }
 
 //----------------------------------------------------------------//
+export function arrayToObject ( arr, getKey ) {
+
+    return ( arr || []).reduce (( acc, item ) => {
+        acc [ getKey ? getKey ( item ) : item ] = item;
+        return acc;
+    }, {});
+}
+
+//----------------------------------------------------------------//
 export function camelToSnake ( str ) {
     return str.replace ( /[a-z][A-Z]/g, m => `${ m.slice ( 0, 1 )}_${ m.slice ( 1 )}` ).toLowerCase ();
 }
@@ -221,6 +230,26 @@ export function isNumber ( number ) {
 export function isString ( value ) {
 
     return (( typeof ( value ) === 'string' ) || ( value instanceof String ));
+}
+
+//----------------------------------------------------------------//
+export function itemArrayToNamedSet ( arr, itemToName ) {
+
+    itemToName = itemToName || (( item ) => item.name || item );
+
+    const itemsByName = {};
+    const itemNames = [];
+
+    for ( let item of arr ) {
+
+        const name = itemToName ( item );
+        if ( !itemsByName [ name ]) {
+            itemNames.push ( name );
+        }
+        itemsByName [ name ] = item;
+    }
+    
+    return [ itemToName, ( name ) => itemsByName [ name ], itemNames ];
 }
 
 //----------------------------------------------------------------//
