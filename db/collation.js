@@ -13,7 +13,6 @@ function affirmCollationBranchRecurse ( scheme, row, node, context, depth ) {
     util.affirmObjectField ( node, 'row', row );
     util.affirmObjectField ( node, 'depth', depth );
     util.affirmObjectField ( node, 'order', null );
-    util.affirmObjectField ( node, 'order', null );
     
     if ( depth >= scheme.length ) return;
 
