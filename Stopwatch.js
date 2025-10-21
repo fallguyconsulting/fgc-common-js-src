@@ -42,9 +42,18 @@
 
 //----------------------------------------------------------------//
 function now () {
-    const hr = process.hrtime ();
-    const nanoSeconds = hr [ 0 ] * 1e9 + hr [ 1 ];
-    return nanoSeconds / 1e6;
+
+    if ( process.hrtime ) {
+        const hr = process.hrtime ();
+        const nanoSeconds = hr [ 0 ] * 1e9 + hr [ 1 ];
+        return nanoSeconds / 1e6;
+    }
+
+    if ( window?.performance?.now ) {
+        return window.performance.now ();
+    }
+
+    return Date.now ();
 }
 
 //================================================================//
