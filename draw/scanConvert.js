@@ -106,7 +106,7 @@ export function drawLine ( setPixel, x0, y0, x1, y1 ) {
 }
 
 //----------------------------------------------------------------//
-export function fillRect ( setPixel, x0, y0, x1, y1 ) {
+export function drawRect ( setPixel, x0, y0, x1, y1, fill = true ) {
 
     x0 = toPixelCoord ( x0 );
     y0 = toPixelCoord ( y0 );
@@ -114,13 +114,25 @@ export function fillRect ( setPixel, x0, y0, x1, y1 ) {
     x1 = toPixelCoord ( x1 );
     y1 = toPixelCoord ( y1 );
 
+    const xMin      = Math.min ( x0, x1 );
+    const yMin      = Math.min ( y0, y1 );
+
     const xMax      = Math.max ( x0, x1 );
     const yMax      = Math.max ( y0, y1 );
 
-    for ( let y = Math.min ( y0, y1 ); y < yMax; ++y ) {
-        for ( let x = Math.min ( x0, x1 ); x < xMax; ++x ) {
-            setPixel ( x, y );
+
+    if ( fill ) {
+        for ( let y = Math.min ( y0, y1 ); y < yMax; ++y ) {
+            for ( let x = Math.min ( x0, x1 ); x < xMax; ++x ) {
+                setPixel ( x, y );
+            }
         }
+    }
+    else {
+        drawLine ( setPixel, xMin, yMin, xMax, yMin )
+        drawLine ( setPixel, xMax, yMin, xMax, yMax )
+        drawLine ( setPixel, xMax, yMax, xMin, yMax )
+        drawLine ( setPixel, xMin, yMax, xMin, yMin )
     }
 }
 
