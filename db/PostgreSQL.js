@@ -232,6 +232,7 @@ export class PostgreSQL {
             user:                       user,
             password:                   password,
             database:                   database,
+            ssl:                        { rejectUnauthorized: false },
         });
         return new PostgreSQL ( pool );
     }
