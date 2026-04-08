@@ -224,6 +224,8 @@ export class PostgreSQL {
     //----------------------------------------------------------------//
     static async makeAsync ( host, user, password, database ) {
 
+        const ssl = process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false };
+
         const pool = await new Pool ({
             max:                        16,
             connectionTimeoutMillis:    1000,
@@ -232,7 +234,7 @@ export class PostgreSQL {
             user:                       user,
             password:                   password,
             database:                   database,
-            ssl:                        { rejectUnauthorized: false },
+            ssl:                        ssl,
         });
         return new PostgreSQL ( pool );
     }
